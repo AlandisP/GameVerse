@@ -1,14 +1,9 @@
 # GameVerse
 
-This first paragraph should be a short description of the app. You can add links
-to your wiki pages that have more detailed descriptions.
-
-Your audience for the Readme.md are other developers who are joining your team.
-Specifically, the file should contain detailed instructions that any developer
-can follow to install, compile, run, and test your project. These are not only
-useful to new developers, but also to you when you have to re-install everything
-because your old laptop crashed. Also, the teachers of this class will be
-following your instructions.
+GameVerse is a social media app in which provides services such as posting to a feed, party finding, groups, and messaging. The main
+goal of this app is to allow people to connect and interact with each other in multiple different ways.
+https://github.com/SCCapstone/CodeCartel/wiki/Project-Description
+https://github.com/SCCapstone/CodeCartel/wiki/Architecture
 
 ## External Requirements
 
@@ -19,6 +14,9 @@ In order to build this project you first have to install:
 
 -   [Node.js](https://nodejs.org/en/)
 -   [MongoDB](https://www.mongodb.com/)
+-   [React](https://react.dev/learn/installation)
+-   [Java 17](https://www.oracle.com/java/technologies/javase/jdk17-archive-downloads.html)
+-   [Maven](https://maven.apache.org/download.cgi)
 
 If possible, list the actual commands you used to install these, so the reader
 can just cut-n-paste the commands and get everything setup.
@@ -64,5 +62,8 @@ In some cases you need to install test runners, etc. Explain how.
 Explain how to run the automated tests.
 
 # Authors
-
-Your names and emails
+Alandis Patterson(alandisp@email.sc.edu)
+Gage Hulbert(hulbertg@email.sc.edu)
+Joshua Cook(jc157@email.sc.edu)
+Quintarius Floyd(qfloyd@email.sc.edu)
+Jamius Cheatham(jamius@sc.edu)
