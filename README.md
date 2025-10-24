@@ -2,7 +2,9 @@
 
 GameVerse is a social media app in which provides services such as posting to a feed, party finding, groups, and messaging. The main
 goal of this app is to allow people to connect and interact with each other in multiple different ways.
+
 https://github.com/SCCapstone/CodeCartel/wiki/Project-Description
+
 https://github.com/SCCapstone/CodeCartel/wiki/Architecture
 
 ## External Requirements
