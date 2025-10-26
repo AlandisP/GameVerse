@@ -4,31 +4,39 @@ GameVerse is a social media app in which provides services such as posting to a 
 goal of this app is to allow people to connect and interact with each other in multiple different ways.
 
 [Description](https://github.com/SCCapstone/CodeCartel/wiki/Project-Description)
+
 [Architecture](https://github.com/SCCapstone/CodeCartel/wiki/Architecture)
 
 ## External Requirements
 
 In order to build this project you first have to install:
 
-- [Node.js](https://nodejs.org/en/)
-- [MongoDB](https://www.mongodb.com/)
-- [React](https://react.dev/learn/installation)
-- [Java 17](https://www.oracle.com/java/technologies/javase/jdk17-archive-downloads.html)
-- [Maven](https://maven.apache.org/download.cgi)
-  If you're downloading/cloning the repo, you don't need to install react, springboot, or maven. You need to just have the extentions in VSCode.
-  If you don't have react installed run: npx create-react-app my-app
-  If you dont have firebase installed run: npm install firebase
+-   [Node.js](https://nodejs.org/en/)
+-   [MongoDB](https://www.mongodb.com/)
+-   [React](https://react.dev/learn/installation)
+-   [Java 17](https://www.oracle.com/java/technologies/javase/jdk17-archive-downloads.html)
+-   [Maven](https://maven.apache.org/download.cgi)
 
+If you're downloading/cloning the repo, you don't need to install react, springboot, or maven. You need to just have the extentions in VSCode.
+If you don't have react installed run: npx create-react-app my-app
+If you dont have firebase installed run: npm install firebase  
 ## Setup
 
 1. Connect your MongoDB to the program.
-   Steps:
-
--
+Steps:
+  - Install MongoDB Compass for Local databases
+  - Open the application and press "connect"
+  - name the database whatever you want to, just make sure its connected to your local host(27017)
+  - Now you have your own local database for our application.
+2. Configure your applications properties
+  - Ensure the ports are correct and the name of the database.
+**There will be more instructions as development continues such has JWT token and ways to connect to the MongoDB Atlas once its set up and deployed later.** 
 
 ## Running
-
-Specify the commands for a developer to run the app from the cloned repo.
+1. Start the springboot application backend. Run: mvn spring-boot:run
+2. change your directory the the frontend. Run: cd ./frontend/
+3. Run the react application. Run: npm start
+4. Verify that everything is running by vieiwng you localhost tab that opened when you ran the application.
 
 # Deployment
 
@@ -36,7 +44,6 @@ Webapps need a deployment section that explains how to get it deployed on the
 Internet. These should be detailed enough so anyone can re-deploy if needed
 . Note that you **do not put passwords in git**.
 
-Testing making changes and pushing. -Josh
 
 # Testing
 
