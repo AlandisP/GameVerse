@@ -62,7 +62,7 @@ The behavioral tests are in `/test/casper/`.
 
 ## Testing Technology
 
-In some cases you need to install test runners, etc. Explain how.
+Testing frameworks are included with Maven and React. No additional installation needed.
 
 ## Running Tests
 
