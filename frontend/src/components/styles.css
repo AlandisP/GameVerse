@@ -1,0 +1,15 @@
+.LoginScreen {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+
+}
+
+.Username {
+    margin-top: 10px;
+    gap: 5px;
+}
+
+.Username h3, .Password h3 {
+    margin-bottom: 0px;
+}
