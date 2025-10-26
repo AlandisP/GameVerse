@@ -10,18 +10,21 @@ goal of this app is to allow people to connect and interact with each other in m
 
 In order to build this project you first have to install:
 
--   [Node.js](https://nodejs.org/en/)
--   [MongoDB](https://www.mongodb.com/)
--   [React](https://react.dev/learn/installation)
--   [Java 17](https://www.oracle.com/java/technologies/javase/jdk17-archive-downloads.html)
--   [Maven](https://maven.apache.org/download.cgi)
-If you're downloading/cloning the repo, you don't need to install react, springboot, or maven. You need to just have the extentions in VSCode.
-If you don't have react installed run: npx create-react-app my-app
-If you dont have firebase installed run: npm install firebase  
+- [Node.js](https://nodejs.org/en/)
+- [MongoDB](https://www.mongodb.com/)
+- [React](https://react.dev/learn/installation)
+- [Java 17](https://www.oracle.com/java/technologies/javase/jdk17-archive-downloads.html)
+- [Maven](https://maven.apache.org/download.cgi)
+  If you're downloading/cloning the repo, you don't need to install react, springboot, or maven. You need to just have the extentions in VSCode.
+  If you don't have react installed run: npx create-react-app my-app
+  If you dont have firebase installed run: npm install firebase
+
 ## Setup
+
 1. Connect your MongoDB to the program.
-Steps:
-  - 
+   Steps:
+
+-
 
 ## Running
 
@@ -33,9 +36,7 @@ Webapps need a deployment section that explains how to get it deployed on the
 Internet. These should be detailed enough so anyone can re-deploy if needed
 . Note that you **do not put passwords in git**.
 
-Mobile apps will also sometimes need some instructions on how to build a
-"release" version, maybe how to sign it, and how to run that binary in an
-emulator or in a physical phone.
+Testing making changes and pushing. -Josh
 
 # Testing
 
@@ -55,6 +56,7 @@ In some cases you need to install test runners, etc. Explain how.
 Explain how to run the automated tests.
 
 # Authors
+
 Alandis Patterson(alandisp@email.sc.edu)
 Gage Hulbert(hulbertg@email.sc.edu)
 Joshua Cook(jc157@email.sc.edu)
