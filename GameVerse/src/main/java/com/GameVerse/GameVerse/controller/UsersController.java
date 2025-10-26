@@ -51,6 +51,8 @@ public class UsersController {
         
         repository.save(new User("SadLingo", "LingoIsFye1234")); // if any of the group memebers is seeing this
                                                                             // these credentials are NOT real -_-
+
+         repository.save(new User("Jxmius", "somethingrandom123"));
         
         return "Test data inserted! Total users: " + repository.count();
     }
