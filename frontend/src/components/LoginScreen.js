@@ -8,12 +8,12 @@ function LoginScreen() {
     const [error, setError] = useState('');
 
     const HandleLogin = async() => {
-        try {
-            if(!username || !password) {
-                setError('Please fill in the fields');
-                return;
-            }
-        }
+        // try {
+        //     if(!username || !password) {
+        //         setError('Please fill in the fields');
+        //         return;
+        //     }
+        // }
     }
 
     const HandleClick = () =>{
