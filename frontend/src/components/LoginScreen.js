@@ -6,7 +6,14 @@ function LoginScreen() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
 
-  const HandleLogin = async () => {};
+  const HandleLogin = async () => {
+    // try {
+    //     if(!username || !password) {
+    //         setError('Please fill in the fields');
+    //         return;
+    //     }
+    // }
+  };
 
   const HandleClick = () => {
     alert("I Clicked");
