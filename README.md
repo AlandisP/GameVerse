@@ -8,9 +8,6 @@ goal of this app is to allow people to connect and interact with each other in m
 
 ## External Requirements
 
-List all the stuff the reader will need to install in order to get you app to
-run in their laptop. For example:
-
 In order to build this project you first have to install:
 
 -   [Node.js](https://nodejs.org/en/)
@@ -18,18 +15,13 @@ In order to build this project you first have to install:
 -   [React](https://react.dev/learn/installation)
 -   [Java 17](https://www.oracle.com/java/technologies/javase/jdk17-archive-downloads.html)
 -   [Maven](https://maven.apache.org/download.cgi)
-
-If possible, list the actual commands you used to install these, so the reader
-can just cut-n-paste the commands and get everything setup.
-
-You only need to add instructions for the OS you are using.
-
+If you're downloading/cloning the repo, you don't need to install react, springboot, or maven. You need to just have the extentions in VSCode.
+If you don't have react installed run: npx create-react-app my-app
+If you dont have firebase installed run: npm install firebase  
 ## Setup
-
-Here you list all the one-time things the developer needs to do after cloning
-your repo. Sometimes there is no need for this section, but some apps require
-some first-time configuration from the developer, for example: setting up a
-database for running your webapp locally.
+1. Connect your MongoDB to the program.
+Steps:
+  - 
 
 ## Running
 
