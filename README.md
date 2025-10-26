@@ -43,7 +43,7 @@ GameVerse is deployed using Railway, MongoDB Compass, and MongoDB Atlas.
 
 1.Set up database in MongoDB Atlas and get connection string
 2.Connect to Atlas using MongoDB Compass to manage your database
-3.Deploy backend: Go to Railway → Deploy from GitHub → Add environment variables (MongoDB Atlas            connection string)
+3.Deploy backend: Go to Railway → Deploy from GitHub → Add environment variables (MongoDB Atlas connection string)
 4.Deploy frontend: Create new Railway project → Set root to frontend → Add environment variables
 
 Railway redeploys automatically on push to GitHub.
