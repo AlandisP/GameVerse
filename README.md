@@ -21,6 +21,7 @@ If you're downloading/cloning the repo, you don't need to install react, springb
 If you don't have react installed run: npx create-react-app my-app
 If you dont have firebase installed run: npm install firebase  
 ## Setup
+
 1. Connect your MongoDB to the program.
 Steps:
   - Install MongoDB Compass for Local databases
@@ -62,6 +63,7 @@ In some cases you need to install test runners, etc. Explain how.
 Explain how to run the automated tests.
 
 # Authors
+
 Alandis Patterson(alandisp@email.sc.edu)
 Gage Hulbert(hulbertg@email.sc.edu)
 Joshua Cook(jc157@email.sc.edu)
