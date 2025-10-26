@@ -17,7 +17,7 @@ function LoginScreen() {
     }
 
     const HandleClick = () =>{
-        alert("Nothing")
+        alert("Anything I want!");
     }
 
     return (
