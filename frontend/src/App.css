@@ -28,6 +28,9 @@
   color: #61dafb;
 }
 
+.Pink-bg {
+  background-color:pink;
+}
 @keyframes App-logo-spin {
   from {
     transform: rotate(0deg);
