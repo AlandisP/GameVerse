@@ -6,9 +6,7 @@ function LoginScreen() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
 
-  const HandleLogin = async () => {
-    /* Testing the merge conflict resolution. */
-  };
+  const HandleLogin = async () => {};
 
   const HandleClick = () => {
     alert("I Clicked");
