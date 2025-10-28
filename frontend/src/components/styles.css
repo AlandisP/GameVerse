@@ -1,8 +1,19 @@
+body {
+    background-color: rgb(46, 44, 44);
+}
+
 .LoginScreen {
     display: flex;
     flex-direction: column;
     align-items: center;
 
+}
+
+.HeaderE {
+    color: white;
+    text-align: center;
+    border-bottom: 5px solid rgb(131, 127, 127);
+    padding-bottom: 5px;
 }
 
 .Username {

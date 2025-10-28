@@ -21,8 +21,9 @@ function LoginScreen() {
     }
 
     return (
+        <div>
+            <h1 className="HeaderE" >GameVerse</h1>
         <div className="LoginScreen">
-            <h1>Please Login!</h1>
             <div className="Username">
                 <h3>Username</h3>
                 <input 
@@ -47,6 +48,7 @@ function LoginScreen() {
                 Login
             </button>
 
+        </div>
         </div>
     )
 
