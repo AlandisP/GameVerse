@@ -9,6 +9,7 @@ public class User {
     @Id
     private String id;
     @Indexed(unique = true)  
+    private String email;
     private String username;
     private String password;
 
@@ -17,13 +18,24 @@ public class User {
 
     }
 
+    public User(String name, String password, String email) {
+        this.email = email;
+        this.username = name;
+        this.password = password;
+    }
+
     public User(String name, String password) {
+        this.email = "";
         this.username = name;
         this.password = password;
     }
 
     public String getId() {
         return this.id;
+    }
+
+    public String getEmail() {
+        return email;
     }
 
     public String getUsername() {
@@ -36,6 +48,10 @@ public class User {
 
     public void setId(String id) {
         this.id = id;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
     }
 
     public void setUsername(String username) {
