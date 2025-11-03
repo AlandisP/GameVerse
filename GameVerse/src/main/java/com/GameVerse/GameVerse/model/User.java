@@ -12,9 +12,9 @@ public class User {
     private String email;
     private String username;
     private String password;
+    private Role role;
 
     public User() {
-        System.out.println("Jamius");
 
     }
 
@@ -22,6 +22,8 @@ public class User {
         this.email = email;
         this.username = name;
         this.password = password;
+        role = Role.USER;
+
     }
 
     public User(String name, String password) {
@@ -46,6 +48,10 @@ public class User {
         return password;
     }
 
+    public Role getRole() {
+        return role;
+    }
+
     public void setId(String id) {
         this.id = id;
     }
@@ -61,6 +67,11 @@ public class User {
     public void setPassword(String password) {
         this.password = password;
     }
+
+    public void setRole(Role role) {
+        this.role = role;
+    }
+
 
 
 

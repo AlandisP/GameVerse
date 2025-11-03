@@ -1,27 +1,60 @@
 package com.GameVerse.GameVerse.security;
 
-import jakarta.servlet.FilterChain;
-import jakarta.servlet.ServletException;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
+import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 import org.springframework.web.servlet.HandlerExceptionResolver;
 
-import java.io.IOException;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
-    private final HandlerExceptionResolver handlerExceptionResolver;
-
-    private final JwtService jwtService;
-    private final UserDetailsService userDetailsService;
+    @Autowired
+    private JwtService jwtService;
+    
+    @Override
+    protected void doFilterInternal(HttpServletRequest request, 
+                                    HttpServletResponse response, 
+                                    FilterChain filterChain) throws ServletException, IOException {
+        
+        try {
+            String token = getJwtFromRequest(request);
+            
+            if (token != null && jwtService.isTokenValid(token)) {
+                String userId = jwtService.extractUserId(token);
+                Role role = jwtService.extractRole(token);
+                
+                // Create authorities from role
+                List<GrantedAuthority> authorities = List.of(
+                    new SimpleGrantedAuthority("ROLE_" + role.name())
+                );
+                
+                UsernamePasswordAuthenticationToken authentication = 
+                    new UsernamePasswordAuthenticationToken(userId, null, authorities);
+                
+                SecurityContextHolder.getContext().setAuthentication(authentication);
+            }
+        } catch (Exception e) {
+            System.out.println("Could not authenticate user: " + e.getMessage());
+        }
+        
+        filterChain.doFilter(request, response);
+    }
 
     public JwtAuthenticationFilter(
         JwtService jwtService,
