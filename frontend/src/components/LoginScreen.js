@@ -1,5 +1,6 @@
 import './styles.css';
 //import { useNavigate } from 'react-router-dom';
+import logo from '../images/GameVerse_LogoV2.png';
 import React, { useState } from 'react';
 function LoginScreen() {
 
@@ -21,9 +22,16 @@ function LoginScreen() {
     }
 
     return (
-        <div>
-            <h1 className="HeaderE" >GameVerse</h1>
+        <div className='App'>
+            <div className='bg'>
+        <div className='Header'>
+            <div><img className='logo' src={logo}/></div>
+            <div><h1 className="HeaderE" >GameVerse</h1></div>
+            <div className='spacer'></div>
+        </div>
         <div className="LoginScreen">
+            <h1>Welcome Back!</h1>
+            <p className='intro-text'>Lets hop right back into action by logging in!</p>
             <div className="Username">
                 <h3>Username</h3>
                 <input 
@@ -48,6 +56,7 @@ function LoginScreen() {
                 Login
             </button>
 
+        </div>
         </div>
         </div>
     )
