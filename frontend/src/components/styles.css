@@ -1,5 +1,5 @@
 body {
-    background-color: rgb(46, 44, 44);
+    background-color: #373737;
 }
 
 .LoginScreen {
@@ -12,7 +12,7 @@ body {
 .HeaderE {
     color: white;
     text-align: center;
-    border-bottom: 5px solid rgb(131, 127, 127);
+    border-bottom: 5px solid ;
     padding-bottom: 5px;
 }
 
