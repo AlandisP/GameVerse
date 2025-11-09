@@ -9,7 +9,7 @@ public class User {
     @Id
     private String id;
     @Indexed(unique = true)  
-    private String email;
+    //private String email; //This is entirely optional
     private String username;
     private String password;
     private Role role;
@@ -18,27 +18,28 @@ public class User {
 
     }
 
-    public User(String name, String password, String email) {
-        this.email = email;
+    // public User(String name, String password, String email) {
+    //     this.email = email;
+    //     this.username = name;
+    //     this.password = password;
+    //     role = Role.USER;
+
+    // }
+
+    public User(String name, String password) {
+        //this.email = "";
         this.username = name;
         this.password = password;
         role = Role.USER;
-
-    }
-
-    public User(String name, String password) {
-        this.email = "";
-        this.username = name;
-        this.password = password;
     }
 
     public String getId() {
         return this.id;
     }
 
-    public String getEmail() {
-        return email;
-    }
+    // public String getEmail() {
+    //     return email;
+    // }
 
     public String getUsername() {
         return username;
@@ -56,9 +57,9 @@ public class User {
         this.id = id;
     }
 
-    public void setEmail(String email) {
-        this.email = email;
-    }
+    // public void setEmail(String email) {
+    //     this.email = email;
+    // }
 
     public void setUsername(String username) {
         this.username = username;
