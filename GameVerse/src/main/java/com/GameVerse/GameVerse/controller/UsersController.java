@@ -4,6 +4,7 @@ package com.GameVerse.GameVerse.controller;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -21,6 +22,9 @@ import com.GameVerse.GameVerse.repository.UserRepository;
 @RequestMapping("/users")
 @CrossOrigin(origins = "http://localhost:3000")
 public class UsersController {
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
     @Autowired
     private UserRepository repository;
@@ -48,11 +52,14 @@ public class UsersController {
      @GetMapping("/test/populate")
     public String populateTestData() {
         repository.deleteAll(); // Clear existing data
-        
-        repository.save(new User("SadLingo", "LingoIsFye1234")); // if any of the group memebers is seeing this
-                                                                            // these credentials are NOT real -_-
 
-         repository.save(new User("Jxmius", "somethingrandom123"));
+        User john = new User("john", passwordEncoder.encode("1234"));
+        repository.save(john);
+        
+        // repository.save(new User("SadLingo", "a1234")); // if any of the group memebers is seeing this
+                                                                            // these credentials are NOT real -_-
+                                
+
         
         return "Test data inserted! Total users: " + repository.count();
     }

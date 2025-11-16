@@ -1,5 +1,4 @@
 import './styles.css';
-//import { useNavigate } from 'react-router-dom';
 import logo from '../images/GameVerse_LogoV2.png';
 import React, { useState } from 'react';
 import axios from 'axios';
@@ -18,11 +17,11 @@ function LoginScreen() {
                 return;
             }
             const response = await axios.post('http://localhost:8080/auth/login', {username, password});
+            setError('Logged in!');
             console.log('Login Successful:', response.data);
             localStorage.setItem('token', response.data.token);
             localStorage.setItem('username', response.data.username);
-
-            history('/home');
+            history('/home', {state: {username: username}});
         } catch (error) {
             console.error('Login failed:', error.response ? error.response.data: error.message);
             setError('Invalid Username or Password');  
@@ -68,7 +67,7 @@ function LoginScreen() {
                 Login
             </button>
             <p className='error-text'>
-                Hola{error}
+                {error}
             </p>
         </div>
         </div>

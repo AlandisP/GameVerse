@@ -30,6 +30,7 @@ public class SecurityConfiguration {
                 session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests((authorize) -> authorize
                 .requestMatchers("/auth/**").permitAll()  // Allow all /auth endpoints
+                .requestMatchers("/users/**").permitAll()
                 .anyRequest().authenticated())
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)  // FIXED
             .csrf(csrf -> csrf.disable())
