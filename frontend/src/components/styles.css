@@ -82,3 +82,8 @@ div {
     margin-bottom: 15px;
     color:darkgrey;
 }
+.error-text{
+    color: red;
+    font-size: 12px;
+    font-weight: bold;
+}

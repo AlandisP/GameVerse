@@ -2,20 +2,32 @@ import './styles.css';
 //import { useNavigate } from 'react-router-dom';
 import logo from '../images/GameVerse_LogoV2.png';
 import React, { useState } from 'react';
+import axios from 'axios';
+import { useNavigate} from 'react-router-dom';
 function LoginScreen() {
 
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
+    const history = useNavigate();
 
-    // const HandleLogin = async() => {
-    //     try {
-    //         if(!username || !password) {
-    //             setError('Please fill in the fields');
-    //             return;
-    //         }
-    //     }
-    // }
+    const HandleLogin = async() => {
+        try {
+            if(!username || !password) {
+                setError('Please fill in the fields');
+                return;
+            }
+            const response = await axios.post('http://localhost:8080/auth/login', {username, password});
+            console.log('Login Successful:', response.data);
+            localStorage.setItem('token', response.data.token);
+            localStorage.setItem('username', response.data.username);
+
+            history('/home');
+        } catch (error) {
+            console.error('Login failed:', error.response ? error.response.data: error.message);
+            setError('Invalid Username or Password');  
+        }
+    }
 
     const HandleClick = () =>{
         alert("I Clicked");
@@ -52,10 +64,12 @@ function LoginScreen() {
                 onChange={(e) => setPassword(e.target.value)}
                 />
             </div>
-            <button className = "LoginButton" onClick={HandleClick}>
+            <button className = "LoginButton" onClick={HandleLogin}>
                 Login
             </button>
-
+            <p className='error-text'>
+                Hola{error}
+            </p>
         </div>
         </div>
         </div>

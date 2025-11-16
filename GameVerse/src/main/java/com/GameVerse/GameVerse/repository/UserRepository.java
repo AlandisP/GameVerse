@@ -9,7 +9,7 @@ import com.GameVerse.GameVerse.model.User;
 @Repository
 public interface UserRepository extends MongoRepository<User, String>{
     User findByUsername(String username);
-    User findByEmail(String email);
+    //User findByEmail(String email);
     boolean existsByUsername(String username);
 }
 
