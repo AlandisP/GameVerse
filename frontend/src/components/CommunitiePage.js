@@ -1,11 +1,7 @@
-import React, { useState } from 'react';
-import { useNavigate} from 'react-router-dom';
-import { useLocation } from 'react-router-dom';
-function HomePage() {
-    const history = useNavigate();
-    const location = useLocation();
-    const username = location.state?.username;
-    return(
+import React from "react";
+
+function CommunitiesPage() {
+    return (
         <div>
             <nav className="nav-links" id="navLinks">
                 <a href="/home">Home</a>
@@ -17,11 +13,11 @@ function HomePage() {
             </nav>
 
             <h1 style={{ color: "white", textAlign: "center", marginTop: "50px" }}>
-                Home Page
+                Communities Page
             </h1>
-        </div>
 
+        </div>
     );
 }
 
-export default HomePage;
+export default CommunitiesPage;
