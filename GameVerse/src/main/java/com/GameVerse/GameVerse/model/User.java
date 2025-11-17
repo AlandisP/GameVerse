@@ -12,6 +12,7 @@ public class User {
     //private String email; //This is entirely optional
     private String username;
     private String password;
+    private String bio;
     private Role role;
 
     public User() {
@@ -30,6 +31,7 @@ public class User {
         //this.email = "";
         this.username = name;
         this.password = password;
+        this.bio = "";
         role = Role.USER;
     }
 
@@ -53,6 +55,10 @@ public class User {
         return role;
     }
 
+    public String getBio() {
+        return bio;
+    }
+
     public void setId(String id) {
         this.id = id;
     }
@@ -71,6 +77,10 @@ public class User {
 
     public void setRole(Role role) {
         this.role = role;
+    }
+
+    public void setBio(String bio) {
+        this.bio = bio;
     }
 
 

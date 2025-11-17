@@ -51,25 +51,23 @@ public class AuthController {
     
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest request) {
-        // Find user
         User user = userRepository.findByUsername(request.username);
         
         if (user == null) {
             return ResponseEntity.badRequest().body("Invalid username or password");
         }
         
-        // Check password
         if (!passwordEncoder.matches(request.password, user.getPassword())) {
             return ResponseEntity.badRequest().body("Invalid username or password");
         }
         
-        // Generate token
+    
         String token = jwtService.generateToken(user.getId(), user.getRole());
         
         return ResponseEntity.ok(new AuthResponse(token, user.getUsername(), user.getRole()));
     }
     
-    // Inner classes for requests/responses
+    // Inner classes
     static class LoginRequest {
         public String username;
         public String password;
