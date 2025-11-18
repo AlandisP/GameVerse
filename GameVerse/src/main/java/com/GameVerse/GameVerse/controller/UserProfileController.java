@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.GameVerse.GameVerse.controller.UserProfileController.ProfileUpdateRequest;
 import com.GameVerse.GameVerse.model.User;
 import com.GameVerse.GameVerse.repository.UserRepository;
 
@@ -47,9 +48,11 @@ public class UserProfileController {
         String userId = (String) auth.getPrincipal();
         User user = repository.findById(userId).orElseThrow();
         
-        if (req.bio != null) {
+        if (req.bio != null && !req.bio.trim().isEmpty()) {
             user.setBio(req.bio);
+            repository.save(user);
         }
+
         repository.save(user);
         return ResponseEntity.ok(user);
     }
@@ -59,18 +62,25 @@ public class UserProfileController {
     public ResponseEntity<?> editUserPassword(@RequestBody PasswordChangeRequest req, Authentication auth) {
         String userId = (String) auth.getPrincipal();
         User user = repository.findById(userId).orElseThrow();
-        req.oldPassword = user.getPassword();
+        
 
-        if(req.newPassword == null) {
-            if(passwordEncoder.encode(req.newPassword).equals(passwordEncoder.encode(req.oldPassword))) {
-                return ResponseEntity.badRequest().body("New password cannot be the same as the old password");
-            }
-            return ResponseEntity.badRequest().body("No password entered");
+        if(req.oldPassword == null || req.newPassword == null) {
+            return ResponseEntity.badRequest().body("Both old and new passwords are required");
+        }
+        
+
+        if(!passwordEncoder.matches(req.oldPassword, user.getPassword())) {
+            return ResponseEntity.badRequest().body("Old password is incorrect");
+        }
+        
+
+        if(req.oldPassword.equals(req.newPassword)) {
+            return ResponseEntity.badRequest().body("New password cannot be the same as the old password");
         }
 
         user.setPassword(passwordEncoder.encode(req.newPassword));
         repository.save(user);
-
+        
         return ResponseEntity.ok("Password has been changed");
     }
 
@@ -78,16 +88,26 @@ public class UserProfileController {
     public ResponseEntity<?> editUsername(@RequestBody UsernameChangeReq req, Authentication auth) {
         String userId = (String) auth.getPrincipal();
         User user = repository.findById(userId).orElseThrow();
-        req.oldUsername = user.getUsername();
-        if(req.newUsername.equals(repository.findByUsername(req.newUsername).getUsername())) {
+        
+
+        if(req.newUsername == null || req.newUsername.trim().isEmpty()) {
+            return ResponseEntity.badRequest().body("Username cannot be empty");
+        }
+        
+ 
+        User existingUser = repository.findByUsername(req.newUsername);
+        if(existingUser != null && !existingUser.getId().equals(userId)) {
             return ResponseEntity.badRequest().body("Username already exists");
         }
+        
+
         user.setUsername(req.newUsername);
         repository.save(user);
+        
         return ResponseEntity.ok(user);
     }
 
-    static class ProfileUpdateRequest {
+        static class ProfileUpdateRequest {
         public String bio;
     }
     
