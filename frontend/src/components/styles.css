@@ -3,7 +3,7 @@
     min-height: 100vh;
     overflow: hidden;
     color : white;
-    padding-bottom: 40px;
+    /* padding-bottom: 40px; */
 }
 
 .bg {
@@ -27,6 +27,7 @@ div {
 .logo {
     width: 60px;
     margin-left: 10px;
+    margin-right: auto;
 }
 
 .spacer {
