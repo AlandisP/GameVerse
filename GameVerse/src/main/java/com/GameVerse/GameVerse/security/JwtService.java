@@ -17,10 +17,10 @@ import io.jsonwebtoken.security.Keys;
 
 @Service
 public class JwtService {
-    @Value("${security.jwt.secret-key:561ecf7f164d0f4c9d7dcb74a6c385488a28dfed2f4adad9f8858e14c767cd2c}")
+    @Value("${security.jwt.secret-key}")
     private String secretKey;
 
-    @Value("${security.jwt.expiration-time:3600000}")
+    @Value("${security.jwt.expiration-time}")
     private long jwtExpiration;
 
         // Generate token with userId AND role

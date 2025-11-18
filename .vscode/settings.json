@@ -1,5 +1,7 @@
 {
     "java.compile.nullAnalysis.mode": "automatic",
     "git.ignoreLimitWarning": true,
-    "java.configuration.updateBuildConfiguration": "interactive"
+    "java.configuration.updateBuildConfiguration": "interactive",
+    "java.debug.settings.console": "integratedTerminal",
+    "terminal.explorerKind": "both"
 }
