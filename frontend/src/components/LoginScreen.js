@@ -66,6 +66,9 @@ function LoginScreen() {
             <button className = "LoginButton" onClick={HandleLogin}>
                 Login
             </button>
+            <p className='Create-Account'>
+                Don't have an account? <a  href = "/signup" className='CA-Link'>Create One?</a>
+            </p>
             <p className='error-text'>
                 {error}
             </p>

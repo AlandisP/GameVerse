@@ -3,7 +3,7 @@
     min-height: 100vh;
     overflow: hidden;
     color : white;
-    padding-bottom: 50px;
+    padding-bottom: 40px;
 }
 
 .bg {
@@ -78,6 +78,17 @@ div {
     height: 50px;
     border: none;
 }
+
+.LoginButton:hover{
+    margin-top: 40px;
+    background-color: #058afe81;
+    color:white;
+    border-radius: 25px;
+    width: 125px;
+    height: 50px;
+    border: none;
+}
+
 .SignupButton{
     margin-top: 40px;
     background-color: #058BFE;
@@ -133,4 +144,18 @@ div {
 }
 .login p{
     margin-right: 5px;
+}
+
+.CA-Link{
+    color: darkgray;
+    
+}
+
+.CA-Link:hover{
+    color: rgb(255, 255, 255);
+    
+}
+
+.Create-Account {
+    color: darkgrey;
 }

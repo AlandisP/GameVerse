@@ -9,6 +9,7 @@ import MessagePage from './components/MessagePage';
 import PartyFinderPage from './components/PartyFinderPage';
 import CommunitiesPage from './components/CommunitiesPage';
 import ProfilePage from './components/ProfilePage';
+import Signup from './components/Signup';
 
 function App() {
   return (
@@ -16,6 +17,7 @@ function App() {
         <Router>
               <Routes>
               <Route path="/" element={<LoginScreen/>} />
+                <Route path = "/signup" element = {<Signup/>}/>
                 <Route path = "/home" element={<HomePage/>}/>
                 <Route path="/explore" element={<ExplorePage />} />
                 <Route path="/messages" element={<MessagePage />} />

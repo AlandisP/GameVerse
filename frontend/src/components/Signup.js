@@ -94,6 +94,7 @@ function LoginScreen() {
                     <option value='PS'>Playstation</option>
                     <option value='PC'>PC</option>
                     <option value='XB'>Xbox</option>
+                    <option value='NI'>Nintendo</option>
                 </select>
             </div>
             <button className = "SignupButton" >
