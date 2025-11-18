@@ -53,8 +53,10 @@ public class UsersController {
     public String populateTestData() {
         repository.deleteAll(); // Clear existing data
 
-        User john = new User("john", passwordEncoder.encode("1234"));
+        User john = new User("alandis", passwordEncoder.encode("2190"));
+        User q = new User("q", passwordEncoder.encode("1234"));
         repository.save(john);
+        repository.save(q);
         
         // repository.save(new User("SadLingo", "a1234")); // if any of the group memebers is seeing this
                                                                             // these credentials are NOT real -_-

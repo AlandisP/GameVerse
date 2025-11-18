@@ -7,7 +7,7 @@ import LoginScreen from './components/LoginScreen';
 import ExplorePage from './components/ExplorePage';
 import MessagePage from './components/MessagePage';
 import PartyFinderPage from './components/PartyFinderPage';
-import CommunitiesPage from './components/CommunitiePage';
+import CommunitiesPage from './components/CommunitiesPage';
 import ProfilePage from './components/ProfilePage';
 
 function App() {
