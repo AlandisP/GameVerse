@@ -18,6 +18,9 @@ function HomePage() {
 
             <h1 style={{ color: "white", textAlign: "center", marginTop: "50px" }}>
                 Home Page
+                <div>
+                    <h3>Welcome {username}, you are logged in!</h3>
+                </div>
             </h1>
         </div>
 

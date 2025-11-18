@@ -57,7 +57,7 @@ function LoginScreen() {
                 <h3>Password</h3>
                 <input 
                 className="InputBox" 
-                type='text'
+                type='password'
                 id='passinput'
                 placeholder='Password'
                 onChange={(e) => setPassword(e.target.value)}
