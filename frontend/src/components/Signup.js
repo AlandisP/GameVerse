@@ -1,9 +1,11 @@
 import './styles.css';
-//import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import logo from '../images/GameVerse_LogoV2.png';
 import React, { useState } from 'react';
-function LoginScreen() {
+import axios from 'axios';
+function Signup() {
 
+    const history = useNavigate();
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [pwdverify, setVerify] = useState('');
@@ -11,6 +13,26 @@ function LoginScreen() {
 
     // const numbers = Array.from({ length: 77 }, (x, i) => i + 1950);
     // const days = Array.from({ length: 31 }, (x, i) => i + 1);
+
+    const HandleSignUp = async () => {
+        try {
+            if(!username || !password || !pwdverify) {
+                setError('Please fill in the fields');
+                return;
+            }
+            const response = await axios.post('http://localhost:8080/auth/signup', {username, password, pwdverify});
+            setError("Account Created!");
+            console.log('Create Account Successful:', response.data);
+            localStorage.setItem('token', response.data.token);
+            localStorage.setItem('username', response.data.username);
+            history('/home');
+        } catch(error) {
+            console.error('Account Creation failed:', error.response ? error.response.data: error.message);
+            setError(error.message);  
+        }
+        
+    } 
+
 
     return (
         <div className='App'>
@@ -97,7 +119,7 @@ function LoginScreen() {
                     <option value='NI'>Nintendo</option>
                 </select>
             </div>
-            <button className = "SignupButton" >
+            <button className = "SignupButton" onClick={HandleSignUp}>
                 Create Account
             </button>
             <div className='login'>
@@ -112,4 +134,4 @@ function LoginScreen() {
 
 }
 
-export default LoginScreen;
+export default Signup;

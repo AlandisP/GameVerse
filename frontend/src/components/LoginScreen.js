@@ -21,7 +21,7 @@ function LoginScreen() {
             console.log('Login Successful:', response.data);
             localStorage.setItem('token', response.data.token);
             localStorage.setItem('username', response.data.username);
-            history('/home', {state: {username: username}});
+            history('/home');
         } catch (error) {
             console.error('Login failed:', error.response ? error.response.data: error.message);
             setError('Invalid Username or Password');  

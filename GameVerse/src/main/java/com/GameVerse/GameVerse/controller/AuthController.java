@@ -34,6 +34,9 @@ public class AuthController {
         if (userRepository.existsByUsername(request.username)) {
             return ResponseEntity.badRequest().body("Username already exists");
         }
+        if (!(request.password.equals(request.confirmPassword))) {
+            return ResponseEntity.badRequest().body("Passwords don't match");
+        }
         
         // Create user
         User user = new User();
@@ -76,6 +79,7 @@ public class AuthController {
     static class RegisterRequest {
         public String username;
         public String password;
+        public String confirmPassword;
     }
     
     static class AuthResponse {

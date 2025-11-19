@@ -4,13 +4,14 @@ import { useNavigate, useLocation } from 'react-router-dom';
 function HomePage() {
     const navigate = useNavigate();
     const location = useLocation();
-    const username = location.state?.username;
+    const username = localStorage.getItem('username');
+    const token  = localStorage.getItem('token');
     const [activeTab, setActiveTab] = useState('home');
 
     const handleNavClick = (e, path, tabId) => {
         e.preventDefault();
         setActiveTab(tabId);
-        navigate(path, { state: { username } });
+
     };
 
     return(
