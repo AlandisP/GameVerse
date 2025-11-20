@@ -38,11 +38,15 @@ public class AuthController {
             return ResponseEntity.badRequest().body("Passwords don't match");
         }
         
+        if(request.username.contains(" ")) {
+            return ResponseEntity.badRequest().body("Username cannot contain spaces.");
+        }
         // Create user
         User user = new User();
         user.setUsername(request.username);
         user.setPassword(passwordEncoder.encode(request.password));
         user.setRole(Role.USER);
+        user.setBio("");
         
         User savedUser = userRepository.save(user);
         
@@ -54,7 +58,7 @@ public class AuthController {
     
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest request) {
-        User user = userRepository.findByUsername(request.username);
+        User user = userRepository.findByUsernameIgnoreCase(request.username);
         
         if (user == null) {
             return ResponseEntity.badRequest().body("Invalid username or password");

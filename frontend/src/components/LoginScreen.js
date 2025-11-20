@@ -67,7 +67,7 @@ function LoginScreen() {
                 Login
             </button>
             <p className='Create-Account'>
-                Don't have an account? <a  href = "/signup" className='CA-Link'>Create One?</a>
+                Don't have an account? <a  href = "/signup" className='CA-Link'>Create One!</a>
             </p>
             <p className='error-text'>
                 {error}

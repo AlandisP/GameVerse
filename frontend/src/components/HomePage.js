@@ -3,7 +3,6 @@ import { useNavigate, useLocation } from 'react-router-dom';
 
 function HomePage() {
     const navigate = useNavigate();
-    const location = useLocation();
     const username = localStorage.getItem('username');
     const token  = localStorage.getItem('token');
     const [activeTab, setActiveTab] = useState('home');
@@ -13,6 +12,12 @@ function HomePage() {
         setActiveTab(tabId);
 
     };
+
+    const handleLogout = () =>{
+        localStorage.removeItem('token');
+        localStorage.removeItem('username');
+        navigate('/');
+    }
 
     return(
         <div className="page-container">
@@ -112,7 +117,7 @@ function HomePage() {
                     <button 
                         className="logout-button"
                         onClick={() => {
-                            navigate('/login');
+                            handleLogout();
                         }}
                     >
                         <svg className="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">

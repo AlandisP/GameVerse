@@ -35,7 +35,7 @@ public class UserProfileController {
     
     @GetMapping("/{username}")
     public ResponseEntity<?> getUserProfile(@PathVariable String username) {
-        User user = repository.findByUsername(username);
+        User user = repository.findByUsernameIgnoreCase(username);
         if(user == null) {
             return ResponseEntity.notFound().build();
         }
@@ -94,7 +94,7 @@ public class UserProfileController {
         }
         
  
-        User existingUser = repository.findByUsername(req.newUsername);
+        User existingUser = repository.findByUsernameIgnoreCase(req.newUsername);
         if(existingUser != null && !existingUser.getId().equals(userId)) {
             return ResponseEntity.badRequest().body("Username already exists");
         }

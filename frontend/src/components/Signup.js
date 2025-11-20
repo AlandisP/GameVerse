@@ -8,7 +8,7 @@ function Signup() {
     const history = useNavigate();
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
-    const [pwdverify, setVerify] = useState('');
+    const [confirmPassword, setVerify] = useState('');
     const [error, setError] = useState('');
 
     // const numbers = Array.from({ length: 77 }, (x, i) => i + 1950);
@@ -16,11 +16,11 @@ function Signup() {
 
     const HandleSignUp = async () => {
         try {
-            if(!username || !password || !pwdverify) {
+            if(!username || !password || !confirmPassword) {
                 setError('Please fill in the fields');
                 return;
             }
-            const response = await axios.post('http://localhost:8080/auth/signup', {username, password, pwdverify});
+            const response = await axios.post('http://localhost:8080/auth/signup', {username, password, confirmPassword});
             setError("Account Created!");
             console.log('Create Account Successful:', response.data);
             localStorage.setItem('token', response.data.token);
@@ -28,7 +28,7 @@ function Signup() {
             history('/home');
         } catch(error) {
             console.error('Account Creation failed:', error.response ? error.response.data: error.message);
-            setError(error.message);  
+            setError(error.response.data);  
         }
         
     } 
@@ -59,7 +59,7 @@ function Signup() {
                 <h3>Password</h3>
                 <input 
                 className="InputBox" 
-                type='text'
+                type='password'
                 id='passinput'
                 placeholder='Password'
                 onChange={(e) => setPassword(e.target.value)}
@@ -69,7 +69,7 @@ function Signup() {
                 <h3>Confirm Password</h3>
                 <input 
                 className="InputBox" 
-                type='text'
+                type='password'
                 id='passinput'
                 placeholder='Password'
                 onChange={(e) => setVerify(e.target.value)}
@@ -119,13 +119,15 @@ function Signup() {
                     <option value='NI'>Nintendo</option>
                 </select>
             </div>
-            <button className = "SignupButton" onClick={HandleSignUp}>
+            <button className = "LoginButton" onClick={HandleSignUp}>
                 Create Account
             </button>
-            <div className='login'>
-                <p>Already have an account?</p>
-                <p>Log In!</p>
-            </div>
+            <p className='Create-Account'>
+                Already have an Account? <a  href = "/" className='CA-Link'>Log In!</a>
+            </p>
+            <p className='error-text'>
+                {error}
+            </p>
 
         </div>
         </div>
