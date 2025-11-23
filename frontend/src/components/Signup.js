@@ -25,6 +25,7 @@ function Signup() {
             console.log('Create Account Successful:', response.data);
             localStorage.setItem('token', response.data.token);
             localStorage.setItem('username', response.data.username);
+            localStorage.setItem('page', '/');
             history('/home');
         } catch(error) {
             console.error('Account Creation failed:', error.response ? error.response.data: error.message);
