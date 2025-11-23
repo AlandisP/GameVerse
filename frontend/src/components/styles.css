@@ -309,7 +309,6 @@ nav.sidebar div,
 .main-content {
     margin-left: 16rem; 
     flex: 1;
-    padding: 2rem;
     overflow-y: auto;
     background-color: #373737;
 }
@@ -321,5 +320,42 @@ nav.sidebar div,
     
     .main-content {
         margin-left: 0;
+    }
+}
+
+.Message-Title {
+    margin-top: .5rem;
+    text-align: center;
+}
+
+.mainPortion {
+    height: 100vh;
+    width: 300px;
+    background-color: blueviolet;
+    overflow-y: auto;
+    position: fixed;
+}
+
+.search {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    background-color: transparent;
+
+    .search-bar{
+        flex:1;
+        background-color: white;
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        border-radius: 20px;
+        padding: 10px 20px;
+
+        input {
+            background-color: transparent;
+            border: none;
+            color: black;
+            flex:1;
+        }
     }
 }

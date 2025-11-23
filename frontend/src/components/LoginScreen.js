@@ -28,10 +28,6 @@ function LoginScreen() {
         }
     }
 
-    const HandleClick = () =>{
-        alert("I Clicked");
-    }
-
     return (
         <div className='App'>
             <div className='bg'>
