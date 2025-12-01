@@ -14,6 +14,8 @@ public class User {
     private String password;
     private String bio;
     private Role role;
+    private int followerCount;
+    private int followingCount;
 
     public User() {
 
@@ -32,6 +34,8 @@ public class User {
         this.username = name;
         this.password = password;
         this.bio = "";
+        this.followerCount = 0;
+        this.followingCount = 0;
         role = Role.USER;
     }
 
@@ -39,9 +43,13 @@ public class User {
         return this.id;
     }
 
-    // public String getEmail() {
-    //     return email;
-    // }
+    public int getFollowerCount() {
+        return followerCount;
+    }
+
+    public int getFollowingCount() {
+        return followingCount;
+    }
 
     public String getUsername() {
         return username;
@@ -63,9 +71,13 @@ public class User {
         this.id = id;
     }
 
-    // public void setEmail(String email) {
-    //     this.email = email;
-    // }
+    public void setFollowingCount(int followingCount) {
+        this.followingCount = followingCount;
+    }
+
+    public void setFollowerCount(int followerCount) {
+        this.followerCount = followerCount;
+    }
 
     public void setUsername(String username) {
         this.username = username;
