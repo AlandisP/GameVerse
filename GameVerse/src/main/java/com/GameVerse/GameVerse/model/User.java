@@ -13,6 +13,7 @@ public class User {
     private String username;
     private String password;
     private String bio;
+    private String platform;
     private Role role;
     private int followerCount;
     private int followingCount;
@@ -36,7 +37,12 @@ public class User {
         this.bio = "";
         this.followerCount = 0;
         this.followingCount = 0;
+        this.platform = "";
         role = Role.USER;
+    }
+
+    public String getPlatform() {
+        return platform;
     }
 
     public String getId() {
@@ -65,6 +71,10 @@ public class User {
 
     public String getBio() {
         return bio;
+    }
+
+    public void setPlatform(String platform) {
+        this.platform = platform;
     }
 
     public void setId(String id) {
