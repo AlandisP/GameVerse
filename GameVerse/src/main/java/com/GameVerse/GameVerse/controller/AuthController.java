@@ -47,6 +47,7 @@ public class AuthController {
         user.setPassword(passwordEncoder.encode(request.password));
         user.setRole(Role.USER);
         user.setBio("");
+        user.setPlatform(request.platform);
         
         User savedUser = userRepository.save(user);
         
@@ -84,6 +85,7 @@ public class AuthController {
         public String username;
         public String password;
         public String confirmPassword;
+        public String platform;
     }
     
     static class AuthResponse {

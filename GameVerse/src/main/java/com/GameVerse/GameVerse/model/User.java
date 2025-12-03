@@ -13,7 +13,10 @@ public class User {
     private String username;
     private String password;
     private String bio;
+    private String platform;
     private Role role;
+    private int followerCount;
+    private int followingCount;
 
     public User() {
 
@@ -32,16 +35,27 @@ public class User {
         this.username = name;
         this.password = password;
         this.bio = "";
+        this.followerCount = 0;
+        this.followingCount = 0;
+        this.platform = "";
         role = Role.USER;
+    }
+
+    public String getPlatform() {
+        return platform;
     }
 
     public String getId() {
         return this.id;
     }
 
-    // public String getEmail() {
-    //     return email;
-    // }
+    public int getFollowerCount() {
+        return followerCount;
+    }
+
+    public int getFollowingCount() {
+        return followingCount;
+    }
 
     public String getUsername() {
         return username;
@@ -59,13 +73,21 @@ public class User {
         return bio;
     }
 
+    public void setPlatform(String platform) {
+        this.platform = platform;
+    }
+
     public void setId(String id) {
         this.id = id;
     }
 
-    // public void setEmail(String email) {
-    //     this.email = email;
-    // }
+    public void setFollowingCount(int followingCount) {
+        this.followingCount = followingCount;
+    }
+
+    public void setFollowerCount(int followerCount) {
+        this.followerCount = followerCount;
+    }
 
     public void setUsername(String username) {
         this.username = username;

@@ -10,9 +10,14 @@ function Signup() {
     const [password, setPassword] = useState('');
     const [confirmPassword, setVerify] = useState('');
     const [error, setError] = useState('');
+    const [selectedValue, setSelectedValue] = useState('');
 
     // const numbers = Array.from({ length: 77 }, (x, i) => i + 1950);
     // const days = Array.from({ length: 31 }, (x, i) => i + 1);
+
+    const HandleChange = (e) => {
+        setSelectedValue(e.target.value);
+    }
 
     const HandleSignUp = async () => {
         try {
@@ -20,11 +25,12 @@ function Signup() {
                 setError('Please fill in the fields');
                 return;
             }
-            const response = await axios.post('http://localhost:8080/auth/signup', {username, password, confirmPassword});
+            const response = await axios.post('http://localhost:8080/auth/signup', {username, password, confirmPassword, selectedValue});
             setError("Account Created!");
             console.log('Create Account Successful:', response.data);
             localStorage.setItem('token', response.data.token);
             localStorage.setItem('username', response.data.username);
+            localStorage.setItem('page', '/');
             history('/home');
         } catch(error) {
             console.error('Account Creation failed:', error.response ? error.response.data: error.message);
@@ -111,7 +117,7 @@ function Signup() {
                 <div className='Plat'>
                     <h3>Platform</h3>
                 </div>
-                <select name='Platform' required>
+                <select name='Platform' required value={selectedValue} onChange={setSelectedValue}>
                     <option selected disabled hidden>Select Platform</option>
                     <option value='PS'>Playstation</option>
                     <option value='PC'>PC</option>
