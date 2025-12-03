@@ -19,9 +19,24 @@ function PartyFinderPage() {
             <NavBar/>
 
             <div className="main-content">
-                <h1 style={{ color: "white", textAlign: "center", marginTop: "50px" }}>
-                    Party Finder Page
-                </h1>
+
+                 <div style={{ 
+        borderBottom: "1px solid #000000ff", 
+        paddingBottom: "10px",
+        marginLeft: "-20px", 
+        paddingLeft: "20px" 
+    }}>
+        <h1 style={{ 
+            color: "white", 
+            textAlign: "left",
+            marginTop: "50px",
+            marginLeft: "20px",
+            marginBottom: "0"
+        }}>
+            Party Finder
+        </h1>
+    </div>
+                
                 <div>
                     <h3 style={{ color: "white", textAlign: "center" }}>
                         Find your gaming squad, {username}!
