@@ -25,15 +25,28 @@ function HomePage() {
         <div className="page-container">
             <NavBar/>
             <div className="main-content">
-                <h1 style={{ color: "white", textAlign: "center", marginTop: "50px" }}>
-                    Home Page
-                </h1>
-                <div>
-                    <h3 style={{ color: "white", textAlign: "center" }}>
-                        Welcome {username}, you are logged in!
-                    </h3>
-                </div>
-            </div>
+    <div style={{ 
+        borderBottom: "1px solid #000000ff", 
+        paddingBottom: "10px",
+        marginLeft: "-20px", 
+        paddingLeft: "20px" 
+    }}>
+        <h1 style={{ 
+            color: "white", 
+            textAlign: "left",
+            marginTop: "50px",
+            marginLeft: "20px",
+            marginBottom: "0"
+        }}>
+            Feed
+        </h1>
+    </div>
+    <div>
+        <h3 style={{ color: "white", textAlign: "center" }}>
+            Welcome {username}, you are logged in!
+        </h3>
+    </div>
+</div>
         </div>
     );
 }
