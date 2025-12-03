@@ -6,55 +6,38 @@ import org.springframework.data.mongodb.core.mapping.Document;
 
 @Document(collection = "users")
 public class User {
+
     @Id
     private String id;
-    @Indexed(unique = true)  
-    //private String email; //This is entirely optional
+
+    @Indexed(unique = true)
     private String username;
+
     private String password;
     private String bio;
     private String platform;
     private Role role;
+
+    // These are COUNT values only.
     private int followerCount;
     private int followingCount;
 
-    public User() {
+    public User() {}
 
-    }
-
-    // public User(String name, String password, String email) {
-    //     this.email = email;
-    //     this.username = name;
-    //     this.password = password;
-    //     role = Role.USER;
-
-    // }
-
-    public User(String name, String password) {
-        //this.email = "";
-        this.username = name;
+    public User(String username, String password) {
+        this.username = username;
         this.password = password;
         this.bio = "";
+        this.platform = "";
+        this.role = Role.USER;
         this.followerCount = 0;
         this.followingCount = 0;
-        this.platform = "";
-        role = Role.USER;
     }
 
-    public String getPlatform() {
-        return platform;
-    }
+    // ---- Getters ----
 
     public String getId() {
-        return this.id;
-    }
-
-    public int getFollowerCount() {
-        return followerCount;
-    }
-
-    public int getFollowingCount() {
-        return followingCount;
+        return id;
     }
 
     public String getUsername() {
@@ -65,28 +48,30 @@ public class User {
         return password;
     }
 
-    public Role getRole() {
-        return role;
-    }
-
     public String getBio() {
         return bio;
     }
 
-    public void setPlatform(String platform) {
-        this.platform = platform;
+    public String getPlatform() {
+        return platform;
     }
+
+    public Role getRole() {
+        return role;
+    }
+
+    public int getFollowerCount() {
+        return followerCount;
+    }
+
+    public int getFollowingCount() {
+        return followingCount;
+    }
+
+    // ---- Setters ----
 
     public void setId(String id) {
         this.id = id;
-    }
-
-    public void setFollowingCount(int followingCount) {
-        this.followingCount = followingCount;
-    }
-
-    public void setFollowerCount(int followerCount) {
-        this.followerCount = followerCount;
     }
 
     public void setUsername(String username) {
@@ -97,15 +82,23 @@ public class User {
         this.password = password;
     }
 
-    public void setRole(Role role) {
-        this.role = role;
-    }
-
     public void setBio(String bio) {
         this.bio = bio;
     }
 
+    public void setPlatform(String platform) {
+        this.platform = platform;
+    }
 
+    public void setRole(Role role) {
+        this.role = role;
+    }
 
+    public void setFollowerCount(int followerCount) {
+        this.followerCount = followerCount;
+    }
 
+    public void setFollowingCount(int followingCount) {
+        this.followingCount = followingCount;
+    }
 }
