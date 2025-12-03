@@ -3,31 +3,6 @@ import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 import "./styles.css";
 
-// -------- Helper placeholders (until backend features arrive) -------------//
-const placeholderActivity = [
-    {
-        title: "Won Valorant Tournament",
-        subtitle: "Platinum League Finals - 1st Place",
-        time: "2 hours ago",
-    },
-    {
-        title: "Completed 100 Wins Challenge",
-        subtitle: "CS:GO Competitive",
-        time: "3 days ago",
-    },
-];
-
-const placeholderFriends = [
-    { name: "SniperElite", status: "Offline" },
-    { name: "TankMaster", status: "Offline" },
-    { name: "RushKing3", status: "Online" },
-    { name: "RushKing44", status: "Offline" },
-    { name: "SupportQueen", status: "In Game" },
-    { name: "RushKing", status: "Online" },
-    { name: "StealthNinja", status: "Online" },
-];
-// ----------------------------------------------------------------------------- //
-
 function ProfilePage() {
     const { username } = useParams();
     const navigate = useNavigate();
@@ -38,7 +13,7 @@ function ProfilePage() {
     const [bio, setBio] = useState("");
     const [loading, setLoading] = useState(true);
     const [editMode, setEditMode] = useState(false);
-    const [activeTab, setActiveTab] = useState('profile');
+    const [activeTab, setActiveTab] = useState("posts");
 
     useEffect(() => {
         const fetchProfile = async () => {
@@ -47,7 +22,6 @@ function ProfilePage() {
                 let res;
 
                 if (username) {
-                    // Viewing someone else's profile
                     res = await axios.get(
                         `http://localhost:8080/profile/${username}`,
                         token
@@ -55,7 +29,6 @@ function ProfilePage() {
                             : undefined
                     );
                 } else {
-                    // Viewing own profile
                     res = await axios.get("http://localhost:8080/profile", {
                         headers: { Authorization: `Bearer ${token}` },
                     });
@@ -84,9 +57,9 @@ function ProfilePage() {
     };
 
     const handleLogout = () => {
-        localStorage.removeItem('token');
-        localStorage.removeItem('username');
-        navigate('/');
+        localStorage.removeItem("token");
+        localStorage.removeItem("username");
+        navigate("/");
     };
 
     const handleSaveBio = async () => {
@@ -103,16 +76,16 @@ function ProfilePage() {
         }
     };
 
-    // Create a reusable Sidebar component function
+    // Sidebar Component
     const Sidebar = () => (
         <nav className="sidebar">
             <div className="sidebar-header">
                 <div className="sidebar-logo">
                     <div className="logo-icon">
-                        <img 
-                            src={require('../images/GameVerse_Logo.png')} 
-                            alt="GameVerse Logo" 
-                            style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+                        <img
+                            src={require("../images/GameVerse_Logo.png")}
+                            alt="GameVerse Logo"
+                            style={{ width: "100%", height: "100%", objectFit: "contain" }}
                         />
                     </div>
                     <span className="logo-text">GameVerse</span>
@@ -121,69 +94,51 @@ function ProfilePage() {
 
             <div className="nav-items">
                 <div className="nav-links">
-                    <a 
-                        href="/home" 
-                        className={activeTab === 'home' ? 'active' : ''}
-                        onClick={(e) => handleNavClick(e, '/home', 'home')}
+                    <a
+                        href="/home"
+                        className={activeTab === "home" ? "active" : ""}
+                        onClick={(e) => handleNavClick(e, "/home", "home")}
                     >
-                        <svg className="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-                        </svg>
                         Home
                     </a>
-                    
-                    <a 
+
+                    <a
                         href="/explore"
-                        className={activeTab === 'explore' ? 'active' : ''}
-                        onClick={(e) => handleNavClick(e, '/explore', 'explore')}
+                        className={activeTab === "explore" ? "active" : ""}
+                        onClick={(e) => handleNavClick(e, "/explore", "explore")}
                     >
-                        <svg className="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                        </svg>
                         Explore
                     </a>
-                    
-                    <a 
+
+                    <a
                         href="/messages"
-                        className={activeTab === 'messages' ? 'active' : ''}
-                        onClick={(e) => handleNavClick(e, '/messages', 'messages')}
+                        className={activeTab === "messages" ? "active" : ""}
+                        onClick={(e) => handleNavClick(e, "/messages", "messages")}
                     >
-                        <svg className="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                        </svg>
                         Messages
                     </a>
-                    
-                    <a 
+
+                    <a
                         href="/partyfinder"
-                        className={activeTab === 'partyfinder' ? 'active' : ''}
-                        onClick={(e) => handleNavClick(e, '/partyfinder', 'partyfinder')}
+                        className={activeTab === "partyfinder" ? "active" : ""}
+                        onClick={(e) => handleNavClick(e, "/partyfinder", "partyfinder")}
                     >
-                        <svg className="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                        </svg>
                         Party Finder
                     </a>
-                    
-                    <a 
+
+                    <a
                         href="/communities"
-                        className={activeTab === 'communities' ? 'active' : ''}
-                        onClick={(e) => handleNavClick(e, '/communities', 'communities')}
+                        className={activeTab === "communities" ? "active" : ""}
+                        onClick={(e) => handleNavClick(e, "/communities", "communities")}
                     >
-                        <svg className="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
-                        </svg>
                         Communities
                     </a>
-                    
-                    <a 
+
+                    <a
                         href="/profile"
-                        className={activeTab === 'profile' ? 'active' : ''}
-                        onClick={(e) => handleNavClick(e, '/profile', 'profile')}
+                        className={activeTab === "profile" ? "active" : ""}
+                        onClick={(e) => handleNavClick(e, "/profile", "profile")}
                     >
-                        <svg className="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                        </svg>
                         Profile
                     </a>
                 </div>
@@ -191,21 +146,11 @@ function ProfilePage() {
 
             <div className="sidebar-footer">
                 <button className="user-profile">
-                    <svg className="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                    </svg>
-                    <span>@{loggedInUsername || 'Guest'}</span>
+                    <span>@{loggedInUsername || "Guest"}</span>
                 </button>
 
-                <button 
-                    className="logout-button"
-                    onClick={handleLogout}
-                >
-                    <svg className="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                    </svg>
-                    <span>Logout</span>
+                <button className="logout-button" onClick={handleLogout}>
+                    Logout
                 </button>
             </div>
         </nav>
@@ -237,159 +182,173 @@ function ProfilePage() {
         !username || username.toLowerCase() === loggedInUsername?.toLowerCase();
 
     return (
-        <div className="main-content" style={{ color: "white" }}>
-            {/* ------------------------------------------------------
-                 PROFILE HEADER (Twitter-style)
-            ------------------------------------------------------- */}
-            <div
-                style={{
-                    backgroundColor: "#2f2f2f",
-                    paddingBottom: "20px",
-                    borderRadius: "0 0 12px 12px",
-                    marginBottom: "25px",
-                    position: "relative",
-                }}
-            >
-                {/* Banner placeholder */}
+        <div className="page-container">
+            <Sidebar />
+
+            <div className="main-content" style={{ color: "white" }}>
+                {/* HEADER */}
                 <div
                     style={{
-                        height: "150px",
-                        backgroundColor: "#3f4b5b",
+                        backgroundColor: "#2f2f2f",
+                        paddingBottom: "20px",
                         borderRadius: "0 0 12px 12px",
+                        marginBottom: "25px",
+                        position: "relative",
                     }}
-                ></div>
+                >
+                    {/* Banner */}
+                    <div
+                        style={{
+                            height: "150px",
+                            backgroundColor: "#3f4b5b",
+                            borderRadius: "0 0 12px 12px",
+                        }}
+                    ></div>
 
-                {/* Avatar */}
-                <div
-                    style={{
-                        position: "absolute",
-                        top: "90px",
-                        left: "30px",
-                        width: "120px",
-                        height: "120px",
-                        borderRadius: "50%",
-                        backgroundColor: "#1c1c1c",
-                        border: "4px solid #2f2f2f",
-                    }}
-                ></div>
+                    {/* Avatar */}
+                    <div
+                        style={{
+                            position: "absolute",
+                            top: "90px",
+                            left: "30px",
+                            width: "120px",
+                            height: "120px",
+                            borderRadius: "50%",
+                            backgroundColor: "#1c1c1c",
+                            border: "4px solid #2f2f2f",
+                        }}
+                    ></div>
 
-                {/* Username + Edit Button */}
-                <div style={{ padding: "20px", marginTop: "40px" }}>
-                    <div style={{ display: "flex", justifyContent: "space-between" }}>
-                        <div>
-                            <h1 style={{ marginBottom: "5px" }}>{profile.username}</h1>
-                            <p style={{ marginTop: 0, color: "#aaaaaa" }}>
-                                @{profile.username}
-                            </p>
+                    {/* Username */}
+                    <div style={{ padding: "20px", marginTop: "40px" }}>
+                        <div style={{ display: "flex", justifyContent: "space-between" }}>
+                            <div>
+                                <h1 style={{ marginBottom: "5px" }}>{profile.username}</h1>
+                                <p style={{ marginTop: 0, color: "#aaaaaa" }}>
+                                    @{profile.username}
+                                </p>
+                            </div>
+
+                            {isOwnProfile && !editMode && (
+                                <button
+                                    onClick={() => setEditMode(true)}
+                                    style={{
+                                        marginTop: "10px",
+                                        padding: "10px 20px",
+                                        backgroundColor: "#058BFE",
+                                        color: "white",
+                                        border: "none",
+                                        borderRadius: "10px",
+                                        cursor: "pointer",
+                                    }}
+                                >
+                                    Edit Bio
+                                </button>
+                            )}
                         </div>
 
-                        {isOwnProfile && !editMode && (
-                            <button
-                                onClick={() => setEditMode(true)}
-                                style={{
-                                    marginTop: "10px",
-                                    padding: "10px 20px",
-                                    backgroundColor: "#058BFE",
-                                    color: "white",
-                                    border: "none",
-                                    borderRadius: "10px",
-                                    cursor: "pointer",
-                                }}
-                            >
-                                Edit Bio
-                            </button>
+                        {/* Bio */}
+                        {editMode ? (
+                            <>
+                                <textarea
+                                    value={bio}
+                                    onChange={(e) => setBio(e.target.value)}
+                                    style={{
+                                        width: "100%",
+                                        height: "80px",
+                                        borderRadius: "10px",
+                                        padding: "10px",
+                                        backgroundColor: "#444",
+                                        color: "white",
+                                    }}
+                                />
+                                <br />
+                                <button
+                                    onClick={handleSaveBio}
+                                    style={{
+                                        marginTop: "10px",
+                                        padding: "8px 15px",
+                                        backgroundColor: "#058BFE",
+                                        border: "none",
+                                        borderRadius: "20px",
+                                        cursor: "pointer",
+                                        color: "white",
+                                    }}
+                                >
+                                    Save
+                                </button>
+
+                                <button
+                                    onClick={() => setEditMode(false)}
+                                    style={{
+                                        marginLeft: "10px",
+                                        marginTop: "10px",
+                                        padding: "8px 15px",
+                                        backgroundColor: "#777",
+                                        border: "none",
+                                        borderRadius: "20px",
+                                        cursor: "pointer",
+                                        color: "white",
+                                    }}
+                                >
+                                    Cancel
+                                </button>
+                            </>
+                        ) : (
+                            <p>{profile.bio || "No bio yet."}</p>
                         )}
                     </div>
                 </div>
 
-                {/* ------------------------------------------------------
-                     RECENT ACTIVITY
-                ------------------------------------------------------- */}
+                {/* TABS */}
                 <div
                     style={{
-                        backgroundColor: "#2f2f2f",
-                        padding: "25px",
-                        borderRadius: "12px",
-                        marginBottom: "30px",
+                        borderBottom: "1px solid #444",
+                        marginBottom: "15px",
+                        display: "flex",
+                        justifyContent: "space-around",
                     }}
                 >
-                    <h2>Recent Activity</h2>
-
-                    {placeholderActivity.map((act, index) => (
-                        <div
-                            key={index}
+                    {["posts", "media", "likes"].map((tab) => (
+                        <button
+                            key={tab}
+                            onClick={() => setActiveTab(tab)}
                             style={{
-                                backgroundColor: "#3b3b3b",
-                                padding: "15px",
-                                borderRadius: "10px",
-                                marginTop: "15px",
-                                display: "flex",
-                                justifyContent: "space-between",
-                                alignItems: "center",
+                                flex: 1,
+                                padding: "12px",
+                                backgroundColor: "transparent",
+                                color: activeTab === tab ? "#058BFE" : "#aaaaaa",
+                                border: "none",
+                                borderBottom:
+                                    activeTab === tab ? "3px solid #058BFE" : "none",
+                                fontSize: "1rem",
+                                cursor: "pointer",
                             }}
                         >
-                            <div>
-                                <h4 style={{ margin: 0 }}>{act.title}</h4>
-                                <p style={{ margin: 0, color: "#bbbbbb" }}>{act.subtitle}</p>
-                            </div>
-                            <span style={{ color: "#aaaaaa" }}>{act.time}</span>
-                        </div>
+                            {tab.charAt(0).toUpperCase() + tab.slice(1)}
+                        </button>
                     ))}
                 </div>
 
-            {/* ------------------------------------------------------
-     TABS (Posts / Media / Likes)
-------------------------------------------------------- */}
-<div
-    style={{
-        borderBottom: "1px solid #444",
-        marginBottom: "15px",
-        display: "flex",
-        justifyContent: "space-around",
-    }}
->
-    {["posts", "media", "likes"].map((tab) => (
-        <button
-            key={tab}
-            onClick={() => setActiveTab(tab)}
-            style={{
-                flex: 1,
-                padding: "12px",
-                backgroundColor: "transparent",
-                color: activeTab === tab ? "#058BFE" : "#aaaaaa",
-                border: "none",
-                borderBottom:
-                    activeTab === tab ? "3px solid #058BFE" : "none",
-                fontSize: "1rem",
-                cursor: "pointer",
-            }}
-        >
-            {tab.charAt(0).toUpperCase() + tab.slice(1)}
-        </button>
-    ))}
-</div>
+                {/* TAB CONTENT */}
+                {activeTab === "posts" && (
+                    <p style={{ color: "#888", textAlign: "center", marginTop: "20px" }}>
+                        No posts yet.
+                    </p>
+                )}
 
-{/* ------------------------------------------------------
-     TAB CONTENT (Posts / Media / Likes)
-------------------------------------------------------- */}
-{activeTab === "posts" && (
-    <p style={{ color: "#888", textAlign: "center", marginTop: "20px" }}>
-        No posts yet.
-    </p>
-)}
+                {activeTab === "media" && (
+                    <p style={{ color: "#888", textAlign: "center", marginTop: "20px" }}>
+                        No media uploaded yet.
+                    </p>
+                )}
 
-{activeTab === "media" && (
-    <p style={{ color: "#888", textAlign: "center", marginTop: "20px" }}>
-        No media uploaded yet.
-    </p>
-)}
-
-{activeTab === "likes" && (
-    <p style={{ color: "#888", textAlign: "center", marginTop: "20px" }}>
-        No liked posts yet.
-    </p>
-)}
-
+                {activeTab === "likes" && (
+                    <p style={{ color: "#888", textAlign: "center", marginTop: "20px" }}>
+                        No liked posts yet.
+                    </p>
+                )}
+            </div>
         </div>
     );
 }
