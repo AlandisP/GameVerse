@@ -117,7 +117,7 @@ function Signup() {
                 <div className='Plat'>
                     <h3>Platform</h3>
                 </div>
-                <select name='Platform' required value={selectedValue} onChange={setSelectedValue}>
+                <select name='Platform' required>
                     <option selected disabled hidden>Select Platform</option>
                     <option value='PS'>Playstation</option>
                     <option value='PC'>PC</option>
