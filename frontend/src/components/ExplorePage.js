@@ -1,5 +1,7 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
+import "../styles/ExplorePage.css";
 
 function ExplorePage() {
   const navigate = useNavigate();
@@ -11,65 +13,88 @@ function ExplorePage() {
     navigate(path);
   };
 
-  const handleLogout = (e) => {
+  const hanleLogout = () => {
     e.preventDefault();
-    localStorage.removeItem("token");
+    localStorage.removeItem("authToken");
     localStorage.removeItem("username");
-    navigate("/");
+    navigate("/login");
   };
 
   const [posts, setPosts] = useState([]);
-  const [loadingPosts, setLoadingPosts] = useState(true);
-  const [postsError, setPostsError] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const abortRef = useRef(null);
+
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState([]);
+  const [searchLoading, setSearchLoading] = useState(false);
+  const [searchError, setSearchError] = useState(null);
+  const searchControllerRef = useRef(null);
+  const searchDebounceRef = useRef(null);
 
   useEffect(() => {
     let mounted = true;
-    const token = localStorage.getItem("token");
+    const token = localStorage.getItem("authToken");
+
+    if (abortRef.current) {
+      abortRef.current.abort();
+    }
+
+    const controller = new AbortController();
+    abortRef.current = controller;
 
     const fetchPosts = async () => {
-      setLoadingPosts(true);
+      setLoading(true);
+      setError(null);
+
       try {
-        const res = await fetch("/api/posts/explore", {
-          headers: token
-            ? {
-                Authorization: `Bearer ${token}`,
-                "Content-Type": "application/json",
-              }
-            : { "Content-Type": "application/json" },
+        const response = await axios.get("/api/posts/explore", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          signal: controller.signal,
         });
 
-        if (!res.ok) {
-          throw new Error(`Error: ${res.status} ${res.statusText}`);
+        if (!mounted) {
+          return;
         }
 
-        const data = await res.json();
-        if (mounted) {
-          setPosts(Array.isArray(data) ? data : []);
+        const data = response.data;
+        setPosts(Array.isArray(data) ? data : []);
+      } catch (err) {
+        if (err?.code === "ERR_CANCELED" || err?.name === "CanceledError") {
+          return;
         }
-      } catch (error) {
-        console.error("Failed to fetch posts:", error);
-        if (mounted) {
-          setPostsError(error.message || "Failed to load posts.");
-          setPosts([
-            {
-              id: "demo-1",
-              author: "DemoUser",
-              content: "Looking for teammates tonight. DM me!",
-              createdAt: new Date().toISOString(),
-              likes: 2,
-            },
-            {
-              id: "demo-2",
-              author: "GamerGal",
-              content: "New patch notes are wild. Who's tried the new map?",
-              createdAt: new Date(Date.now() - 1000 * 60 * 60).toISOString(),
-              likes: 7,
-            },
-          ]);
+
+        console.error("Failed to fetch posts", err);
+
+        if (!mounted) {
+          return;
         }
+
+        setPostsError(error.response?.data?.message || "Failed to load posts.");
+
+        setPosts([
+          {
+            id: "demo-1",
+            author: "DemoUser",
+            content: "Looking for teammates tonight. DM me!",
+            createdAt: new Date().toISOString(),
+            likes: 2,
+            liked: false,
+          },
+          {
+            id: "demo-2",
+            author: "GamerGal",
+            content: "New patch notes are wild. Who's tried the new map?",
+            createdAt: new Date(Date.now() - 1000 * 60 * 60).toISOString(),
+            likes: 7,
+            liked: false,
+          },
+        ]);
       } finally {
         if (mounted) {
-          setLoadingPosts(false);
+          setLoading(false);
         }
       }
     };
@@ -78,14 +103,105 @@ function ExplorePage() {
 
     return () => {
       mounted = false;
+      controller.abort();
     };
   }, []);
 
-  const handleLike = (postId) => {
-    setPosts((prev) =>
-      prev.map((p) => (p.id === postId ? { ...p, likes: p.likes + 1 } : p))
+  const handleLike = async (postId) => {
+    setPosts((prevPosts) =>
+      prevPosts.map((post) =>
+        post.id === postId
+          ? {
+              ...post,
+              liked: !post.liked,
+              likes: post.liked ? post.likes - 1 : post.likes + 1,
+            }
+          : post
+      )
     );
+
+    try {
+      await axios.post(
+        `http://localhost:8080/api/posts/${encodeURIComponent(postId)}/like`
+      );
+    } catch (err) {
+      console.error("Failed to update like status", err);
+      setPosts((prevPosts) =>
+        prevPosts.map((post) =>
+          post.id === postId
+            ? {
+                ...post,
+                liked: !post.liked,
+                likes: post.liked ? post.likes - 1 : post.likes + 1,
+              }
+            : post
+        )
+      );
+    }
   };
+
+  useEffect(() => {
+    if (!searchQuery || searchQuery.trim().length === 0) {
+      setSearchResults([]);
+      setSearchError(null);
+      setSearchLoading(false);
+      return;
+    }
+
+    if (searchDebounceRef.current) {
+      clearTimeout(searchDebounceRef.current);
+    }
+
+    searchDebounceRef.current = setTimeout(() => {
+      if (searchControllerRef.current) {
+        searchControllerRef.current.abort();
+      }
+      const controller = new AbortController();
+      searchControllerRef.current = controller;
+
+      const performSearch = async () => {
+        setSearchLoading(true);
+        setSearchError(null);
+
+        const token = localStorage.getItem("authToken");
+
+        try {
+          const response = await axios.get("/api/posts/search", {
+            params: { q: searchQuery },
+            headers: { Authorization: `Bearer ${token}` },
+            signal: controller.signal,
+          });
+
+          const data = response.data;
+          setSearchResults(Array.isArray(data) ? data : []);
+        } catch (err) {
+          if (err?.code === "ERR_CANCELED" || err?.name === "CanceledError") {
+            return;
+          }
+          console.error("Search failed", err);
+          setSearchError(err.response?.data?.message || "Search failed.");
+        } finally {
+          setSearchLoading(false);
+        }
+      };
+
+      performSearch();
+    }, 500);
+
+    return () => {
+      if (searchDebounceRef.current) {
+        clearTimeout(searchDebounceRef.current);
+      }
+    };
+  }, [searchQuery]);
+
+  useEffect(() => {
+    return () => {
+      if (searchControllerRef.current) {
+        searchControllerRef.current.abort();
+      }
+    };
+  }, []);
 
   const PostCard = ({ post }) => {
     const created = new Date(post.createdAt || Date.now());
@@ -134,134 +250,128 @@ function ExplorePage() {
 
         <div className="nav-items">
           <div className="nav-links">
-            <a
-              href="/home"
-              className={activeTab === "home" ? "active" : ""}
+            <a>
+              href="/home" className={activeTab === "home" ? "active" : ""}
               onClick={(e) => handleNavClick(e, "/home", "home")}
-            >
-              <svg
-                className="nav-icon"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
-                />
-              </svg>
-              Home
             </a>
 
-            <a
-              href="/explore"
-              className={activeTab === "explore" ? "active" : ""}
+            <a>
+              href="/explore" className=
+              {activeTab === "explore" ? "active" : ""}
               onClick={(e) => handleNavClick(e, "/explore", "explore")}
-            >
-              <svg
-                className="nav-icon"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                />
-              </svg>
-              Explore
             </a>
 
-            <a
-              href="/messages"
-              className={activeTab === "messages" ? "active" : ""}
+            <a>
+              href="/messages" className=
+              {activeTab === "messages" ? "active" : ""}
               onClick={(e) => handleNavClick(e, "/messages", "messages")}
-            >
-              <svg
-                className="nav-icon"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
-                />
-              </svg>
-              Messages
             </a>
 
-            <a
-              href="/partyfinder"
-              className={activeTab === "partyfinder" ? "active" : ""}
+            <a>
+              href="/partyfinder" className=
+              {activeTab === "partyfinder" ? "active" : ""}
               onClick={(e) => handleNavClick(e, "/partyfinder", "partyfinder")}
-            >
-              <svg
-                className="nav-icon"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
-                />
-              </svg>
-              Party Finder
             </a>
 
-            <a
-              href="/communities"
-              className={activeTab === "communities" ? "active" : ""}
+            <a>
+              href="/communities" className=
+              {activeTab === "communities" ? "active" : ""}
               onClick={(e) => handleNavClick(e, "/communities", "communities")}
-            >
-              <svg
-                className="nav-icon"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"
-                />
-              </svg>
-              Communities
             </a>
 
-            <a
-              href="/profile"
-              className={activeTab === "profile" ? "active" : ""}
+            <a>
+              href="/profile" className=
+              {activeTab === "profile" ? "active" : ""}
               onClick={(e) => handleNavClick(e, "/profile", "profile")}
-            >
-              <svg
-                className="nav-icon"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                />
-              </svg>
-              Profile
             </a>
+          </div>
+
+          <div style={{ marginTop: 20 }}>
+            <button>
+              onClick={handleLogout}
+              className="logout-button" type="button"
+            </button>
           </div>
         </div>
       </nav>
+
+      <main className="main-content">
+        <header style={{ marginBottom: 20 }}>
+          <h1>Explore</h1>
+          <p style={{ color: "#bbb" }}>See what's trending in the community.</p>
+
+          {/* Search input */}
+          <div style={{ marginTop: 12 }}>
+            <input
+              type="search"
+              placeholder="Search users by username..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="user-search-input"
+              aria-label="Search users"
+            />
+            {searchLoading && (
+              <span className="search-loading"> Searching…</span>
+            )}
+          </div>
+
+          {/* Search results dropdown */}
+          {searchQuery && (
+            <div className="search-results">
+              {searchError && <div className="search-error">{searchError}</div>}
+
+              {!searchLoading && searchResults.length === 0 && !searchError && (
+                <div className="search-empty">No users found.</div>
+              )}
+
+              <ul>
+                {searchResults.map((u) => (
+                  <li
+                    key={u.username || u.id}
+                    className="search-result-item"
+                    onClick={() => {
+                      // navigate to user's profile
+                      const target = u.username || u.id;
+                      setSearchQuery("");
+                      setSearchResults([]);
+                      navigate(`/profile/${encodeURIComponent(target)}`);
+                    }}
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        const target = u.username || u.id;
+                        setSearchQuery("");
+                        setSearchResults([]);
+                        navigate(`/profile/${encodeURIComponent(target)}`);
+                      }
+                    }}
+                  >
+                    <strong>@{u.username || u.name}</strong>
+                    {u.displayName && (
+                      <span className="muted"> — {u.displayName}</span>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </header>
+
+        {/* Posts area */}
+        {loading ? (
+          <h3>Loading posts…</h3>
+        ) : error ? (
+          <>
+            <h3 style={{ color: "salmon" }}>Unable to load posts.</h3>
+            <p style={{ color: "#aaa" }}>{error}</p>
+          </>
+        ) : posts.length === 0 ? (
+          <h3>No posts yet.</h3>
+        ) : (
+          posts.map((post) => <PostCard key={post.id} post={post} />)
+        )}
+      </main>
     </div>
   );
 }
