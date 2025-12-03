@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 import "./styles.css";
-
+import NavBar from "./NavBar";
 function ProfilePage() {
     const { username } = useParams();
     const navigate = useNavigate();
@@ -78,82 +78,7 @@ function ProfilePage() {
 
     // Sidebar Component
     const Sidebar = () => (
-        <nav className="sidebar">
-            <div className="sidebar-header">
-                <div className="sidebar-logo">
-                    <div className="logo-icon">
-                        <img
-                            src={require("../images/GameVerse_Logo.png")}
-                            alt="GameVerse Logo"
-                            style={{ width: "100%", height: "100%", objectFit: "contain" }}
-                        />
-                    </div>
-                    <span className="logo-text">GameVerse</span>
-                </div>
-            </div>
-
-            <div className="nav-items">
-                <div className="nav-links">
-                    <a
-                        href="/home"
-                        className={activeTab === "home" ? "active" : ""}
-                        onClick={(e) => handleNavClick(e, "/home", "home")}
-                    >
-                        Home
-                    </a>
-
-                    <a
-                        href="/explore"
-                        className={activeTab === "explore" ? "active" : ""}
-                        onClick={(e) => handleNavClick(e, "/explore", "explore")}
-                    >
-                        Explore
-                    </a>
-
-                    <a
-                        href="/messages"
-                        className={activeTab === "messages" ? "active" : ""}
-                        onClick={(e) => handleNavClick(e, "/messages", "messages")}
-                    >
-                        Messages
-                    </a>
-
-                    <a
-                        href="/partyfinder"
-                        className={activeTab === "partyfinder" ? "active" : ""}
-                        onClick={(e) => handleNavClick(e, "/partyfinder", "partyfinder")}
-                    >
-                        Party Finder
-                    </a>
-
-                    <a
-                        href="/communities"
-                        className={activeTab === "communities" ? "active" : ""}
-                        onClick={(e) => handleNavClick(e, "/communities", "communities")}
-                    >
-                        Communities
-                    </a>
-
-                    <a
-                        href="/profile"
-                        className={activeTab === "profile" ? "active" : ""}
-                        onClick={(e) => handleNavClick(e, "/profile", "profile")}
-                    >
-                        Profile
-                    </a>
-                </div>
-            </div>
-
-            <div className="sidebar-footer">
-                <button className="user-profile">
-                    <span>@{loggedInUsername || "Guest"}</span>
-                </button>
-
-                <button className="logout-button" onClick={handleLogout}>
-                    Logout
-                </button>
-            </div>
-        </nav>
+        <NavBar/>
     );
 
     if (loading) {
