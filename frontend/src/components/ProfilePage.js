@@ -35,8 +35,8 @@ function ProfilePage() {
     const loggedInUsername = localStorage.getItem("username");
 
     const [profile, setProfile] = useState(null);
-    const [loading, setLoading] = useState(true);
     const [bio, setBio] = useState("");
+    const [loading, setLoading] = useState(true);
     const [editMode, setEditMode] = useState(false);
     const [activeTab, setActiveTab] = useState('profile');
 
@@ -44,11 +44,18 @@ function ProfilePage() {
         const fetchProfile = async () => {
             try {
                 setLoading(true);
-
                 let res;
+
                 if (username) {
-                    res = await axios.get(`http://localhost:8080/profile/${username}`);
+                    // Viewing someone else's profile
+                    res = await axios.get(
+                        `http://localhost:8080/profile/${username}`,
+                        token
+                            ? { headers: { Authorization: `Bearer ${token}` } }
+                            : undefined
+                    );
                 } else {
+                    // Viewing own profile
                     res = await axios.get("http://localhost:8080/profile", {
                         headers: { Authorization: `Bearer ${token}` },
                     });
@@ -56,8 +63,12 @@ function ProfilePage() {
 
                 setProfile(res.data);
                 setBio(res.data.bio || "");
-            } catch {
-                console.error("Error loading profile");
+            } catch (err) {
+                if (err.response?.status === 404) {
+                    setProfile(null);
+                } else {
+                    console.error("Error loading profile:", err);
+                }
             } finally {
                 setLoading(false);
             }
@@ -87,8 +98,8 @@ function ProfilePage() {
             );
             setProfile({ ...profile, bio });
             setEditMode(false);
-        } catch {
-            alert("Error saving bio");
+        } catch (err) {
+            alert("Error saving bio.");
         }
     };
 
@@ -225,114 +236,52 @@ function ProfilePage() {
     const isOwnProfile =
         !username || username.toLowerCase() === loggedInUsername?.toLowerCase();
 
-    // ===================== PAGE START ============================= //
-
     return (
-        <div className="page-container">
-            <Sidebar />
-
-            {/* Main Profile Content */}
-            <div className="main-content" style={{ color: "white" }}>
-                {/* ------------------------------------------------------
-                     PROFILE HEADER CARD
-                ------------------------------------------------------- */}
+        <div className="main-content" style={{ color: "white" }}>
+            {/* ------------------------------------------------------
+                 PROFILE HEADER (Twitter-style)
+            ------------------------------------------------------- */}
+            <div
+                style={{
+                    backgroundColor: "#2f2f2f",
+                    paddingBottom: "20px",
+                    borderRadius: "0 0 12px 12px",
+                    marginBottom: "25px",
+                    position: "relative",
+                }}
+            >
+                {/* Banner placeholder */}
                 <div
                     style={{
-                        backgroundColor: "#2f2f2f",
-                        padding: "25px",
-                        borderRadius: "12px",
-                        marginBottom: "30px",
+                        height: "150px",
+                        backgroundColor: "#3f4b5b",
+                        borderRadius: "0 0 12px 12px",
                     }}
-                >
-                    {/* Avatar + Name Row */}
-                    <div style={{ display: "flex", alignItems: "center", marginBottom: "20px" }}>
-                        {/* Avatar Circle */}
-                        <div
-                            style={{
-                                width: "110px",
-                                height: "110px",
-                                borderRadius: "50%",
-                                backgroundColor: "#3f4b5b",
-                                marginRight: "25px",
-                            }}
-                        ></div>
+                ></div>
 
-                        {/* User Info */}
+                {/* Avatar */}
+                <div
+                    style={{
+                        position: "absolute",
+                        top: "90px",
+                        left: "30px",
+                        width: "120px",
+                        height: "120px",
+                        borderRadius: "50%",
+                        backgroundColor: "#1c1c1c",
+                        border: "4px solid #2f2f2f",
+                    }}
+                ></div>
+
+                {/* Username + Edit Button */}
+                <div style={{ padding: "20px", marginTop: "40px" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between" }}>
                         <div>
-                            <h1 style={{ margin: 0, fontSize: "2rem" }}>@{profile.username}</h1>
-                            <p style={{ marginTop: "5px", color: "#cfcfcf" }}>
-                                Level 42 Elite Player (placeholder)
+                            <h1 style={{ marginBottom: "5px" }}>{profile.username}</h1>
+                            <p style={{ marginTop: 0, color: "#aaaaaa" }}>
+                                @{profile.username}
                             </p>
                         </div>
-                    </div>
-
-                    {/* Stats Row */}
-                    <div
-                        style={{
-                            display: "flex",
-                            gap: "40px",
-                            marginTop: "10px",
-                            color: "#cccccc",
-                        }}
-                    >
-                        <span>👥 1.2K Followers</span>
-                        <span>👤 356 Following</span>
-                        <span>⏱️ 2,450 Hours Played</span>
-                    </div>
-
-                    {/* Bio Section */}
-                    <div style={{ marginTop: "25px" }}>
-                        <h3>Bio</h3>
-                        {editMode ? (
-                            <>
-                                <textarea
-                                    value={bio}
-                                    onChange={(e) => setBio(e.target.value)}
-                                    style={{
-                                        width: "100%",
-                                        height: "100px",
-                                        borderRadius: "10px",
-                                        padding: "10px",
-                                        backgroundColor: "#444",
-                                        color: "white",
-                                    }}
-                                />
-                                <br />
-                                <button
-                                    onClick={handleSaveBio}
-                                    style={{
-                                        marginTop: "10px",
-                                        padding: "10px 20px",
-                                        backgroundColor: "#058BFE",
-                                        color: "white",
-                                        border: "none",
-                                        borderRadius: "10px",
-                                        cursor: "pointer",
-                                    }}
-                                >
-                                    Save
-                                </button>
-                                <button
-                                    onClick={() => setEditMode(false)}
-                                    style={{
-                                        marginLeft: "10px",
-                                        marginTop: "10px",
-                                        padding: "10px 20px",
-                                        backgroundColor: "#777",
-                                        color: "white",
-                                        border: "none",
-                                        borderRadius: "10px",
-                                        cursor: "pointer",
-                                    }}
-                                >
-                                    Cancel
-                                </button>
-                            </>
-                        ) : (
-                            <p style={{ color: "#cccccc" }}>
-                                {profile.bio || (isOwnProfile ? "You have no bio yet." : "No bio yet.")}
-                            </p>
-                        )}
 
                         {isOwnProfile && !editMode && (
                             <button
@@ -388,67 +337,59 @@ function ProfilePage() {
                     ))}
                 </div>
 
-                {/* ------------------------------------------------------
-                     FRIENDS LIST
-                ------------------------------------------------------- */}
-                <div
-                    style={{
-                        backgroundColor: "#2f2f2f",
-                        padding: "25px",
-                        borderRadius: "12px",
-                        marginBottom: "30px",
-                    }}
-                >
-                    <h2>Friends</h2>
+            {/* ------------------------------------------------------
+     TABS (Posts / Media / Likes)
+------------------------------------------------------- */}
+<div
+    style={{
+        borderBottom: "1px solid #444",
+        marginBottom: "15px",
+        display: "flex",
+        justifyContent: "space-around",
+    }}
+>
+    {["posts", "media", "likes"].map((tab) => (
+        <button
+            key={tab}
+            onClick={() => setActiveTab(tab)}
+            style={{
+                flex: 1,
+                padding: "12px",
+                backgroundColor: "transparent",
+                color: activeTab === tab ? "#058BFE" : "#aaaaaa",
+                border: "none",
+                borderBottom:
+                    activeTab === tab ? "3px solid #058BFE" : "none",
+                fontSize: "1rem",
+                cursor: "pointer",
+            }}
+        >
+            {tab.charAt(0).toUpperCase() + tab.slice(1)}
+        </button>
+    ))}
+</div>
 
-                    <div style={{ display: "flex", overflowX: "auto", gap: "20px", marginTop: "20px" }}>
-                        {placeholderFriends.map((f, i) => (
-                            <div key={i} style={{ textAlign: "center" }}>
-                                <div
-                                    style={{
-                                        width: "65px",
-                                        height: "65px",
-                                        borderRadius: "50%",
-                                        backgroundColor: "#3f4b5b",
-                                        marginBottom: "10px",
-                                    }}
-                                ></div>
-                                <p style={{ margin: 0 }}>{f.name}</p>
-                                <p style={{ margin: 0, fontSize: "0.8rem", color: "#999" }}>
-                                    {f.status}
-                                </p>
-                            </div>
-                        ))}
-                    </div>
-                </div>
+{/* ------------------------------------------------------
+     TAB CONTENT (Posts / Media / Likes)
+------------------------------------------------------- */}
+{activeTab === "posts" && (
+    <p style={{ color: "#888", textAlign: "center", marginTop: "20px" }}>
+        No posts yet.
+    </p>
+)}
 
-                {/* ------------------------------------------------------
-                     ACHIEVEMENTS
-                ------------------------------------------------------- */}
-                <div
-                    style={{
-                        backgroundColor: "#2f2f2f",
-                        padding: "25px",
-                        borderRadius: "12px",
-                    }}
-                >
-                    <h2>Achievements</h2>
+{activeTab === "media" && (
+    <p style={{ color: "#888", textAlign: "center", marginTop: "20px" }}>
+        No media uploaded yet.
+    </p>
+)}
 
-                    <div style={{ display: "flex", gap: "15px", marginTop: "20px" }}>
-                        {[1, 2, 3, 4, 5].map((box) => (
-                            <div
-                                key={box}
-                                style={{
-                                    width: "80px",
-                                    height: "80px",
-                                    backgroundColor: "#3f4b5b",
-                                    borderRadius: "10px",
-                                }}
-                            ></div>
-                        ))}
-                    </div>
-                </div>
-            </div>
+{activeTab === "likes" && (
+    <p style={{ color: "#888", textAlign: "center", marginTop: "20px" }}>
+        No liked posts yet.
+    </p>
+)}
+
         </div>
     );
 }
