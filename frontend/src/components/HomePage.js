@@ -55,35 +55,33 @@ function HomePage() {
                 'http://localhost:8080/post/makepost',{body:postbod},
                 { headers: { Authorization: `Bearer ${token}` } }
             );
-
+            setposts(posts => {
+                const newArray = [...posts]; 
+                newArray.push({user:username,text:postbod}); 
+                return newArray; 
+            });
         }
     }
 
     const getposts = async() =>{
-            // const result = await axios.get(
-            //     'http://localhost:8080/post/getposts',
-            //     { headers: { Authorization: `Bearer ${token}` } }
-            // );
-            const result = await axios.get(
-                'http://localhost:8080/post/getposts',
-                { headers: { Authorization: `Bearer ${token}` } }
-            );
-            console.log(result);
+        const result = await axios.get(
+            'http://localhost:8080/post/getposts',
+            { headers: { Authorization: `Bearer ${token}` } }
+        );
+        setposts(result.data);
     }
 
     const Readposts = () => {
-        // useEffect(()=>{
-        //     getposts();
-        //     setposts([]);
-        // },[canref]);
         const items = posts.map((post,ind)=>(
-            <PostObj key={ind} User={post.name} Content={post.data}/>
+            <PostObj key={ind} User={post["user"]} Content={post["text"]}/>
         ));
         return(
             <div>{items}</div>
         )
     }
-    getposts();
+    useEffect(()=>{
+            getposts();
+    },[]);
     return(
         <div className="page-container">
             <NavBar/>
@@ -113,8 +111,7 @@ function HomePage() {
             <textarea rows='1' cols='50' maxLength={maxlen} ref={text} onChange={autoresize} placeholder='What are you thinking?'></textarea>
             <button className='Post' onClick={makepost}>Post</button>
         </div>
-        <div>
-            <PostObj User="Dummy" Content="Demo Text"/>
+        <div className='Content'>
             <Readposts/>
         </div>
     </div>

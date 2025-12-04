@@ -1,6 +1,7 @@
 package com.GameVerse.GameVerse.controller;
 
 import java.util.List;
+import java.util.Collections;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -49,17 +50,19 @@ public class PostController {
     // public List<Post> getpost(){
     //     return postRepo.findAll();
     // }
-    // @GetMapping("/getposts")
-    // public ResponseEntity<List<Post>> getapost(){
-    //     System.out.println("Get Posts");
-    //     List<Post> result = postRepo.findAll();
-    //     return ResponseEntity.ok().body(result);
-    // }
     @GetMapping("/getposts")
-    public ResponseEntity<String> getapost(){
+    public ResponseEntity<List<Post>> getapost(){
         System.out.println("Get Posts");
-        postRepo.findAll();
-        //String result = postRepo.findAll().toString();
-        return ResponseEntity.ok().body("Yay");
+        List<Post> result = postRepo.findAll();
+        Collections.reverse(result);
+        return ResponseEntity.ok().body(result);
     }
+    // @GetMapping("/getposts")
+    // public ResponseEntity<String> getapost(){
+    //     System.out.println("Get Posts");
+    //     postRepo.findAll();
+        
+    //     //String result = postRepo.findAll().toString();
+    //     return ResponseEntity.ok().body("Yay");
+    // }
 }

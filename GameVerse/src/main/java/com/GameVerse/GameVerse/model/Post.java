@@ -19,9 +19,9 @@ public class Post {
     private String userId;
     private String tag;
 
-    public Post(String body, String uid){
-        this.text = body;
-        this.userId = uid;
+    public Post(String text, String userId){
+        this.text = text;
+        this.userId = userId;
         this.tag = "";
     }
 
