@@ -10,7 +10,7 @@ function Signup() {
     const [password, setPassword] = useState('');
     const [confirmPassword, setVerify] = useState('');
     const [error, setError] = useState('');
-    const [selectedValue, setSelectedValue] = useState('');
+    const [selectedValue, setSelectedValue] = useState('nan');
 
     // const numbers = Array.from({ length: 77 }, (x, i) => i + 1950);
     // const days = Array.from({ length: 31 }, (x, i) => i + 1);
@@ -117,8 +117,8 @@ function Signup() {
                 <div className='Plat'>
                     <h3>Platform</h3>
                 </div>
-                <select name='Platform' required>
-                    <option selected disabled hidden>Select Platform</option>
+                <select name='Platform' required value={selectedValue} onChange={HandleChange}>
+                    <option disabled hidden value='nan'>Select Platform</option>
                     <option value='PS'>Playstation</option>
                     <option value='PC'>PC</option>
                     <option value='XB'>Xbox</option>
