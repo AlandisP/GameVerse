@@ -2,6 +2,7 @@
     display: flex;
     flex-direction: column;
     align-items: center;
+    overflow: hidden;
 }
 .Post-Bar{
     display: flex;
@@ -16,6 +17,7 @@
     border-left: 0;
     padding-top: 50px;
     padding-bottom: 30px;
+    margin-bottom: 40px;
 }
 
 .Post-Bar textarea{
@@ -40,7 +42,47 @@
     border-radius: 10px;
     height: 25px;
     width: 50px;
+    color:white;
 }
 .Post-Bar Button:active{
     background-color: #4e3bf6;
+}
+
+.Postcontent{
+    display: flex;
+    flex-direction: row;
+    padding-left: 20px;
+    padding-bottom: 30px;
+    margin-left: 150px;
+    margin-top: 20px;
+    width: 725px;
+    background-color: grey;
+    border-radius: 30px;
+    border-style: solid;
+    border-color: black;
+    border-width: 2px;
+    
+}
+
+.Postcontent div{
+    background-color: grey;
+}
+.Postcontent h3{
+    margin-bottom: 0px;
+}
+.Postcontent .inner{
+    display: flex;
+    flex-direction: column;
+
+}
+
+.Postcontent p{
+    margin-left: 20px;
+    max-width: 600px;
+}
+.Others{
+    width:30px;
+    height: 30px;
+    margin-right: 10px;
+    margin-top: 20px;
 }

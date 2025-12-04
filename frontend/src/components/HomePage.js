@@ -1,9 +1,23 @@
-import React, { useState, useRef} from 'react';
+import React, { useState, useRef, useEffect} from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import './Home.css'
 import NavBar from "./NavBar";
 import Pfp from '../images/Profile.png'
 import axios from 'axios';
+
+function PostObj({User, Content}){
+    return(
+        <div className='Postcontent'>
+            <img className='Others' src={Pfp}/>
+            <div className='inner'>
+                <h3>@{User}</h3>
+                <p>{Content}</p>
+            </div>
+            
+
+        </div>
+    )
+}
 
 function HomePage() {
     const navigate = useNavigate();
@@ -12,7 +26,9 @@ function HomePage() {
     const [activeTab, setActiveTab] = useState('home');
     const text = useRef(null);
     const maxlen = 300;
-    const [body, setpostbod] = useState("");
+    const [postbod, setpostbod] = useState("");
+    const [posts, setposts] = useState([]);
+    const [canref, refresh] = useState(0);
 
     const handleNavClick = (e, path, tabId) => {
         e.preventDefault();
@@ -33,16 +49,39 @@ function HomePage() {
         setpostbod(e.target.value);
     }
 
-    const makepost = async() =>{
-        if(body!=""){
-            try {
-                await axios.post('http://localhost:8080/post/makepost', {body}, {headers: { Authorization: `Bearer ${token}` }});
-            } catch(error) {
-                alert("couldnt do this");
-            }
+    const makepost = async () =>{
+        if(postbod!=""){
+            await axios.post(
+                'http://localhost:8080/post/makepost',{body:postbod},
+                { headers: { Authorization: `Bearer ${token}` } }
+            );
+            setposts(posts => {
+                const newArray = [...posts]; 
+                newArray.push({user:username,text:postbod}); 
+                return newArray; 
+            });
         }
     }
 
+    const getposts = async() =>{
+        const result = await axios.get(
+            'http://localhost:8080/post/getposts',
+            { headers: { Authorization: `Bearer ${token}` } }
+        );
+        setposts(result.data);
+    }
+
+    const Readposts = () => {
+        const items = posts.map((post,ind)=>(
+            <PostObj key={ind} User={post["user"]} Content={post["text"]}/>
+        ));
+        return(
+            <div>{items}</div>
+        )
+    }
+    useEffect(()=>{
+            getposts();
+    },[]);
     return(
         <div className="page-container">
             <NavBar/>
@@ -71,6 +110,9 @@ function HomePage() {
             <img className='PFP' src={Pfp}/>
             <textarea rows='1' cols='50' maxLength={maxlen} ref={text} onChange={autoresize} placeholder='What are you thinking?'></textarea>
             <button className='Post' onClick={makepost}>Post</button>
+        </div>
+        <div className='Content'>
+            <Readposts/>
         </div>
     </div>
 </div>
