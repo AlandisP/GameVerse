@@ -29,13 +29,37 @@ import com.GameVerse.GameVerse.model.Post;
 public class PostController {
     @Autowired
     private PostRepository postRepo;
+    @Autowired
+    private UserRepository userRep;
     static class PostContent{
         public String body;
     }
+    static class nsg{
+        public String bod;
+    }
     @PostMapping("/makepost")
     public ResponseEntity<?> makepost(@RequestBody PostContent content, Authentication auth){
-        Post newPost = new Post(content.body,auth.getPrincipal().toString());
+        String username = userRep.findById(auth.getPrincipal().toString()).get().getUsername();
+        Post newPost = new Post(content.body,username);
+        newPost.setTag(userRep.findById(auth.getPrincipal().toString()).get().getPlatform());
         postRepo.save(newPost);
         return ResponseEntity.ok().build();
+    }
+    // @GetMapping("/getposts")
+    // public List<Post> getpost(){
+    //     return postRepo.findAll();
+    // }
+    // @GetMapping("/getposts")
+    // public ResponseEntity<List<Post>> getapost(){
+    //     System.out.println("Get Posts");
+    //     List<Post> result = postRepo.findAll();
+    //     return ResponseEntity.ok().body(result);
+    // }
+    @GetMapping("/getposts")
+    public ResponseEntity<String> getapost(){
+        System.out.println("Get Posts");
+        postRepo.findAll();
+        //String result = postRepo.findAll().toString();
+        return ResponseEntity.ok().body("Yay");
     }
 }

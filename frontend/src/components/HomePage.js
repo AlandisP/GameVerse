@@ -1,9 +1,23 @@
-import React, { useState, useRef} from 'react';
+import React, { useState, useRef, useEffect} from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import './Home.css'
 import NavBar from "./NavBar";
 import Pfp from '../images/Profile.png'
 import axios from 'axios';
+
+function PostObj({User, Content}){
+    return(
+        <div className='Postcontent'>
+            <img className='Others' src={Pfp}/>
+            <div className='inner'>
+                <h3>@{User}</h3>
+                <p>{Content}</p>
+            </div>
+            
+
+        </div>
+    )
+}
 
 function HomePage() {
     const navigate = useNavigate();
@@ -13,6 +27,8 @@ function HomePage() {
     const text = useRef(null);
     const maxlen = 300;
     const [postbod, setpostbod] = useState("");
+    const [posts, setposts] = useState([]);
+    const [canref, refresh] = useState(0);
 
     const handleNavClick = (e, path, tabId) => {
         e.preventDefault();
@@ -33,12 +49,41 @@ function HomePage() {
         setpostbod(e.target.value);
     }
 
-    const makepost = () =>{
+    const makepost = async () =>{
         if(postbod!=""){
-            const response = axios.post('http://localhost:8080/post/makepost', {postbod});
+            await axios.post(
+                'http://localhost:8080/post/makepost',{body:postbod},
+                { headers: { Authorization: `Bearer ${token}` } }
+            );
+
         }
     }
 
+    const getposts = async() =>{
+            // const result = await axios.get(
+            //     'http://localhost:8080/post/getposts',
+            //     { headers: { Authorization: `Bearer ${token}` } }
+            // );
+            const result = await axios.get(
+                'http://localhost:8080/post/getposts',
+                { headers: { Authorization: `Bearer ${token}` } }
+            );
+            console.log(result);
+    }
+
+    const Readposts = () => {
+        // useEffect(()=>{
+        //     getposts();
+        //     setposts([]);
+        // },[canref]);
+        const items = posts.map((post,ind)=>(
+            <PostObj key={ind} User={post.name} Content={post.data}/>
+        ));
+        return(
+            <div>{items}</div>
+        )
+    }
+    getposts();
     return(
         <div className="page-container">
             <NavBar/>
@@ -67,6 +112,10 @@ function HomePage() {
             <img className='PFP' src={Pfp}/>
             <textarea rows='1' cols='50' maxLength={maxlen} ref={text} onChange={autoresize} placeholder='What are you thinking?'></textarea>
             <button className='Post' onClick={makepost}>Post</button>
+        </div>
+        <div>
+            <PostObj User="Dummy" Content="Demo Text"/>
+            <Readposts/>
         </div>
     </div>
 </div>

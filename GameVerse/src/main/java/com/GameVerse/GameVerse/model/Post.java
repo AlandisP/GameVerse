@@ -10,9 +10,8 @@ import com.GameVerse.GameVerse.repository.UserRepository;
 @Document(collection = "posts")
 public class Post {
 
-    @Autowired
-    private UserRepository repository;
-
+    
+    
     @Id
     private String id;
     // @Indexed(unique = true)  
@@ -23,7 +22,7 @@ public class Post {
     public Post(String body, String uid){
         this.text = body;
         this.userId = uid;
-        this.tag = repository.findById(userId).get().getPlatform();
+        this.tag = "";
     }
 
     public String getId(){
@@ -37,6 +36,9 @@ public class Post {
     }
     public String getUser(){
         return this.userId;
+    }
+    public void setTag(String t){
+        this.tag = t;
     }
     
     
