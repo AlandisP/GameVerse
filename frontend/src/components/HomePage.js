@@ -12,7 +12,7 @@ function HomePage() {
     const [activeTab, setActiveTab] = useState('home');
     const text = useRef(null);
     const maxlen = 300;
-    const [postbod, setpostbod] = useState("");
+    const [body, setpostbod] = useState("");
 
     const handleNavClick = (e, path, tabId) => {
         e.preventDefault();
@@ -33,9 +33,13 @@ function HomePage() {
         setpostbod(e.target.value);
     }
 
-    const makepost = () =>{
-        if(postbod!=""){
-            const response = axios.post('http://localhost:8080/post/makepost', {postbod});
+    const makepost = async() =>{
+        if(body!=""){
+            try {
+                await axios.post('http://localhost:8080/post/makepost', {body}, {headers: { Authorization: `Bearer ${token}` }});
+            } catch(error) {
+                alert("couldnt do this");
+            }
         }
     }
 

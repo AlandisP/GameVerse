@@ -1,0 +1,6 @@
+spring.application.name=GameVerse
+spring.data.mongodb.uri=YOUR_MONGODB_URI_HERE
+server.port=8080
+logging.level.org.springframework.data.mongodb=DEBUG
+security.jwt.secret-key=YOUR_JWT_SECRET_HERE
+security.jwt.expiration-time=3600000
