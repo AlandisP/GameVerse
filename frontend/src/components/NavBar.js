@@ -28,6 +28,7 @@ function NavBar() {
         localStorage.removeItem('username');
         navigate('/');
     }
+    
 
 
     return (
