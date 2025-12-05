@@ -1,11 +1,13 @@
-// Import the functions you need from the SDKs you need
+// Import Firebase core
 import { initializeApp } from "firebase/app";
-import { getAnalytics } from "firebase/analytics";
-// TODO: Add SDKs for Firebase products that you want to use
-// https://firebase.google.com/docs/web/setup#available-libraries
 
-// Your web app's Firebase configuration
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+// Import Firestore ( this is required for messaging)
+import { getFirestore } from "firebase/firestore";
+
+// Optional: Analytics (you can keep it or remove it)
+import { getAnalytics } from "firebase/analytics";
+
+// Your Firebase configuration
 const firebaseConfig = {
   apiKey: "AIzaSyDyVs9_mHJq1CHpzZ86bX6o2ioB3N2TRZg",
   authDomain: "gameverse-e5fd8.firebaseapp.com",
@@ -18,4 +20,9 @@ const firebaseConfig = {
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
+
+// Optional analytics
 const analytics = getAnalytics(app);
+
+// Initialize Firestore and EXPORT IT
+export const db = getFirestore(app);
