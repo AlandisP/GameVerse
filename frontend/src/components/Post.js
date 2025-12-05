@@ -4,6 +4,7 @@ import Pfp from '../images/Profile.png'
 import React, { useState, useRef, useEffect} from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
+import API_URL from '../config/api';
 function PostObj ({User, Content, Likes, Liked, id}){
         const postid = id;
         const [didLike, setdidLike]= useState(Liked);
@@ -12,7 +13,7 @@ function PostObj ({User, Content, Likes, Liked, id}){
         const navigate = useNavigate();
         const likeinteract = async ()=>{
             await axios.post(
-                'http://localhost:8080/post/likepost',{id:id},
+                `${API_URL}/post/likepost`,{id:id},
                 { headers: { Authorization: `Bearer ${token}` } }
             );
             if(didLike){

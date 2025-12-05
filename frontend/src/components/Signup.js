@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import logo from '../images/GameVerse_LogoV2.png';
 import React, { useState } from 'react';
 import axios from 'axios';
+import API_URL from '../config/api';
 function Signup() {
 
     const history = useNavigate();
@@ -25,7 +26,7 @@ function Signup() {
                 setError('Please fill in the fields');
                 return;
             }
-            const response = await axios.post('http://localhost:8080/auth/signup', {username, password, confirmPassword, platform});
+            const response = await axios.post(`${API_URL}/auth/signup`, {username, password, confirmPassword, platform});
             setError("Account Created!");
             console.log('Create Account Successful:', response.data);
             localStorage.setItem('token', response.data.token);

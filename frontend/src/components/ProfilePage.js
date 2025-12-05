@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 import "./styles.css";
 import NavBar from "./NavBar";
+import API_URL from '../config/api';
 
 function ProfilePage() {
   const { username } = useParams();
@@ -26,14 +27,14 @@ function ProfilePage() {
         if (username) {
           // viewing someone else's profile
           res = await axios.get(
-            `http://localhost:8080/profile/${username}`,
+            `${API_URL}/profile/${username}`,
             token
               ? { headers: { Authorization: `Bearer ${token}` } }
               : undefined
           );
         } else {
           // viewing own profile
-          res = await axios.get("http://localhost:8080/profile", {
+          res = await axios.get(`${API_URL}/profile`, {
             headers: { Authorization: `Bearer ${token}` },
           });
         }
@@ -45,7 +46,7 @@ function ProfilePage() {
         if (username && token) {
           try {
             const followRes = await axios.get(
-              `http://localhost:8080/profile/${username}/isFollowing`,
+              `${API_URL}/profile/${username}/isFollowing`,
               { headers: { Authorization: `Bearer ${token}` } }
             );
             setIsFollowing(followRes.data === true);
@@ -74,7 +75,7 @@ function ProfilePage() {
       (async () => {
         try {
           setLoading(true);
-          const res = await axios.get(`http://localhost:8080/profile/${username}`);
+          const res = await axios.get(`${API_URL}/profile/${username}`);
           setProfile(res.data);
           setBio(res.data.bio || "");
           setIsFollowing(false);
@@ -94,7 +95,7 @@ function ProfilePage() {
   const handleSaveBio = async () => {
     try {
       await axios.put(
-        "http://localhost:8080/profile",
+        `${API_URL}/profile`,
         { bio },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -113,7 +114,7 @@ function ProfilePage() {
 
     try {
       await axios.post(
-        `http://localhost:8080/profile/${profile.username}/follow`,
+        `${API_URL}/profile/${profile.username}/follow`,
         {},
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -137,7 +138,7 @@ function ProfilePage() {
 
     try {
       await axios.post(
-        `http://localhost:8080/profile/${profile.username}/unfollow`,
+        `${API_URL}/profile/${profile.username}/unfollow`,
         {},
         { headers: { Authorization: `Bearer ${token}` } }
       );

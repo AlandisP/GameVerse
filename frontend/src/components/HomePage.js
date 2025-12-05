@@ -5,6 +5,7 @@ import NavBar from "./NavBar";
 import Pfp from '../images/Profile.png'
 import axios from 'axios';
 import PostObj from './Post'
+import API_URL from '../config/api';
 
 function HomePage() {
     const navigate = useNavigate();
@@ -39,7 +40,7 @@ function HomePage() {
     const makepost = async () =>{
         if(postbod!=""){
             const pid = await axios.post(
-                'http://localhost:8080/post/makepost',{body:postbod},
+                `${API_URL}/post/makepost`,{body:postbod},
                 { headers: { Authorization: `Bearer ${token}` } }
             );
             setposts(posts => {
@@ -52,7 +53,7 @@ function HomePage() {
 
     const getposts = async() =>{
         const result = await axios.get(
-            'http://localhost:8080/post/getposts',
+            `${API_URL}/post/getposts`,
             { headers: { Authorization: `Bearer ${token}` } }
         );
         setposts(result.data);
