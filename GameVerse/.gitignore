@@ -33,7 +33,6 @@ build/
 .vscode/
 
 ### Database credentials ###
-application-local.properties
 application.properties
 .env
 *.env
