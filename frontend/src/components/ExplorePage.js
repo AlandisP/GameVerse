@@ -5,6 +5,7 @@ import axios from "axios";
 import api from "../config/api"; // if api.get doesn't exist, we use axios in fetchPosts below
 import NavBar from "./NavBar";
 import searchIcon from "../images/search.png"; // same icon path used in MessagePage
+import API_URL from '../config/api';
 
 function ExplorePage() {
   const navigate = useNavigate();
@@ -151,10 +152,10 @@ function ExplorePage() {
 
         try {
           const token = getToken();
-          const res = await axios.get("/api/users/search", {
-            params: { q: searchQuery },
-            headers: token ? { Authorization: `Bearer ${token}` } : {},
-            signal: controller.signal,
+          const res = await axios.get(`${API_URL}/users/matches`, {
+            params: { text: searchQuery },
+            // headers: token ? { Authorization: `Bearer ${token}` } : {},
+            // signal: controller.signal,
           });
 
           const data = res.data;
