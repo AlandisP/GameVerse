@@ -4,20 +4,8 @@ import './Home.css'
 import NavBar from "./NavBar";
 import Pfp from '../images/Profile.png'
 import axios from 'axios';
-
-function PostObj({User, Content}){
-    return(
-        <div className='Postcontent'>
-            <img className='Others' src={Pfp}/>
-            <div className='inner'>
-                <h3>@{User}</h3>
-                <p>{Content}</p>
-            </div>
-            
-
-        </div>
-    )
-}
+import Heart from '../images/HeartBlank.png'
+import HeartFull from '../images/HeartFull.png'
 
 function HomePage() {
     const navigate = useNavigate();
@@ -48,16 +36,48 @@ function HomePage() {
         text.current.style.height = `${text.current.scrollHeight}px`;
         setpostbod(e.target.value);
     }
+    const PostObj =({User, Content, Likes, Liked, id})=>{
+        const postid = id;
+        const [didLike, setdidLike]= useState(Liked);
+        const [falseLikes, setfalseLikes]= useState(Likes);
+        const likeinteract = async ()=>{
+            await axios.post(
+                'http://localhost:8080/post/likepost',{id:id},
+                { headers: { Authorization: `Bearer ${token}` } }
+            );
+            if(didLike){
+                setfalseLikes(falseLikes-1);
+            }else{
+                setfalseLikes(falseLikes+1);
+            }
+            setdidLike(!didLike);
+            console.log(Liked);
+        }
+        return(
+            <div className='Postcontent'>
+                <img className='Others' src={Pfp}/>
+                <div className='inner'>
+                    {/* <h3>@{User}</h3> */}
+                    <h3 onClick={()=>{navigate(`/profile/${User}`)}}>@{User}</h3>
+                    <p>{Content}</p>
+                    <div className='Media-Bar'>
+                        <img src={didLike ? HeartFull : Heart} onClick={likeinteract}/>
+                        <p>{falseLikes}</p>
+                    </div>
+                </div>
+            </div>
+        )
+    }
 
     const makepost = async () =>{
         if(postbod!=""){
-            await axios.post(
+            const pid = await axios.post(
                 'http://localhost:8080/post/makepost',{body:postbod},
                 { headers: { Authorization: `Bearer ${token}` } }
             );
             setposts(posts => {
                 const newArray = [...posts]; 
-                newArray.push({user:username,text:postbod}); 
+                newArray.unshift({user:username,text:postbod,likes:0,liked:{},id:pid.data}); 
                 return newArray; 
             });
         }
@@ -71,9 +91,15 @@ function HomePage() {
         setposts(result.data);
     }
 
+    const parselike = (postinf)=>{
+        const array = postinf["liked"];
+        const like = array[username];
+        return like;
+    }
+
     const Readposts = () => {
         const items = posts.map((post,ind)=>(
-            <PostObj key={ind} User={post["user"]} Content={post["text"]}/>
+            <PostObj key={ind} User={post["user"]} Content={post["text"]} Likes={post["likes"]} Liked={parselike(post)} id={post["id"]}/>
         ));
         return(
             <div>{items}</div>

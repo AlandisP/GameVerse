@@ -38,13 +38,16 @@ public class PostController {
     static class nsg{
         public String bod;
     }
+    static class PostInf{
+        public String id;
+    }
     @PostMapping("/makepost")
-    public ResponseEntity<?> makepost(@RequestBody PostContent content, Authentication auth){
+    public ResponseEntity<String> makepost(@RequestBody PostContent content, Authentication auth){
         String username = userRep.findById(auth.getPrincipal().toString()).get().getUsername();
         Post newPost = new Post(content.body,username);
         newPost.setTag(userRep.findById(auth.getPrincipal().toString()).get().getPlatform());
         postRepo.save(newPost);
-        return ResponseEntity.ok().build();
+        return ResponseEntity.ok().body(newPost.getId());
     }
     // @GetMapping("/getposts")
     // public List<Post> getpost(){
@@ -52,17 +55,16 @@ public class PostController {
     // }
     @GetMapping("/getposts")
     public ResponseEntity<List<Post>> getapost(){
-        System.out.println("Get Posts");
         List<Post> result = postRepo.findAll();
         Collections.reverse(result);
         return ResponseEntity.ok().body(result);
     }
-    // @GetMapping("/getposts")
-    // public ResponseEntity<String> getapost(){
-    //     System.out.println("Get Posts");
-    //     postRepo.findAll();
-        
-    //     //String result = postRepo.findAll().toString();
-    //     return ResponseEntity.ok().body("Yay");
-    // }
+    @PostMapping("/likepost")
+    public ResponseEntity<?> likeapost(@RequestBody PostInf info, Authentication auth){
+        Post target = postRepo.findByid(info.id);
+        String user = userRep.findById(auth.getPrincipal().toString()).get().getUsername();
+        target.setALike(user);
+        postRepo.save(target);
+        return ResponseEntity.ok().build();
+    }
 }

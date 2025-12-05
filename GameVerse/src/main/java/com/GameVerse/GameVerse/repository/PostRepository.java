@@ -12,4 +12,5 @@ import com.GameVerse.GameVerse.model.Post;
 public interface PostRepository extends MongoRepository<Post, String>{
     Post findByText(String text);
     Post findByuserId(String userId);
+    Post findByid(String id);
 }
