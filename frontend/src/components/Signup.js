@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import logo from '../images/GameVerse_LogoV2.png';
 import React, { useState } from 'react';
 import axios from 'axios';
+import API_URL from '../config/api';
 function Signup() {
 
     const history = useNavigate();
@@ -10,9 +11,14 @@ function Signup() {
     const [password, setPassword] = useState('');
     const [confirmPassword, setVerify] = useState('');
     const [error, setError] = useState('');
+    const [platform, setSelectedValue] = useState('Null');
 
     // const numbers = Array.from({ length: 77 }, (x, i) => i + 1950);
     // const days = Array.from({ length: 31 }, (x, i) => i + 1);
+
+    const HandleChange = (e) => {
+        setSelectedValue(e.target.value);
+    }
 
     const HandleSignUp = async () => {
         try {
@@ -20,7 +26,7 @@ function Signup() {
                 setError('Please fill in the fields');
                 return;
             }
-            const response = await axios.post('http://localhost:8080/auth/signup', {username, password, confirmPassword});
+            const response = await axios.post(`${API_URL}/auth/signup`, {username, password, confirmPassword, platform});
             setError("Account Created!");
             console.log('Create Account Successful:', response.data);
             localStorage.setItem('token', response.data.token);
@@ -112,8 +118,8 @@ function Signup() {
                 <div className='Plat'>
                     <h3>Platform</h3>
                 </div>
-                <select name='Platform' required>
-                    <option selected disabled hidden>Select Platform</option>
+                <select name='Platform' required value={platform} onChange={HandleChange}>
+                    <option selected disabled hidden value="Null">Select Platform</option>
                     <option value='PS'>Playstation</option>
                     <option value='PC'>PC</option>
                     <option value='XB'>Xbox</option>

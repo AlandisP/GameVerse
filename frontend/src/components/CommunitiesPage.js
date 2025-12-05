@@ -1,23 +1,48 @@
-import React from "react";
+import React, { useState } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import NavBar from "./NavBar";
 
-function CommunitiesPage() {
-    return (
-        <div>
-            <nav className="nav-links" id="navLinks">
-                <a href="/home">Home</a>
-                <a href="/explore">Explore</a>
-                <a href="/messages">Messages</a>
-                <a href="/partyfinder">Party Finder</a>
-                <a href="/communities">Communities</a>
-                <a href="/profile">Profile</a>
-            </nav>
+function Communitieispage() {
+    const navigate = useNavigate();
+    const location = useLocation();
+    const username = location.state?.username;
+    const [activeTab, setActiveTab] = useState('explore');
 
-            <h1 style={{ color: "white", textAlign: "center", marginTop: "50px" }}>
-                Communities Page
-            </h1>
+    const handleNavClick = (e, path, tabId) => {
+        e.preventDefault();
+        setActiveTab(tabId);
+        navigate(path, { state: { username } });
+    };
 
+    return(
+        <div className="page-container">
+            <NavBar/>
+            <div className="main-content">
+                <div style={{ 
+        borderBottom: "1px solid #000000ff", 
+        paddingBottom: "10px",
+        marginLeft: "-20px", 
+        paddingLeft: "20px" 
+    }}>
+        <h1 style={{ 
+            color: "white", 
+            textAlign: "left",
+            marginTop: "50px",
+            marginLeft: "20px",
+            marginBottom: "0"
+        }}>
+            Communities
+        </h1>
+    </div>
+                <div>
+                    <h3 style={{ color: "white", textAlign: "center" }}>
+                        
+                            Join gaming communities, {username}!
+                    </h3>
+                </div>
+            </div>
         </div>
     );
 }
 
-export default CommunitiesPage;
+export default Communitieispage;

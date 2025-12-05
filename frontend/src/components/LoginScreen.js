@@ -3,6 +3,7 @@ import logo from '../images/GameVerse_LogoV2.png';
 import React, { useState } from 'react';
 import axios from 'axios';
 import { useNavigate} from 'react-router-dom';
+import API_URL from '../config/api';
 function LoginScreen() {
 
     const [username, setUsername] = useState('');
@@ -16,7 +17,7 @@ function LoginScreen() {
                 setError('Please fill in the fields');
                 return;
             }
-            const response = await axios.post('http://localhost:8080/auth/login', {username, password});
+            const response = await axios.post(`${API_URL}/auth/login`, {username, password});
             setError('Logged in!');
             console.log('Login Successful:', response.data);
             localStorage.setItem('token', response.data.token);

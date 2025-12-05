@@ -4,6 +4,8 @@ package com.GameVerse.GameVerse.controller;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -12,16 +14,21 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.GameVerse.GameVerse.model.User;
 import com.GameVerse.GameVerse.repository.UserRepository;
+import com.GameVerse.GameVerse.services.RelationshipServices;
 
 
 @RestController
 @RequestMapping("/users")
 @CrossOrigin(origins = "http://localhost:3000")
 public class UsersController {
+
+    @Autowired
+    private RelationshipServices relationshipService;
 
     @Autowired
     private PasswordEncoder passwordEncoder;
@@ -61,8 +68,45 @@ public class UsersController {
         // repository.save(new User("SadLingo", "a1234")); // if any of the group memebers is seeing this
                                                                             // these credentials are NOT real -_-
                                 
-
-        
         return "Test data inserted! Total users: " + repository.count();
     }
+
+    @GetMapping("/matches")
+    public List<User> getUsernameMatches(@RequestParam String text) {
+
+        return repository.findByUsernameContainingIgnoreCase(text);
+
+    }
+
+    @PostMapping("/follow/{username}")
+    public ResponseEntity<?> followUser(@PathVariable String username, Authentication auth) {
+        String userId = (String) auth.getPrincipal();
+        User currUser = repository.findById(userId).orElseThrow();
+        User following = repository.findByUsernameIgnoreCase(username);
+        if(following == null) {
+            return ResponseEntity.notFound().build();
+        }
+        if(relationshipService.isFollowing(currUser.getId(), following.getId())) {
+            return ResponseEntity.badRequest().body("User is already following this person");
+        }
+        relationshipService.followUser(currUser.getId(), following.getId());
+        return ResponseEntity.ok("Successfully followed the user");
+    }
+
+    @DeleteMapping("/unfollow/{username}")
+    public ResponseEntity<?> unfollowUser(@PathVariable String username, Authentication auth) {
+        String userId = (String) auth.getPrincipal();
+        User currUser = repository.findById(userId).orElseThrow();
+        User following = repository.findByUsernameIgnoreCase(username);
+        if(following == null) {
+            return ResponseEntity.notFound().build();
+        }
+        if(!relationshipService.isFollowing(currUser.getId(), following.getId())) {
+            return ResponseEntity.badRequest().body("The relationship between the users dont exist");
+        }
+        relationshipService.unfollowUser(currUser.getId(), following.getId());
+        return ResponseEntity.ok("Successfully unfollowed the user");
+    }
+
+
 }
