@@ -39,6 +39,14 @@ public class PartyFinderService {
         }
     }
 
+    public void deleteParty(String partyId) {
+        PartyFinder party = partyFinderRepository.findById(partyId).orElseThrow();
+        if(party == null) {
+            throw new RuntimeException("Party doesn't exist");
+        }
+        partyFinderRepository.delete(party);
+    }
+
 
     
 }

@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -97,7 +98,7 @@ public class PartyController {
         partyService.removeMember(userId, id);
         return ResponseEntity.ok(party);
     }
-
+    //Kick a member from the party
     @PutMapping("/{partyname}/{username}")
     public ResponseEntity<?> kickFromParty(@PathVariable String partyname, @PathVariable String username) {
         PartyFinder party = partyRepository.findByNameIgnoreCase(partyname);
@@ -108,6 +109,16 @@ public class PartyController {
 
         partyService.removeMember(user.getId(), party.getId());
         return ResponseEntity.ok().body(party);
+    }
+    //Delete Party
+    @DeleteMapping("/delete")
+    public ResponseEntity<?> deleteParty(@RequestParam String partyname) {
+        PartyFinder party = partyRepository.findByNameIgnoreCase(partyname);
+        if(party == null) {
+            return ResponseEntity.badRequest().body("Party with that name doesn't exist");
+        }
+        partyService.deleteParty(partyname);
+        return ResponseEntity.ok("party successfully deleted");
     }
 
 

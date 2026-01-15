@@ -20,5 +20,8 @@ public enum Category {
     DIAMOND,
     NEWBIE,
     PRO,
-    INTERMEDIATE    
+    INTERMEDIATE,
+    CALLOFDUTY,
+    MARVELRIVALS,
+    MINECRAFT    
 }

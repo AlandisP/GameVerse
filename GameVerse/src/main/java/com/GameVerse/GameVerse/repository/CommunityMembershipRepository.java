@@ -13,6 +13,7 @@ public interface CommunityMembershipRepository extends MongoRepository<Community
     CommunityMembership findByCommunityIdAndUserId(String communityId, String userId);
     List<CommunityMembership> findByCommunityId(String communityId);
     void deleteByUserIdAndCommunityId(String userId, String communityId);
+    void deleteAllByCommunityId(String communityId);
     long countByCommunityId(String communityId);
     
 }

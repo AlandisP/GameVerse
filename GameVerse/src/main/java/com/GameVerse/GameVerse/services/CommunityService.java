@@ -95,4 +95,13 @@ public class CommunityService {
 
     }
 
+    public void deleteCommunity(String communityId) {
+        Community com = communityRepository.findById(communityId).orElse(null);
+        if(com == null) {
+            throw new RuntimeException("Community or User doesn't exist");
+        }
+        cr.deleteAllByCommunityId(communityId);
+        communityRepository.delete(com);
+    }
+
 }
