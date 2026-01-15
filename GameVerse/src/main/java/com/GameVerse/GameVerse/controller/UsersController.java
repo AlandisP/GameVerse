@@ -65,8 +65,6 @@ public class UsersController {
         repository.save(john);
         repository.save(q);
         
-        // repository.save(new User("SadLingo", "a1234")); // if any of the group memebers is seeing this
-                                                                            // these credentials are NOT real -_-
                                 
         return "Test data inserted! Total users: " + repository.count();
     }

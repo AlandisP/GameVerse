@@ -1,6 +1,7 @@
 package com.GameVerse.GameVerse.model;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.Indexed;
@@ -18,20 +19,37 @@ public class PartyFinder {
     private int maxMembers;
     private ArrayList<String> members;
     private Status status;
-    private ArrayList<Category> categories;
+    private List<Category> categories;
 
     public PartyFinder() {
 
     }
 
-    public PartyFinder(String creatorId, String name, String description, int maxMembers) {
+    public PartyFinder(String creatorId, String name, String description, int maxMembers, List<Category> categories) {
         this.creatorId = creatorId;
         this.name = name;
         this.description = description;
         this.maxMembers = maxMembers;
-        categories = new ArrayList<>();
+        this.categories = categories;
         members = new ArrayList<>();
         members.add(creatorId);
+        this.status = Status.WAITING;
+    }
+
+    public Status getStatus() {
+        return status;
+    }
+
+    public String getId() {
+        return id;
+    }
+
+    public String getCreatorId() {
+        return creatorId;
+    }
+
+    public List<Category> getCategories() {
+        return categories;
     }
 
     public String getName() {
@@ -53,6 +71,26 @@ public class PartyFinder {
     public ArrayList<String> getMembers() {
         return members;
     }
+
+    public void addMember(String userId) {
+        members.add(userId);
+        if(members.size() == maxMembers) {
+            this.status = Status.FULL;
+        }
+    }
+
+    public void removeMember(String userId) {
+        members.remove(userId);
+        if(members.size() < maxMembers) {
+            this.status = Status.WAITING;
+        }
+    }
+
+    public void setStatus(Status status) {
+        this.status = status;
+    }
+
+
 
     
     

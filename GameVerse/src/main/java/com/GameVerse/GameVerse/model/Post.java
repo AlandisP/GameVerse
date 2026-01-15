@@ -20,6 +20,7 @@ public class Post {
     // @Indexed(unique = true)  
     private String text;
     private String userId;
+    private String communityId;
     private String tag;
     private int likes;
     private Map<String,Boolean> liked;
@@ -27,6 +28,15 @@ public class Post {
     public Post(String text, String userId){
         this.text = text;
         this.userId = userId;
+        this.tag = "";
+        this.likes = 0;
+        liked = new HashMap<String,Boolean>();
+    }
+
+    public Post(String text, String userId, String communityId){
+        this.text = text;
+        this.userId = userId;
+        this.communityId = communityId;
         this.tag = "";
         this.likes = 0;
         liked = new HashMap<String,Boolean>();
