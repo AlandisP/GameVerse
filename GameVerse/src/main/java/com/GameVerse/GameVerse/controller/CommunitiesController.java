@@ -96,7 +96,7 @@ public class CommunitiesController {
         return ResponseEntity.ok("Successfuly made the user moderator");
     }
 
-    @PutMapping("/{communityname}/{username}")
+    @PutMapping("/{username}/{communityname}")
     public ResponseEntity<?> removeModerator(@PathVariable String communityname, @PathVariable String username){
         Community com = communityRepository.findByNameIgnoreCase(communityname);
         User user = repository.findByUsernameIgnoreCase(username);
