@@ -1,5 +1,6 @@
 package com.GameVerse.GameVerse.controller;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -119,6 +120,20 @@ public class PartyController {
         }
         partyService.deleteParty(partyname);
         return ResponseEntity.ok("party successfully deleted");
+    }
+
+    // Testing 
+    @GetMapping("/test/populate")
+    public String populateParties() {
+        User owner = repository.findById("69320f828c7352454ed8b7ea").orElse(null);
+        List<Category> cats = Arrays.asList(Category.COOP, Category.PRO);
+        List<Category> cats2 = Arrays.asList(Category.COOP, Category.PRO, Category.MARVELRIVALS);
+        PartyFinder party = new PartyFinder(owner.getId(), "Elden Ring Coop Testing", "Consort Radahn and Miquella Boss Fight", 4,cats );
+        partyService.joinParty(repository.findByUsernameIgnoreCase("akame").getId(), party.getId());
+        PartyFinder party2 = new PartyFinder("693754ac5e5fe6949986a855", "Rivals Platinum Rounds", "No Noobs allowed", 6, cats2);
+        partyRepository.save(party);
+        partyRepository.save(party2);
+        return "parties successfully created!";
     }
 
 

@@ -33,14 +33,14 @@ public class Post {
         liked = new HashMap<String,Boolean>();
     }
 
-    public Post(String text, String userId, String communityId){
-        this.text = text;
-        this.userId = userId;
-        this.communityId = communityId;
-        this.tag = "";
-        this.likes = 0;
-        liked = new HashMap<String,Boolean>();
-    }
+    // public Post(String text, String userId, String communityId){
+    //     this.text = text;
+    //     this.userId = userId;
+    //     this.communityId = communityId;
+    //     this.tag = "";
+    //     this.likes = 0;
+    //     liked = new HashMap<String,Boolean>();
+    // }
 
     public String getId(){
         return this.id;

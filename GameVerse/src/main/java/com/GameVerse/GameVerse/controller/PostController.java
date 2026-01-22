@@ -51,15 +51,15 @@ public class PostController {
         return ResponseEntity.ok().body(newPost.getId());
     }
 
-    @PostMapping("/makecommunitypost")
-    public ResponseEntity<?> makeCommunityPost(@RequestBody PostContentCom content, Authentication auth) {
-        String username = userRep.findById(auth.getPrincipal().toString()).get().getUsername();
-        String commId = comRepo.findByNameIgnoreCase(content.communityName).getId();
-        Post newComPost = new Post(content.body, username, commId);
-        newComPost.setTag(userRep.findById(auth.getPrincipal().toString()).get().getPlatform());
-        postRepo.save(newComPost);
-        return ResponseEntity.ok().body(newComPost.getId());
-    }
+    // @PostMapping("/makecommunitypost")
+    // public ResponseEntity<?> makeCommunityPost(@RequestBody PostContentCom content, Authentication auth) {
+    //     String username = userRep.findById(auth.getPrincipal().toString()).get().getUsername();
+    //     String commId = comRepo.findByNameIgnoreCase(content.communityName).getId();
+    //     Post newComPost = new Post(content.body, username, commId);
+    //     newComPost.setTag(userRep.findById(auth.getPrincipal().toString()).get().getPlatform());
+    //     postRepo.save(newComPost);
+    //     return ResponseEntity.ok().body(newComPost.getId());
+    // }
 
     @DeleteMapping("/delete")
     public ResponseEntity<?> deletePost(@RequestBody String postId, Authentication auth) {

@@ -6,7 +6,6 @@ import org.springframework.stereotype.Service;
 import com.GameVerse.GameVerse.model.Community;
 import com.GameVerse.GameVerse.model.CommunityMembership;
 import com.GameVerse.GameVerse.model.MemberType;
-import com.GameVerse.GameVerse.model.Post;
 import com.GameVerse.GameVerse.model.User;
 import com.GameVerse.GameVerse.repository.CommunityMembershipRepository;
 import com.GameVerse.GameVerse.repository.CommunityRepository;
@@ -84,16 +83,16 @@ public class CommunityService {
         communityRepository.save(com);
     }
 
-    public void communityPost(String communityId, String userId, String text) {
-        Community com = communityRepository.findById(communityId).orElse(null);
-        User user = userRepository.findById(userId).orElse(null);
-        if(com == null || user == null) {
-            throw new RuntimeException("Community or User doesn't exist");
-        }
-        Post post = new Post(text, userId, communityId);
-        postRepository.save(post);
+    // public void communityPost(String communityId, String userId, String text) {
+    //     Community com = communityRepository.findById(communityId).orElse(null);
+    //     User user = userRepository.findById(userId).orElse(null);
+    //     if(com == null || user == null) {
+    //         throw new RuntimeException("Community or User doesn't exist");
+    //     }
+    //     Post post = new Post(text, userId, communityId);
+    //     postRepository.save(post);
 
-    }
+    // }
 
     public void deleteCommunity(String communityId) {
         Community com = communityRepository.findById(communityId).orElse(null);

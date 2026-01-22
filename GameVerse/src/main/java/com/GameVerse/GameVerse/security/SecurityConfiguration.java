@@ -31,6 +31,7 @@ public class SecurityConfiguration {
             .authorizeHttpRequests((authorize) -> authorize
                 .requestMatchers("/auth/**").permitAll()  // Allow all /auth endpoints
                 .requestMatchers("/users/**").permitAll()
+                .requestMatchers("/parties/test/**").permitAll()
                 .anyRequest().authenticated())
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)  // FIXED
             .csrf(csrf -> csrf.disable())
