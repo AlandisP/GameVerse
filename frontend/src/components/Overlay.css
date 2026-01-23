@@ -1,0 +1,60 @@
+.overlay {
+    background-color: rgba(0, 0, 0, 0.5);
+    width: 100vw;
+    height: 100vh;
+    justify-content: center;
+    position: fixed;
+    align-items: center;
+    top:0;
+    right:0;
+    bottom: 0;
+    left: 0;
+    display: flex;
+}
+
+.overlay-background {
+    background-color: grey;
+    text-align: center;
+    width: 60%;
+    height: 70%;
+    align-items: center;
+    justify-content: center;
+    border-radius: 40px;
+    border: 10px solid #3b82f6;
+}
+
+.header {
+    align-self: center;
+    padding: 0px;
+    font-size: 40px;
+}
+
+.top-portion{
+    display: flex;
+    background-color: transparent;
+    width: 100%;
+    justify-content: center;
+    align-items: center;
+    border-bottom: 5px solid black;
+    position: relative;
+    margin: 0;
+}
+
+.top-portion button {
+    position: absolute;
+    right: 20px
+}
+
+.close {
+    padding: 10px;
+    font-size: 20px;
+    border-radius: 60px;
+}
+.close:hover {
+    background-color: rgb(230, 26, 26);
+}
+
+.contents {
+    justify-content: center;
+    background-color: transparent;
+}

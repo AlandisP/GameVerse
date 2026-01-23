@@ -3,15 +3,26 @@ import logo from '../images/search.png';
 import plus from '../images/plus.png';
 import sword from '../images/sword.png';
 import { useState } from "react";
+import API_URL from "../config/api";
+import axios from "axios";
 
-function Party({Name, Description, Categories, Count, id, Members}) {
+function Party({Name, Description, Categories, Count, id, Members, Status}) {
+    const token = localStorage.getItem("token");
     const [categories, setCategories] = useState(Categories);
     const cats = categories.map((category,index) =>(
         <p className='catbox' key={index}> {category}</p>));
 
     const buttonTest = async () => {
-        alert("Hey this works Alandis");
-    }
+        try {
+            await axios.put(
+                `${API_URL}/parties/${Name}/join`,
+                {},
+                { headers: { Authorization: `Bearer ${token}` } }
+            )
+        } catch(error) {
+            console.error("Couldnt Join Party:", error);
+        }
+    };
 
     return ( 
         <div className='partyInfo'>
@@ -25,7 +36,7 @@ function Party({Name, Description, Categories, Count, id, Members}) {
                 <p> {Members.length}/{Count} Players</p>
             </div>
             <div className='right'>
-                <p className='active'>Active</p>
+                <p className='active'>{Status}</p>
                 <button className='joinparty' onClick={buttonTest}>Join Party</button>
             </div>
         </div>

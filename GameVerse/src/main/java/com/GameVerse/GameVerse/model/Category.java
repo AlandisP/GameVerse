@@ -23,5 +23,11 @@ public enum Category {
     INTERMEDIATE,
     CALLOFDUTY,
     MARVELRIVALS,
-    MINECRAFT    
+    MINECRAFT,
+    FORTNITE,
+    ARCRAIDERS,
+    WAGING,
+    FIFA,
+    NBA2K,
+    MADDEN
 }

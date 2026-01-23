@@ -77,8 +77,8 @@ public class PartyController {
     }
 
     @PutMapping("/{partyname}/join")
-    public ResponseEntity<?> joinParty(@PathVariable String name, Authentication auth) {
-        PartyFinder party = partyRepository.findByNameIgnoreCase(name);
+    public ResponseEntity<?> joinParty(@PathVariable String partyname, Authentication auth) {
+        PartyFinder party = partyRepository.findByNameIgnoreCase(partyname);
         if( party == null) {
             return ResponseEntity.badRequest().body("Party doesnt exist");
         }
@@ -89,8 +89,8 @@ public class PartyController {
     }
 
     @PutMapping("/{partyname}/leave")
-    public ResponseEntity<?> leaveParty(@PathVariable String name, Authentication auth) {
-        PartyFinder party = partyRepository.findByNameIgnoreCase(name);
+    public ResponseEntity<?> leaveParty(@PathVariable String partyname, Authentication auth) {
+        PartyFinder party = partyRepository.findByNameIgnoreCase(partyname);
         if( party == null) {
             return ResponseEntity.badRequest().body("Party doesnt exist");
         }
@@ -125,16 +125,19 @@ public class PartyController {
     // Testing 
     @GetMapping("/test/populate")
     public String populateParties() {
-        User owner = repository.findById("69320f828c7352454ed8b7ea").orElse(null);
-        List<Category> cats = Arrays.asList(Category.COOP, Category.PRO);
+        User owner = repository.findById("6972526f3692577e2dafccdc").orElse(null);
+        List<Category> cats = Arrays.asList(Category.COOP, Category.PRO, Category.SEASON2);
         List<Category> cats2 = Arrays.asList(Category.COOP, Category.PRO, Category.MARVELRIVALS);
         PartyFinder party = new PartyFinder(owner.getId(), "Elden Ring Coop Testing", "Consort Radahn and Miquella Boss Fight", 4,cats );
-        partyService.joinParty(repository.findByUsernameIgnoreCase("akame").getId(), party.getId());
-        PartyFinder party2 = new PartyFinder("693754ac5e5fe6949986a855", "Rivals Platinum Rounds", "No Noobs allowed", 6, cats2);
         partyRepository.save(party);
+        partyService.joinParty(repository.findByUsernameIgnoreCase("ripbuck").getId(), party.getId());
+        PartyFinder party2 = new PartyFinder("697252a43692577e2dafccde", "Rivals Platinum Rounds", "No Noobs allowed", 6, cats2);
+        //partyRepository.save(party);
         partyRepository.save(party2);
         return "parties successfully created!";
     }
+
+
 
 
 
