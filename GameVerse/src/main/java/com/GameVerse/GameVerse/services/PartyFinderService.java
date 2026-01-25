@@ -17,12 +17,18 @@ public class PartyFinderService {
     private PartyFinderRepository partyFinderRepository;
 
     // join a party
-    public void joinParty(String userId, String partyId) {
-        PartyFinder party = partyFinderRepository.findById(partyId).orElseThrow();
+    public void joinParty(String userId, String partyName) {
+        PartyFinder party = partyFinderRepository.findByNameIgnoreCase(partyName);
+        if(party == null) {
+           throw new RuntimeException("Party not found"); 
+        }
         if(party.getMaxMembers() == party.getCurrentNumMembers()) {
             throw new RuntimeException("Party is full");
         } else if(party.getMembers().contains(userId)){
             throw new RuntimeException("User is already in the party");    
+        }
+        if(partyFinderRepository.existsByMembersContaining(userId)) {
+            throw new RuntimeException("User is already in another party");
         }
         party.addMember(userId);
         partyFinderRepository.save(party);
@@ -37,6 +43,8 @@ public class PartyFinderService {
             party.getMembers().remove(userId);
             party.setStatus(Status.WAITING);
         }
+
+        partyFinderRepository.save(party);
     }
 
     public void deleteParty(String partyId) {

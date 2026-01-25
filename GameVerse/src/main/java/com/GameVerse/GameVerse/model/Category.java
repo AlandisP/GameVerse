@@ -1,16 +1,7 @@
 package com.GameVerse.GameVerse.model;
 
 public enum Category {
-    SEASON1,
     SEASON2,
-    SEASON3,
-    SEASON4,
-    SEASON5,
-    SEASON6, 
-    SEASON7, 
-    SEASON8,
-    SEASON9,
-    SEASON10,
     FIGHTING,
     COOP,
     FPS,
@@ -29,5 +20,24 @@ public enum Category {
     WAGING,
     FIFA,
     NBA2K,
-    MADDEN
+    MADDEN,
+    ACTION,
+    ADVENTURE,
+    ROLE_PLAYING,
+    SHOOTER,
+    PLATFORMER,
+    HORROR,
+    SURVIVAL,
+    STEALTH,
+    SANDBOX,
+    OPEN_WORLD,
+    RACING,
+    SPORTS,
+    PUZZLE,
+    SIMULATION,
+    MMO,
+    BATTLE_ROYALE,
+    RHYTHM,
+    PARTY,
+    EDUCATIONAL
 }

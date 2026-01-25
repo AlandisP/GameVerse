@@ -32,6 +32,7 @@ function Signup() {
             localStorage.setItem('token', response.data.token);
             localStorage.setItem('username', response.data.username);
             localStorage.setItem('page', '/');
+            localStorage.setItem('userId', response.data.userId);
             history('/home');
         } catch(error) {
             console.error('Account Creation failed:', error.response ? error.response.data: error.message);

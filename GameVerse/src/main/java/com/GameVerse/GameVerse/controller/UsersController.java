@@ -106,5 +106,14 @@ public class UsersController {
         return ResponseEntity.ok("Successfully unfollowed the user");
     }
 
+    @GetMapping("/usernames")
+    public ResponseEntity<?> getUsers(@RequestParam List<String> userIds) {
+        List<String> usernames = userIds.stream()
+            .map(userId -> repository.findById(userId).map(User::getUsername).orElse(null))
+            .toList();
+        return ResponseEntity.ok(usernames);
+
+    }
+
 
 }

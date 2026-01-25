@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import NavBar from "./NavBar";
-import CreatePartyOverlay from './CreatePartyOverlay';
+import CreatePartyOverlay from './Overlays/CreatePartyOverlay';
 import "./PF.css";
 import logo from '../images/search.png';
 import plus from '../images/plus.png';
@@ -11,10 +11,12 @@ import Party from '../components/Party';
 
 function PartyFinderPage() {
     const username = localStorage.getItem('username');
+    const userId = localStorage.getItem("userId");
     const token  = localStorage.getItem('token');
     const [activeTab, setActiveTab] = useState('partyfinder');
     const [search, setSearch] = useState("");
     const [parties, setParties] = useState([]);
+    const [currParty, setCurrentParty] = useState(null);
     const [isOpen, setIsOpen] = useState(false);
 
     
@@ -23,6 +25,7 @@ function PartyFinderPage() {
         //alert("Hey this works");
         setIsOpen(!isOpen);
     }
+
 
     const handleCloseParty = () => {
         setIsOpen(false);
@@ -36,21 +39,94 @@ function PartyFinderPage() {
         setParties(result.data);
     };
 
+    const searchParties = async(q) => {
+        if(!q || q.trim() === "") {
+            getParties();
+            return;
+        }
+        try {
+            const res = await axios.get(
+                `${API_URL}/parties/matches`, {
+                    params: {text:q},
+                    headers: { Authorization: `Bearer ${token}` }
+                }
+            );
+            setParties(res.data);
+        } catch(error) {
+            console.error("Search failed:", error.response?.data || error.message);
+        }
+    }
+
+    useEffect(() => {
+        const delayDebounce = setTimeout(() => {
+            searchParties(search);
+        }, 300);
+
+        return () => clearTimeout(delayDebounce);
+    }, [search]);
+
+
     const ReadParties = () => {
-        const items = parties.map((party, ind) => (
-            <Party key={ind} Name={party.name} Description={party.description} Categories={party.categories} Count={party.maxMembers} Members={party.members} Status={party.status}/>
+        const filtered = currParty ? parties.filter(p => p.id !== currParty.id):parties;
+        const items = filtered.map((party, ind) => (
+            <Party key={ind} Name={party.name} Description={party.description} Categories={party.categories} Count={party.maxMembers} Members={party.members} Status={party.status} CreatorId={party.creatorId} id={party.id} refresh={getParties} refreshCurrent={GetCurrentParty}/>
         ));
         return(
             <div>{items}</div>
         )
     }
+
+    const GetCurrentParty = async() => {
+        try {
+            const res = await axios.get(
+                 `${API_URL}/parties/myParty`,
+                { headers: { Authorization: `Bearer ${token}` } }
+            );
+            setCurrentParty(res.data);
+            
+        } catch (error) {
+            if (error.response && error.response.status === 404) {
+                setCurrentParty(null);
+                return;
+            }
+        }
+    }
+
+    const handlePartyCreated = () => {
+        getParties();
+        GetCurrentParty();
+        setIsOpen(false);
+    }
+
+    const ReadCurrentParty = () => {
+        if(!currParty) {
+            return <p className='noParty'>You are currently not in a party</p>
+        }
+        return (
+            <div>
+                <Party 
+                    Name={currParty.name} 
+                    Description={currParty.description} 
+                    Categories={currParty.categories} 
+                    Count={currParty.maxMembers} 
+                    Members={currParty.members} 
+                    Status={currParty.status}
+                    CreatorId={currParty.creatorId}
+                    id={currParty.id}
+                    refresh={getParties}
+                    refreshCurrent={GetCurrentParty}/>
+            </div>
+        );
+    }
     useEffect(() => {
         getParties();
-    }, []);
+        GetCurrentParty();
+    }, [token]);
 
     return(
         <div className="page-container">
             <NavBar/>
+            <CreatePartyOverlay isOpen={isOpen} onClose={handleCloseParty} onPartyCreated={handlePartyCreated}/>
 
             <div className="main-content">
 
@@ -70,7 +146,6 @@ function PartyFinderPage() {
             Party Finder
         </h1>
     </div>
-    <CreatePartyOverlay isOpen={isOpen} onClose={handleCloseParty}/>
     <div className='top-container'>
         <div className = "search-bar">
             <img src={logo} alt="search" className='search-img'></img>
@@ -78,6 +153,7 @@ function PartyFinderPage() {
                 className="bar"
                 type = "text"
                 placeholder='Enter the name Or Category of a Party you want to find!'
+                onChange={(c) => setSearch(c.target.value)}
             />
         </div>
         <div className="createButton">
@@ -88,6 +164,8 @@ function PartyFinderPage() {
         </div>
 
         </div>
+        <h2>Current Party</h2>
+        <ReadCurrentParty/>
         <h2>Available Parties</h2>
         <ReadParties/>
     </div>

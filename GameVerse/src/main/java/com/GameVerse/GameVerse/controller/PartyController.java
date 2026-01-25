@@ -1,7 +1,10 @@
 package com.GameVerse.GameVerse.controller;
 
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -50,9 +53,22 @@ public class PartyController {
         if(partyRepository.existsByName(req.name)) {
             return ResponseEntity.badRequest().body("Party name already exists");
         }
+        if(partyRepository.findByCreatorId(userId) != null || partyRepository.existsByMembersContaining(userId)) {
+            return ResponseEntity.badRequest().body("User already owns a party or is a member of a party");
+        }
         PartyFinder party = new PartyFinder(userId, req.name, req.description, req.maxMembers, req.categories);
         partyRepository.save(party);
         return ResponseEntity.ok().body(party.getId());   
+    }
+
+    @GetMapping("/myParty")
+    public ResponseEntity<?> getCurrentParty(Authentication auth) {
+        String userId = (String) auth.getPrincipal();
+        PartyFinder party = partyRepository.findByMembersContaining(userId);
+        if(party == null) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(party);
     }
 
     @GetMapping("/{partyName}")
@@ -65,8 +81,19 @@ public class PartyController {
     }
 
     @GetMapping("/matches")
-    public List<PartyFinder> getPartyMatches(@RequestParam String text) {
-        return partyRepository.findByNameContainingIgnoreCase(text);
+    public ResponseEntity<?> getPartyMatches(@RequestParam String text) {
+        List<PartyFinder> parties = partyRepository.findByNameContainingIgnoreCase(text);
+        Category category = tryParseCategory(text);
+        List<PartyFinder> byCategory = category != null
+            ? partyRepository.findByCategoriesContaining(category)
+            : Collections.emptyList();
+
+    Set<PartyFinder> combined = new HashSet<>();
+    combined.addAll(parties);
+    combined.addAll(byCategory);
+
+        return ResponseEntity.ok(combined);
+
     }
 
     @GetMapping("/matchesCategory")
@@ -82,10 +109,13 @@ public class PartyController {
         if( party == null) {
             return ResponseEntity.badRequest().body("Party doesnt exist");
         }
-        String id = party.getId();
-        String userId = (String) auth.getPrincipal();
-        partyService.joinParty(userId, id);
-        return ResponseEntity.ok(party);
+        try {
+            String userId = (String) auth.getPrincipal();
+            partyService.joinParty(userId, partyname);
+            return ResponseEntity.ok(party);
+        } catch(RuntimeException ex) {
+            return ResponseEntity.badRequest().body(ex.getMessage());
+        }
     }
 
     @PutMapping("/{partyname}/leave")
@@ -100,10 +130,11 @@ public class PartyController {
         return ResponseEntity.ok(party);
     }
     //Kick a member from the party
-    @PutMapping("/{partyname}/{username}")
-    public ResponseEntity<?> kickFromParty(@PathVariable String partyname, @PathVariable String username) {
+    @PutMapping("/{partyname}/{member}")
+    public ResponseEntity<?> kickFromParty(@PathVariable String partyname, @PathVariable String member, Authentication auth) {
+        String userId = (String) auth.getPrincipal();
         PartyFinder party = partyRepository.findByNameIgnoreCase(partyname);
-        User user = repository.findByUsernameIgnoreCase(username);
+        User user = repository.findByUsernameIgnoreCase(member);
         if( party == null || user == null) {
             return ResponseEntity.badRequest().body("Party or User doesnt exist");
         }
@@ -112,13 +143,17 @@ public class PartyController {
         return ResponseEntity.ok().body(party);
     }
     //Delete Party
-    @DeleteMapping("/delete")
-    public ResponseEntity<?> deleteParty(@RequestParam String partyname) {
-        PartyFinder party = partyRepository.findByNameIgnoreCase(partyname);
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> deleteParty(@PathVariable String id, Authentication auth) {
+        String userId = (String) auth.getPrincipal();
+        PartyFinder party = partyRepository.findById(id).orElse(null);
         if(party == null) {
-            return ResponseEntity.badRequest().body("Party with that name doesn't exist");
+            return ResponseEntity.badRequest().body("Party doesn't exist");
         }
-        partyService.deleteParty(partyname);
+         if (!party.getCreatorId().equals(userId)) {
+            return ResponseEntity.status(403).body("You are not the owner of this party");
+        }
+        partyService.deleteParty(id);
         return ResponseEntity.ok("party successfully deleted");
     }
 
@@ -137,6 +172,14 @@ public class PartyController {
         return "parties successfully created!";
     }
 
+    @GetMapping("/categories")
+    public ResponseEntity<?> getAllCategories() {
+        List<String> categories = Arrays.stream(Category.values())
+            .map(Enum::name)
+            .collect(Collectors.toList());
+        return ResponseEntity.ok(categories);
+    }
+
 
 
 
@@ -148,4 +191,24 @@ public class PartyController {
         public List<Category> categories;
 
     }
+
+    // Needed help with this type of enum searching
+    private Category tryParseCategory(String q) {
+    String cleaned = q.trim().toUpperCase();
+
+    // Full match
+    try {
+        return Category.valueOf(cleaned);
+    } catch (IllegalArgumentException ignored) {}
+
+    // Partial match
+    for (Category cat : Category.values()) {
+        if (cat.name().startsWith(cleaned)) {
+            return cat;
+        }
+    }
+
+    return null;
+}
+
 }

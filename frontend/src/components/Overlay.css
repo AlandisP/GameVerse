@@ -10,13 +10,15 @@
     bottom: 0;
     left: 0;
     display: flex;
+    z-index: 9999;
+
 }
 
 .overlay-background {
     background-color: grey;
     text-align: center;
-    width: 60%;
-    height: 70%;
+    width: 65%;
+    height: 75%;
     align-items: center;
     justify-content: center;
     border-radius: 40px;
@@ -47,14 +49,158 @@
 
 .close {
     padding: 10px;
-    font-size: 20px;
+    font-size: 50px;
     border-radius: 60px;
+    font-weight: bold;
+    background: none;
+    border: none;
 }
 .close:hover {
     background-color: rgb(230, 26, 26);
+    color: white;
 }
 
 .contents {
     justify-content: center;
     background-color: transparent;
+    max-height: 70%;
+    overflow-y: auto;
+    padding-right: 10px;
 }
+
+.catHeader{
+    padding: 0;
+    margin: 20px;
+    font-size: 30px;
+}
+.select-list{
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    background-color: transparent;
+    padding: 10px;
+}
+
+.catbox2 {
+    background-color: rgba(61, 53, 53, 0.76);
+    border-radius: 15px;
+    font-size: 15px;
+    padding: 15px;
+    margin-right: 10px;
+    font-weight: bold;
+    border: 2px solid transparent;
+}
+
+.catbox2:hover {
+    background-color: rgba(61, 53, 53, 0.363);
+}
+
+.catbox2:active {
+    background-color: rgba(61, 53, 53, 0.363);
+}
+
+.catbox2-selected {
+    background-color: rgba(61, 53, 53, 0.363);
+    border-radius: 15px;
+    font-size: 15px;
+    padding: 15px;
+    margin-right: 10px;
+    font-weight: bold;
+    border-style: solid;
+    border: 2px solid antiquewhite;
+}
+
+.create {
+    margin-top: 20px;
+    padding:20px;
+    font-size: 20px;
+    border-radius: 40px;
+    background-color: #3b82f6;
+    color: white;
+    font-weight: bold;
+    border: none;
+}
+
+.headers {
+    font-size: 30px;
+    padding: 0;
+    margin: 10px;
+}
+
+.inputs {
+    border: none;
+    padding: 20px;
+    background: none;
+    border-bottom: 5px solid black;
+    border-radius: 10px;
+    font-size: 20px;
+    width: 50%;
+    text-align: center;
+    outline: none;
+}
+
+.create:hover {
+    border: 2px solid black;
+}
+
+.member-overlay{
+    background-color: grey;
+    text-align: center;
+    width: 25%;
+    height: 60%;
+    align-items: center;
+    justify-content: center;
+    border-radius: 40px;
+    border: 10px solid #3b82f6;
+}
+
+.usernames {
+    font-size: 50px;
+    padding: 10px;
+    font-weight: 800;
+    font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.usernames:hover, .owner:hover {
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+.owner {
+    font-size: 50px;
+    justify-content: center;
+    padding: 10px;
+    font-weight: 800;
+    font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color:gold
+}
+
+.owner::after {
+    content: " 👑"
+}
+
+.users-container{
+    background-color: transparent;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+}
+
+.kickbutton {
+    background-color: red;
+    width: 20%;
+    border-radius: 20px;
+    font-size: 30px;
+    font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-weight: bold;
+    color: white;
+    border: none;
+}
+
+.kickbutton:hover{
+    background-color: rgb(230, 26, 26);
+}
+
+

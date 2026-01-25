@@ -11,9 +11,12 @@ import com.GameVerse.GameVerse.model.PartyFinder;
 @Repository
 public interface PartyFinderRepository extends MongoRepository<PartyFinder, String>{
     PartyFinder findByNameIgnoreCase(String name);
+    PartyFinder findByMembersContaining(String userId);
     List<PartyFinder> findByNameContainingIgnoreCase(String chars);
     List<PartyFinder> findByDescriptionContainingIgnoreCase(String description);
+    List<PartyFinder> findByCategoriesContaining(Category category);
     List<PartyFinder> findByCategoriesIn(List<Category> categories);
-    List<PartyFinder> findByCreatorId(String id);
+    PartyFinder findByCreatorId(String id);
     boolean existsByName(String name);
+    boolean existsByMembersContaining(String userId);
 }
