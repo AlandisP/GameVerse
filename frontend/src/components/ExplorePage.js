@@ -1,21 +1,15 @@
-// src/components/ExplorePage.js
 import React, { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import api from "../config/api"; // if api.get doesn't exist, we use axios in fetchPosts below
 import NavBar from "./NavBar";
-import searchIcon from "../images/search.png"; // same icon path used in MessagePage
-import API_URL from '../config/api';
+import searchIcon from "../images/search.png";
+import API_URL from "../config/api";
+import PostObj from "./Post";
 
 function ExplorePage() {
   const navigate = useNavigate();
-  const username = localStorage.getItem("username");
-
-  // local token getter (restores previous fix)
   const getToken = () =>
     localStorage.getItem("authToken") || localStorage.getItem("token") || null;
-
-  const [activeTab, setActiveTab] = useState("explore");
 
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -30,18 +24,81 @@ function ExplorePage() {
   const searchControllerRef = useRef(null);
   const searchDebounceRef = useRef(null);
 
-  const handleNavClick = (e, path, tab) => {
-    e?.preventDefault();
-    setActiveTab(tab);
-    navigate(path);
-  };
+  function shuffleArray(arr) {
+    const a = arr.slice();
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+  }
 
-  const handleLogout = () => {
-    localStorage.removeItem("authToken");
-    localStorage.removeItem("token");
-    localStorage.removeItem("username");
-    navigate("/login");
-  };
+  function getPostTimestamp(post) {
+    const t =
+      post.createdAt ??
+      post.created_at ??
+      post.timestamp ??
+      post.time ??
+      post.date;
+    if (!t) return null;
+    const d = new Date(t);
+    return Number.isFinite(d.getTime()) ? d.getTime() : null;
+  }
+
+  function trendingScore(post, now = Date.now()) {
+    const likes = Number(post.likes || 0);
+    const ts = getPostTimestamp(post);
+    let recencyHours = ts
+      ? Math.max(0, (now - ts) / (1000 * 60 * 60))
+      : 24 * 365;
+    const recencyScore = 10 / (1 + recencyHours);
+    return likes + recencyScore;
+  }
+
+  function pickTrending(postsArray, n = 20) {
+    const now = Date.now();
+    return postsArray
+      .map((p) => ({ p, score: trendingScore(p, now) }))
+      .sort((a, b) => b.score - a.score)
+      .slice(0, n)
+      .map((x) => x.p);
+  }
+
+  function pickRandomFrom(allPosts, excludeSet = new Set(), m = 30) {
+    const pool = allPosts.filter((p) => !excludeSet.has(p.id));
+    return shuffleArray(pool).slice(0, m);
+  }
+
+  function combineTrendingAndRandom(trending, random) {
+    const out = [];
+    const maxLen = Math.max(trending.length, random.length);
+    for (let i = 0; i < maxLen; i++) {
+      if (i < trending.length) out.push(trending[i]);
+      if (i < random.length) out.push(random[i]);
+    }
+    return out;
+  }
+
+  function mapToPostObjProps(p) {
+    const user = p.user ?? p.author ?? p.authorName ?? p.username ?? "Unknown";
+    const content = p.text ?? p.content ?? p.body ?? "";
+    const likes = Number.isFinite(Number(p.likes)) ? Number(p.likes) : 0;
+    let liked = false;
+    const currentUser = localStorage.getItem("username");
+    if (p.liked && typeof p.liked === "object") {
+      const val = p.liked[currentUser];
+      liked = Boolean(val);
+    } else {
+      liked = Boolean(p.liked);
+    }
+    return {
+      User: user,
+      Content: content,
+      Likes: likes,
+      Liked: liked,
+      id: p.id,
+    };
+  }
 
   useEffect(() => {
     let mounted = true;
@@ -54,25 +111,26 @@ function ExplorePage() {
 
       try {
         const token = getToken();
-        console.log("fetchPosts token:", token);
-
-        // Use axios.get for compatibility (in case `api` isn't an axios instance)
-        const response = await axios.get("/api/posts/explore", {
+        const response = await axios.get(`${API_URL}/post/getposts`, {
           signal: controller.signal,
           headers: token ? { Authorization: `Bearer ${token}` } : {},
         });
 
         if (!mounted) return;
-        const data = response.data;
-        setPosts(Array.isArray(data) ? data : []);
+        const data = Array.isArray(response.data) ? response.data : [];
+
+        const trending = pickTrending(data, 20);
+        const exclude = new Set(trending.map((p) => p.id));
+        const random = pickRandomFrom(data, exclude, 30);
+        const combined = combineTrendingAndRandom(trending, random);
+
+        setPosts(combined.slice(0, 50));
       } catch (err) {
-        if (err?.name === "CanceledError" || err?.code === "ERR_CANCELED") {
+        if (err?.name === "CanceledError" || err?.code === "ERR_CANCELED")
           return;
-        }
-        console.error("Failed to fetch posts:", err);
         if (!mounted) return;
         setError(
-          err.response?.data?.message || err.message || "Failed to load posts."
+          err.response?.data?.message || err.message || "Failed to load posts.",
         );
       } finally {
         if (mounted) setLoading(false);
@@ -88,7 +146,6 @@ function ExplorePage() {
   }, []);
 
   const handleToggleLike = async (postId) => {
-    // Optimistic update
     setPosts((prev) =>
       prev.map((post) =>
         post.id === postId
@@ -99,22 +156,20 @@ function ExplorePage() {
                 ? Math.max((post.likes || 1) - 1, 0)
                 : (post.likes || 0) + 1,
             }
-          : post
-      )
+          : post,
+      ),
     );
 
     try {
       const token = getToken();
       await axios.post(
-        `/api/posts/${encodeURIComponent(postId)}/like`,
-        {},
+        `${API_URL}/post/likepost`,
+        { id: postId },
         {
           headers: token ? { Authorization: `Bearer ${token}` } : {},
-        }
+        },
       );
-    } catch (err) {
-      console.error("Failed to update like status", err);
-      // revert optimistic update on error
+    } catch {
       setPosts((prev) =>
         prev.map((post) =>
           post.id === postId
@@ -125,8 +180,8 @@ function ExplorePage() {
                   ? Math.max((post.likes || 1) - 1, 0)
                   : (post.likes || 0) + 1,
               }
-            : post
-        )
+            : post,
+        ),
       );
     }
   };
@@ -141,11 +196,6 @@ function ExplorePage() {
     if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
 
     searchDebounceRef.current = setTimeout(() => {
-      if (searchControllerRef.current) searchControllerRef.current.abort();
-
-      const controller = new AbortController();
-      searchControllerRef.current = controller;
-
       const doSearch = async () => {
         setSearchLoading(true);
         setSearchError(null);
@@ -154,18 +204,12 @@ function ExplorePage() {
           const token = getToken();
           const res = await axios.get(`${API_URL}/users/matches`, {
             params: { text: searchQuery },
-            // headers: token ? { Authorization: `Bearer ${token}` } : {},
-            // signal: controller.signal,
+            headers: token ? { Authorization: `Bearer ${token}` } : {},
           });
-
-          const data = res.data;
-          setSearchResults(Array.isArray(data) ? data : []);
+          setSearchResults(Array.isArray(res.data) ? res.data : []);
         } catch (err) {
-          if (err?.name === "CanceledError" || err?.code === "ERR_CANCELED")
-            return;
-          console.error("User search failed:", err);
           setSearchError(
-            err.response?.data?.message || err.message || "Search failed."
+            err.response?.data?.message || err.message || "Search failed.",
           );
           setSearchResults([]);
         } finally {
@@ -181,20 +225,10 @@ function ExplorePage() {
     };
   }, [searchQuery]);
 
-  useEffect(() => {
-    return () => {
-      if (postsAbortRef.current) postsAbortRef.current.abort();
-      if (searchControllerRef.current) searchControllerRef.current.abort();
-      if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
-    };
-  }, []);
-
   return (
     <div className="page-container">
       <NavBar />
-
       <div className="main-content" style={{ display: "flex", padding: 0 }}>
-        {/* LEFT SIDEBAR (holds search) */}
         <div
           style={{
             width: "350px",
@@ -211,19 +245,12 @@ function ExplorePage() {
               paddingLeft: "40px",
             }}
           >
-            <h1
-              style={{
-                color: "white",
-                fontSize: "32px",
-                margin: "0",
-              }}
-            >
+            <h1 style={{ color: "white", fontSize: "32px", margin: 0 }}>
               Explore
             </h1>
           </div>
 
           <div style={{ padding: "20px" }}>
-            {/* Search pill that matches MessagePage */}
             <div
               style={{
                 backgroundColor: "white",
@@ -253,15 +280,12 @@ function ExplorePage() {
               />
             </div>
 
-            {/* show small searching text */}
             {searchLoading && (
               <small style={{ color: "#ddd" }}>Searching…</small>
             )}
 
-            {/* Search results (dropdown style) */}
             {searchQuery && (
               <div
-                className="search-results"
                 style={{
                   marginTop: 8,
                   maxHeight: 300,
@@ -270,9 +294,7 @@ function ExplorePage() {
                 }}
               >
                 {searchError && (
-                  <div className="search-error" style={{ color: "salmon" }}>
-                    {searchError}
-                  </div>
+                  <div style={{ color: "salmon" }}>{searchError}</div>
                 )}
                 {searchResults.map((u) => (
                   <div
@@ -306,7 +328,6 @@ function ExplorePage() {
           </div>
         </div>
 
-        {/* RIGHT: content area (posts) */}
         <div
           style={{
             flex: 1,
@@ -325,37 +346,19 @@ function ExplorePage() {
             {loading ? (
               <h3>Loading posts…</h3>
             ) : error ? (
-              <div className="error" style={{ color: "salmon" }}>
-                {error}
-              </div>
+              <div style={{ color: "salmon" }}>{error}</div>
             ) : posts.length === 0 ? (
               <div>No posts found.</div>
             ) : (
-              posts.map((post) => (
-                <article
-                  key={post.id}
-                  style={{
-                    marginBottom: 12,
-                    background: "#3a3a3a",
-                    padding: 12,
-                    borderRadius: 8,
-                  }}
-                >
-                  <div className="post-header">
-                    <strong>
-                      {post.authorName || post.author || "Unknown"}
-                    </strong>
-                  </div>
-                  <div className="post-body" style={{ marginTop: 8 }}>
-                    {post.content}
-                  </div>
-                  <div className="post-actions" style={{ marginTop: 8 }}>
-                    <button onClick={() => handleToggleLike(post.id)}>
-                      {post.liked ? "Unlike" : "Like"} ({post.likes || 0})
-                    </button>
-                  </div>
-                </article>
-              ))
+              posts.map((post) => {
+                const props = mapToPostObjProps(post);
+                return (
+                  <PostObj
+                    key={props.id || Math.random().toString(36).slice(2)}
+                    {...props}
+                  />
+                );
+              })
             )}
           </section>
         </div>
