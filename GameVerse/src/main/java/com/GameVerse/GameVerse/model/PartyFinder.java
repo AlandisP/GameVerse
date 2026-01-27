@@ -90,6 +90,10 @@ public class PartyFinder {
         this.status = status;
     }
 
+    public void setMembers(ArrayList<String> members) {
+        this.members = members;
+    }
+
 
 
     
