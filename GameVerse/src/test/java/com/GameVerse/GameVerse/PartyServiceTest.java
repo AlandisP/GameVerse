@@ -23,7 +23,7 @@ import com.GameVerse.GameVerse.repository.PartyFinderRepository;
 import com.GameVerse.GameVerse.services.PartyFinderService;
 
 @ExtendWith(MockitoExtension.class)
-public class PartyServiceTest {
+class PartyServiceTest {
 
     @Mock
     private PartyFinderRepository partyRepository;
@@ -115,7 +115,4 @@ public class PartyServiceTest {
 
         verify(partyRepository, never()).save(any());
     }
-
-
-
 }
