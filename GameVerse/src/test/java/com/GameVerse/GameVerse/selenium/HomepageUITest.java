@@ -40,7 +40,7 @@ public class HomepageUITest {
     void userIsRedirectedToHomeAfterLogin() throws InterruptedException {
         WebDriver driver = new ChromeDriver();
 
-        // Load your login page
+        // Load login page
         driver.get("http://localhost:3000");
 
         // Fill in valid credentials
@@ -50,7 +50,7 @@ public class HomepageUITest {
         // Click login button
         driver.findElement(By.xpath("//button[contains(text(), 'Login')]")).click();
 
-        // Give React + Spring a moment to redirect
+        // Give React a moment to redirect
         Thread.sleep(4000);
 
         // Assert redirect to /home
