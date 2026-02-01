@@ -67,7 +67,7 @@ The behavioral tests are in `/GameVerse/test/java/com/GameVerse/GameVerse/seleni
 
 1. Run the backend + frontend(npm start) of the application(for selenium to run behavioral tests)
 2. Make sure you're in the GameVerse/ directory(otherwise next command will not work)
-3. run the command 'mvnw test' in the termainl and the tests will run.
+3. run the command './mvnw test' in the termainl and the tests will run.
 
 *If you're using VScode, you can run tests via the testing tab or you can run them manually by going into the test folder and running each test.
 
