@@ -53,20 +53,24 @@ Railway redeploys automatically on push to GitHub.
 
 # Testing
 
-In 492 you will write automated tests. When you do you will need to add a
-section that explains how to run them.
+The unit tests are in `/GameVerse/test/java/com/GameVerse/GameVerse`.
 
-The unit tests are in `/test/unit`.
-
-The behavioral tests are in `/test/casper/`.
+The behavioral tests are in `/GameVerse/test/java/com/GameVerse/GameVerse/selenium`.
 
 ## Testing Technology
 
-Testing frameworks are included with Maven and React. No additional installation needed.
+1. Testing frameworks are included with Maven and React. No additional installation needed.
+2. Maven handles all test dependencies automatically.
+3. No additional installation is required beyond Java, Node, and Chrome.
 
 ## Running Tests
 
-Explain how to run the automated tests.
+1. Run the backend + frontend(npm start) of the application(for selenium to run behavioral tests)
+2. Make sure you're in the GameVerse/ directory(otherwise next command will not work)
+3. run the command './mvnw test' in the termainl and the tests will run.
+
+*If you're using VScode, you can run tests via the testing tab or you can run them manually by going into the test folder and running each test.
+
 
 # Authors
 
