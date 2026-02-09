@@ -5,7 +5,6 @@ import NavBar from "./NavBar";
 import Pfp from '../images/Profile.png'
 import axios from 'axios';
 import PostObj from './Post'
-import API_URL from '../config/api';
 
 function HomePage() {
     const navigate = useNavigate();
@@ -16,6 +15,7 @@ function HomePage() {
     const maxlen = 300;
     const [postbod, setpostbod] = useState("");
     const [posts, setposts] = useState([]);
+    const [bookmarks, setbooks] = useState([]);
     const [canref, refresh] = useState(0);
 
     const handleNavClick = (e, path, tabId) => {
@@ -40,7 +40,7 @@ function HomePage() {
     const makepost = async () =>{
         if(postbod!=""){
             const pid = await axios.post(
-                `${API_URL}/post/makepost`,{body:postbod},
+                'http://localhost:8080/post/makepost',{body:postbod},
                 { headers: { Authorization: `Bearer ${token}` } }
             );
             setposts(posts => {
@@ -53,10 +53,15 @@ function HomePage() {
 
     const getposts = async() =>{
         const result = await axios.get(
-            `${API_URL}/post/getposts`,
+            'http://localhost:8080/post/getposts',
             { headers: { Authorization: `Bearer ${token}` } }
         );
+        const bookmarks = await axios.get('http://localhost:8080/post/getbooks',
+            { headers: { Authorization: `Bearer ${token}` } });
+        setbooks(bookmarks.data);
         setposts(result.data);
+        //setbooks(bookmarks.data);
+
     }
 
     const parselike = (postinf)=>{
@@ -66,9 +71,13 @@ function HomePage() {
     }
 
     const Readposts = () => {
-        const items = posts.map((post,ind)=>(
-                <PostObj key={ind} User={post["user"]} Content={post["text"]} Likes={post["likes"]} Liked={parselike(post)} id={post["id"]}/>
-        ));
+        const bookarray = Array.from(bookmarks);
+        const items = posts.map((post,ind)=>{
+                if(bookarray.includes(post["id"])){
+                    return <PostObj key={ind} User={post["user"]} Content={post["text"]} Likes={post["likes"]} Liked={parselike(post)} id={post["id"]} books={true}/>
+                }
+                return <PostObj key={ind} User={post["user"]} Content={post["text"]} Likes={post["likes"]} Liked={parselike(post)} id={post["id"]} books={false}/>
+        });
         return(
             <div>{items}</div>
         )

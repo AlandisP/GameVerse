@@ -1,5 +1,8 @@
 package com.GameVerse.GameVerse.model;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
@@ -22,6 +25,8 @@ public class User {
     private int followerCount;
     private int followingCount;
 
+    private ArrayList<String> bookMarks;
+
     public User() {}
 
     public User(String username, String password) {
@@ -32,6 +37,7 @@ public class User {
         this.role = Role.USER;
         this.followerCount = 0;
         this.followingCount = 0;
+        bookMarks = new ArrayList<>();
     }
 
     // ---- Getters ----
@@ -101,4 +107,27 @@ public class User {
     public void setFollowingCount(int followingCount) {
         this.followingCount = followingCount;
     }
+
+    public void addBookmark(String post){
+        if(bookMarks == null){
+            bookMarks = new ArrayList<>();
+        }
+        if(!bookMarks.contains(post)){
+            bookMarks.add(post);
+        }else{
+            bookMarks.remove(post);
+        }
+    }
+
+    public void removeBookmark(String post){
+
+    }
+
+    public ArrayList<String> getbookMarks(){
+        return bookMarks;
+    }
+
+    // public void setbookMarks(ArrayList<String> input){
+    //     bookMarks = input;
+    // }
 }
