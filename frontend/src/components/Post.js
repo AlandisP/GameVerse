@@ -3,6 +3,7 @@ import HeartFull from '../images/HeartFull.png'
 import Bookmark from '../images/Bookmark.png'
 import BookmarkFull from '../images/BookmarkFull.png'
 import Pfp from '../images/Profile.png'
+import commentico from '../images/Comments.png'
 import React, { useState, useRef, useEffect} from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
@@ -12,6 +13,7 @@ function PostObj ({User, Content, Likes, Liked, id, books}){
         const [didLike, setdidLike]= useState(Liked);
         const [didBook, setBook]= useState(false);
         const [falseLikes, setfalseLikes]= useState(Likes);
+        const [comments, setComments]= useState(0);
         const token  = localStorage.getItem('token');
         const navigate = useNavigate();
         useEffect(()=>{
@@ -47,6 +49,8 @@ function PostObj ({User, Content, Likes, Liked, id, books}){
                     <div className='Media-Bar'>
                         <img src={didLike ? HeartFull : Heart} onClick={likeinteract}/>
                         <p>{falseLikes}</p>
+                        <img src={commentico}/>
+                        <p>{comments}</p>
                         <img className='Bookmark' src={didBook ? BookmarkFull : Bookmark} onClick={bookinteract}/>
                     </div>
                 </div>
