@@ -1,0 +1,255 @@
+.comm-top {
+    background-color: grey;
+    /* width: 85%;
+    max-width: 1400px;  
+    max-height: 100px; */ 
+    width: 85%;
+    padding: 1rem;          
+    border-radius: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: .2rem;               
+    margin: 10px auto 0 auto;
+}
+
+.join-txt {
+    font-size: 2rem;         
+    margin-left: 0; 
+    padding: 0px;       
+    margin: 0; 
+    margin-top: -15px;
+}
+
+.explain-txt {
+    font-size: 1rem;         
+    margin-left: 0;
+    line-height: 1.4;
+}
+
+.buttons {
+    background-color: transparent;
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;        
+    margin: 0; 
+}
+
+.buttons button {
+    padding: 0.75rem 1.5rem;
+    font-size: 1rem;
+    border-radius: 10px;
+    cursor: pointer;
+    margin: 0;
+}
+
+.explorebtn {
+    background-color: #3b82f6;
+    color: white;
+    border: 3px solid transparent;
+}
+
+.explorebtn:hover {
+    background-color: rgba(0, 0, 255, 0.781);
+}
+
+.crtownbtn{
+    background-color: transparent;
+    border: 3px solid white;
+    color: white;
+}
+
+.crtownbtn:hover {
+    background-color: rgba(245, 245, 245, 0.377);
+}
+
+.featured-com {
+    width:100%;
+    display: flex;
+    align-items: center;
+    /* gap: 1rem; */
+    margin:.05rem
+}
+
+
+.featured-com button {
+    display: flex;
+    justify-content: center;   
+    align-items: center;       
+    padding: 0.75rem 1.5rem;
+    background-color: rgba(49, 47, 47, 0.685);
+    color: white;
+    border-radius: 10px;
+    cursor: pointer;
+    line-height: 1;            
+    height: auto;        
+    border: 2px solid transparent;      
+}
+
+
+.featuredbts {
+    display: flex;
+    gap: 0.5rem;
+    margin-left: auto;  
+    flex-wrap: wrap;     
+    margin-right: 10px;
+}
+
+.filter-btn.selected {
+    background-color: white;
+    color: black;
+    border: 2px solid white;
+}
+
+.communities-box {
+    display: flex;
+    flex-direction: row;
+    gap: 1rem;
+    margin: .5rem;
+    max-height: 30%;
+    justify-content: center;
+    margin-top: 0;
+    
+}
+
+
+.fcommunity {
+    display: flex;            
+    flex-direction: column; 
+    max-width: 25%;
+    min-width:100px;
+    width:23.5%;
+    max-height: 37%;
+    background-color: rgb(48, 45, 45);
+    padding: 1.2rem;
+    border-radius: 10px;
+     
+}
+
+.imgbox {
+    width: 100%;
+    max-height: 25%;
+    min-height: 85px;
+    height: fit-content;
+    overflow: hidden;
+    margin-bottom: 1rem;
+}
+
+.imgbox img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.topbox-txt{
+    width: 100%;
+    background-color: transparent;
+    display: flex;
+    flex-direction: row;
+    line-height: 1px;
+    margin-bottom: .01rem;
+}
+
+.topbox-txt h3 {
+    font-size: clamp(0.95rem, 0.7vw + 0.35rem, 1.35rem);
+    margin: 0;
+    padding: 0;
+    display: flex;
+
+}
+
+.count {
+    margin: 0;
+    margin-left: auto;
+    padding: 0;
+    display: flex;
+}
+
+.description {
+    margin-top: 13px;
+    color: grey;
+    font-size: clamp(0.8rem, 0.6vw + 0.3rem, 1rem);
+    line-height: 1.3;
+    overflow: hidden;
+}
+
+.joinbtnf {
+    margin-left: auto;    
+    width: 15%;       
+    padding: .5rem;
+    border-radius: 10px;    
+    background-color: #3b82f6;
+    color: white;
+    font-weight: bold;
+    font-size: .8rem;
+    border: none;
+}
+
+.joinbtn:hover {
+    cursor: pointer;
+}
+
+.minicoms {
+    max-width: 100%;
+    max-height: 18vh;
+    height: auto;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    margin-left: 20px;
+}
+
+
+.minicombox {
+    flex: 0 0 calc(23% - 20px); /* EXACTLY 3 per row */
+    background-color: rgb(48, 45, 45);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    padding: .5rem;
+    height: auto;
+    margin: 0;
+}
+
+.placeholderbox {
+    width: 4.6rem;
+    aspect-ratio: 1 / 1;
+    background-color: grey;
+    border-radius: 8px;
+    margin-right: 15px;
+}
+
+.minicol {
+    background-color: transparent;
+    justify-content: space-between;
+    flex-direction: column;
+}
+
+.minicol h3{
+    margin: 0;
+    font-size: 1rem;
+}
+
+.minicol p{
+    margin: 0;
+    align-self: flex-end;
+    margin-left: auto;
+    font-size: .9rem;
+}
+
+.main-content {
+    position: relative;
+    overflow-y: auto;
+    overflow-x: hidden;   /* add this */
+    z-index: 1;
+}
+
+.mycommunities h2 {
+    margin-bottom: .5rem;
+}
+
+
+
+
+
+
+

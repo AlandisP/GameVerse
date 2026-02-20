@@ -7,14 +7,15 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.GameVerse.GameVerse.model.User;
 import com.GameVerse.GameVerse.repository.UserRepository;
+import com.GameVerse.GameVerse.services.NotificationService;
 import com.GameVerse.GameVerse.services.RelationshipServices;
 
 @RestController
@@ -30,6 +31,11 @@ public class UserProfileController {
 
     @Autowired
     private RelationshipServices relationshipServices;
+
+    @Autowired
+    private NotificationService notificationService;
+
+    private static final String type = "Profile";
 
     // Gets the current Users Profile
     @GetMapping
@@ -118,7 +124,8 @@ public class UserProfileController {
         if (target.getId().equals(followerId)) {
             return ResponseEntity.badRequest().body("You cannot follow yourself");
         }
-
+        String message = repository.findById(followerId).orElse(null).getUsername() + " has followed you!";
+        notificationService.createNotification(type, message, target.getId());
         relationshipServices.followUser(followerId, target.getId());
         return ResponseEntity.ok().build();
     }

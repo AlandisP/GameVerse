@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.GameVerse.GameVerse.model.Community;
+import com.GameVerse.GameVerse.model.CommunityCategory;
 import com.GameVerse.GameVerse.model.CommunityMembership;
 import com.GameVerse.GameVerse.model.MemberType;
 import com.GameVerse.GameVerse.model.User;
@@ -11,6 +12,7 @@ import com.GameVerse.GameVerse.repository.CommunityMembershipRepository;
 import com.GameVerse.GameVerse.repository.CommunityRepository;
 import com.GameVerse.GameVerse.repository.PostRepository;
 import com.GameVerse.GameVerse.repository.UserRepository;
+import java.util.*;
 @Service
 public class CommunityService {
     @Autowired
@@ -25,14 +27,14 @@ public class CommunityService {
     @Autowired
     private CommunityMembershipRepository cr;
 
-    public void createCommunity(String ownerId, String name, String description) {
+    public void createCommunity(String ownerId, String name, String description, CommunityCategory category) {
         User user = userRepository.findById(ownerId).orElse(null);
         if(user == null) {
             throw new RuntimeException("User doesn't exist");
         }
-        Community com = new Community(ownerId, name, description);
-        CommunityMembership cm = new CommunityMembership(ownerId, com.getId(), MemberType.OWNER);
+        Community com = new Community(ownerId, name, description, category);
         communityRepository.save(com);
+        CommunityMembership cm = new CommunityMembership(ownerId, com.getId(), MemberType.OWNER);
         cr.save(cm);
     }
 
@@ -101,6 +103,30 @@ public class CommunityService {
         }
         cr.deleteAllByCommunityId(communityId);
         communityRepository.delete(com);
+    }
+
+    public List<Community> getUsersCommunities(String userId) {
+        if(!userRepository.existsByUsername(userId)) {
+            throw new RuntimeException(" User doesn't exist");
+        }
+        List<CommunityMembership> arr = cr.findAllByUserId(userId);
+        List<Community> coms = new ArrayList<Community>();
+        for(int i = 0; i < arr.size(); i++) {
+            coms.add(communityRepository.findById(arr.get(i).getCommunityId()).orElse(null));
+        }
+        return coms;
+    }
+    // This is structured so that we aren't showing 5+ commiunites on the featured page
+    public List<Community> getTopCommunitiesForUser(String userId) {
+        if(!userRepository.existsByUsername(userId)) {
+            throw new RuntimeException(" User doesn't exist");
+        }
+        List<CommunityMembership> arr = cr.findTop5ByUserId(userId);
+        List<Community> coms = new ArrayList<Community>();
+        for(int i = 0; i < arr.size(); i++) {
+            coms.add(communityRepository.findById(arr.get(i).getCommunityId()).orElse(null));
+        }
+        return coms;
     }
 
 }

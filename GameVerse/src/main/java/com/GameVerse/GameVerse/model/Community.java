@@ -16,9 +16,13 @@ public class Community {
     private int memberCount;
     private int postCount;
 
-    public Community(String ownerId,String name, String description) {
+    private CommunityCategory category;
+
+    public Community(String ownerId, String name, String description, CommunityCategory category) {
+        this.ownerId = ownerId;
         this.name = name;
         this.description = description;
+        this.category = category;
         memberCount = 1;
         postCount = 0;
     }

@@ -1,29 +1,24 @@
 package com.GameVerse.GameVerse.controller;
 
-import java.util.List;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.GameVerse.GameVerse.model.Post;
 import com.GameVerse.GameVerse.model.User;
 import com.GameVerse.GameVerse.repository.PostRepository;
 import com.GameVerse.GameVerse.repository.UserRepository;
-import com.GameVerse.GameVerse.services.RelationshipServices;
-
-import com.GameVerse.GameVerse.model.Post;
+import com.GameVerse.GameVerse.services.NotificationService;
 
 @RestController
 @RequestMapping("/post")
@@ -33,6 +28,10 @@ public class PostController {
     private PostRepository postRepo;
     @Autowired
     private UserRepository userRep;
+    @Autowired
+    private NotificationService notificationService;
+
+    public static final String type = "Post";
     static class PostContent{
         public String body;
     }
@@ -66,6 +65,8 @@ public class PostController {
         String user = userRep.findById(auth.getPrincipal().toString()).get().getUsername();
         target.setALike(user);
         postRepo.save(target);
+        String message = user + " has liked your post";
+        notificationService.createNotification(type, message, userRep.findByUsernameIgnoreCase(target.getUser()).getId());
         return ResponseEntity.ok().build();
     }
 
@@ -82,6 +83,8 @@ public class PostController {
         person.addBookmark(target);
         userRep.save(person);
         System.out.println("User: "+person.getUsername()+" booked post: "+target.toString());
+        String message = person.getUsername() + " has bookmarked your post.";
+        notificationService.createNotification(type, message, userRep.findByUsernameIgnoreCase(postRepo.findById(target).orElse(null).getUser()).getId());
         return ResponseEntity.ok().build();
     }
 }

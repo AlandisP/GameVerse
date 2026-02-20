@@ -1,6 +1,8 @@
 package com.GameVerse.GameVerse.controller;
 
+import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -17,14 +19,20 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import com.GameVerse.GameVerse.model.Community;
+import com.GameVerse.GameVerse.model.CommunityCategory;
 import com.GameVerse.GameVerse.model.User;
+import com.GameVerse.GameVerse.repository.CommunityMembershipRepository;
 import com.GameVerse.GameVerse.repository.CommunityRepository;
 import com.GameVerse.GameVerse.repository.UserRepository;
 import com.GameVerse.GameVerse.services.CommunityService;
+import com.GameVerse.GameVerse.services.NotificationService;
 @Controller
 @RequestMapping("/communities")
 @CrossOrigin(origins = "http://localhost:3000")
 public class CommunitiesController {
+
+    @Autowired
+    private NotificationService notificationService;
 
     @Autowired
     private UserRepository repository;
@@ -34,6 +42,12 @@ public class CommunitiesController {
 
     @Autowired 
     private CommunityService communityService;
+
+    @Autowired
+    private CommunityMembershipRepository cmr;
+
+    private static final String type = "Community";
+
 
     @GetMapping
     public ResponseEntity<?> getAllCommunities() {
@@ -52,7 +66,7 @@ public class CommunitiesController {
         if(communityRepository.existsByNameIgnoreCase(req.name)) {
             return ResponseEntity.badRequest().body("Community with this name already exists");
         }
-        communityService.createCommunity(id, req.name, req.description);
+        communityService.createCommunity(id, req.name, req.description, req.category);
         return ResponseEntity.ok().body("Community Created!");
     }
 
@@ -68,9 +82,14 @@ public class CommunitiesController {
     @PutMapping("/{communityname}/join")
     public ResponseEntity<?> joinCommunity(@PathVariable String communityname, Authentication auth) {
         String id = (String) auth.getPrincipal();
+        User user = repository.findById(id).orElse(null);
         if(!communityRepository.existsByNameIgnoreCase(communityname)) {
             return ResponseEntity.badRequest().body("Community doesn't exist");
         }
+        Community com = communityRepository.findByNameIgnoreCase(communityname);
+        String ownerId = com.getOwnerId();
+        String body = user.getUsername() + " has joined your community!";
+        notificationService.createNotification(type, body, ownerId);
         communityService.addMember(communityRepository.findByNameIgnoreCase(communityname).getId(), id);
         return ResponseEntity.ok().body("Successfully joined community");
     }
@@ -139,11 +158,27 @@ public class CommunitiesController {
         return ResponseEntity.ok("Community successfully deleted");
     }
 
+    @GetMapping("/categories")
+    public ResponseEntity<?> getAllCategories() {
+        List<String> categories = Arrays.stream(CommunityCategory.values())
+            .map(Enum::name)
+            .collect(Collectors.toList());
+        return ResponseEntity.ok(categories);
+    }
+
+    @GetMapping("/{userId}/Memberships")
+    public ResponseEntity<?> getUserCommunities(@PathVariable String userId) {
+        List<Community> communities = communityService.getUsersCommunities(userId);
+        return ResponseEntity.ok(communities);
+    }
+
+
 
 
     static class createCommunityRequest {
         public String name;
         public String description;
+        public CommunityCategory category;
     }
 
     

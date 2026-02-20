@@ -36,6 +36,7 @@ public class UsersController {
     @Autowired
     private UserRepository repository;
 
+
     @GetMapping
     public List<User> getAllUsers() {
         return repository.findAll();
