@@ -129,6 +129,7 @@ p {
     border-radius: 20px;
     justify-content: space-between;
     background-color: transparent;
+    gap: 2rem;
 
 }
 

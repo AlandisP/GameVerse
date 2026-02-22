@@ -1,0 +1,77 @@
+.notifications {
+    display: flex;
+    flex-direction: row;
+    width: 100%;
+    height: auto;
+    flex-wrap: wrap;
+    
+}
+
+.container {
+    display: flex;
+    flex-direction: column;
+    width: 50%;
+    height: 95vh;
+    border-right: 1px solid black;
+    
+}
+
+.noti-container {
+    margin: 20px;
+}
+
+.noti-container:hover {
+    cursor: pointer;
+}
+.noti {
+    display: flex;
+    width: 97%;
+    height: 4rem;
+    align-items: center;
+    background-color: grey;
+    padding: .5rem;
+    border-radius: 20px;
+}
+
+.noti-text {
+    background-color: transparent;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+
+
+.right-side {
+    margin-left: auto;
+    display: flex;
+    flex-direction: column;
+    height: auto;
+    border-radius: 20px;
+    justify-content: space-between;
+    background-color: transparent;
+    gap: 2rem;
+
+}
+.noti-img {
+    padding: 1rem;
+    width: 7%;
+    height: 100%;
+    background-color: transparent;
+    object-fit: contain;
+}
+
+.extras {
+    
+}
+
+.no-notis {
+    margin: 20px;
+    font-weight: bold;
+    font-size: 2rem;
+}
+
+.message-txt:hover {
+    text-decoration: underline;
+    cursor: pointer;
+}

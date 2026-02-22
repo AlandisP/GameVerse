@@ -1,9 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import API_URL from '../config/api';
+import axios from 'axios';
 function NavBar() {
     const [activeTab, setActiveTab] = useState('');
     const navigate = useNavigate();
     const location = useLocation();
+    const [count, setCount] = useState(0);
+    const token = localStorage.getItem("token");
 
     useEffect(() => {
         const path = location.pathname;
@@ -13,6 +17,7 @@ function NavBar() {
         else if (path === '/partyfinder') setActiveTab('partyfinder');
         else if (path === '/communities') setActiveTab('communities');
         else if (path === '/profile') setActiveTab('profile');
+        else if(path === '/notifications') setActiveTab('notifications');
     }, [location.pathname]);
 
 
@@ -29,6 +34,17 @@ function NavBar() {
         localStorage.removeItem('userId');
         navigate('/');
     }
+
+    useEffect(() => {
+        const fetchNotificationCount = async() => {
+            const res = await axios.get(
+                `${API_URL}/notifications/count`,
+                { headers: { Authorization: `Bearer ${token}` } }
+            );
+            setCount(res.data);
+        }
+        fetchNotificationCount();
+    }, []);
     
 
 
@@ -92,6 +108,7 @@ function NavBar() {
                             </svg>
                             Party Finder
                         </a>
+
                         
                         <a 
                             href="/communities"
@@ -103,7 +120,22 @@ function NavBar() {
                             </svg>
                             Communities
                         </a>
-                        
+                        <a 
+                            href="/notifications"
+                            className={activeTab === 'notifications' ? 'active' : ''}
+                            onClick={(e) => handleNavClick(e, '/notifications', 'notifications')}
+                            style={{ position: 'relative' }}
+                        >
+                            <svg className="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                            </svg>
+                            Notifications
+                            {count > 0 && (
+                                <span className="notification-badge">
+                                    {count > 99 ? '99+' : count}
+                                </span>
+                            )}
+                        </a>
                         <a 
                             href="/profile"
                             className={activeTab === 'profile' ? 'active' : ''}

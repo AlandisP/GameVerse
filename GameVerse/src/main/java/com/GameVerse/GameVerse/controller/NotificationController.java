@@ -42,10 +42,25 @@ public class NotificationController {
         return ResponseEntity.ok().body(notificationRepository.findByUserIdOrderByCreatedAtDesc(userId, page));
     }
 
-    @PostMapping("/{id}")
-    public void markAsRead(@PathVariable String id, Authentication auth) {
+    @PostMapping("/markRead/{id}")
+    public ResponseEntity<?> markAsRead(@PathVariable String id, Authentication auth) {
+        String userId = (String) auth.getPrincipal();
         service.readNotification(id);
+        return ResponseEntity.ok().build();
+
     }
+
+    @GetMapping("/count")
+    public ResponseEntity<?> getNotificationCount(Authentication auth) {
+        String userId = (String) auth.getPrincipal();
+        User user = userRepository.findById(userId).orElse(null);
+        if(user == null) {
+            return ResponseEntity.badRequest().body("User doesnt exist");
+        }
+        Long  count = notificationRepository.countByUserIdAndReadFalse(userId);
+        return ResponseEntity.ok().body(count);
+    }
+
 
 
     

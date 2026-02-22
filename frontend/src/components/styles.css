@@ -222,6 +222,7 @@ nav.sidebar div,
 }
 
 .nav-links a {
+    width: 75%;
     display: flex;
     align-items: center;
     gap: 0.75rem;
@@ -258,6 +259,25 @@ nav.sidebar div,
     flex-direction: column;
     gap: 0.5rem;
 
+}
+
+
+.notification-badge {
+    position: absolute;
+    top: 6px;
+    right: 8px;
+    background: #ef4444;
+    color: white;
+    font-size: 11px;
+    font-weight: 700;
+    min-width: 18px;
+    height: 18px;
+    border-radius: 9px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 4px;
+    line-height: 1;
 }
 
 .user-profile {

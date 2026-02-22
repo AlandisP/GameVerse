@@ -1,6 +1,6 @@
 package com.GameVerse.GameVerse.model;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
@@ -14,7 +14,8 @@ public class Notification {
     private String type;
     private String message;
     private boolean read;
-    private LocalDateTime createdAt;
+    private Instant createdAt;
+
 
 
     public Notification(String userId, String type, String message) {
@@ -22,7 +23,11 @@ public class Notification {
         this.type = type;
         this.message = message;
         read = false;
-        createdAt =  LocalDateTime.now();
+        createdAt = Instant.now();
+    }
+
+    public String getId() {
+        return id;
     }
 
     public String getUserId() {
@@ -57,11 +62,11 @@ public class Notification {
         this.read = read;
     }
 
-    public LocalDateTime getTime() {
+    public Instant getCreatedAt() {
         return createdAt;
     }
 
-    public void setTime(LocalDateTime time) {
+    public void setTime(Instant time) {
         this.createdAt = time;
     }
 }

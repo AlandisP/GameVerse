@@ -9,6 +9,7 @@ import PartyFinderPage from "./components/PartyFinderPage";
 import CommunitiesPage from "./components/CommunitiesPage";
 import ProfilePage from "./components/ProfilePage";
 import Signup from "./components/Signup";
+import NotificationPage from "./components/NotificationPage";
 
 function App() {
   return (
@@ -22,12 +23,14 @@ function App() {
           <Route path="/messages" element={<MessagePage />} />
           <Route path="/partyfinder" element={<PartyFinderPage />} />
           <Route path="/communities" element={<CommunitiesPage />} />
+          <Route path = "/notifications" element={<NotificationPage/>}/>
 
           {/* your own profile */}
           <Route path="/profile" element={<ProfilePage />} />
 
           {/* other users' profiles */}
           <Route path="/profile/:username" element={<ProfilePage />} />
+
         </Routes>
       </Router>
     </div>
