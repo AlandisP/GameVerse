@@ -14,14 +14,12 @@ function ExploreCommunities({isOpen, onClose, communities}) {
 
     const ReadCommunities = () => {
         const items = communities.map((community, ind) => (
-            <CommunityBlock key={ind} Name={community.name} Description={community.description} Category={community.category} Members={community.memberCount} OwnerId={community.ownerId} id={community.id}/>
+            <CommunityBlock key={ind} Name={community.name} Description={community.description} Category={community.communityCategory} Members={community.memberCount} OwnerId={community.ownerId} id={community.id}/>
         ));
         return(
             <div>{items}</div>
         )
     }
-    
-
     
 
     useEffect(() => {

@@ -15,7 +15,7 @@ function NavBar() {
         else if (path === '/explore') setActiveTab('explore');
         else if (path === '/messages') setActiveTab('messages');
         else if (path === '/partyfinder') setActiveTab('partyfinder');
-        else if (path === '/communities') setActiveTab('communities');
+        else if (path.startsWith('/communities')) setActiveTab('communities');
         else if (path === '/profile') setActiveTab('profile');
         else if(path === '/notifications') setActiveTab('notifications');
     }, [location.pathname]);

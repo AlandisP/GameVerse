@@ -71,7 +71,9 @@ public class CommunitiesController {
     }
 
     @GetMapping("/{name}")
-    public ResponseEntity<?> getCommunity(@PathVariable String name) {
+    public ResponseEntity<?> getCommunity(@PathVariable String name, Authentication auth) {
+        String id = (String) auth.getPrincipal();
+        User user = repository.findById(id).orElse(null);
         Community com = communityRepository.findByNameIgnoreCase(name);
         if(com == null) {
             return ResponseEntity.badRequest().body("Community not found");
@@ -138,12 +140,12 @@ public class CommunitiesController {
     }
 
     @PutMapping("/{name}/editDescription")
-    public ResponseEntity<?> editCommunityDescription(@PathVariable String name, @RequestBody String description ) {
+    public ResponseEntity<?> editCommunityDescription(@PathVariable String name, @RequestBody EditDescriptionRequest req ) {
         Community com = communityRepository.findByNameIgnoreCase(name);
         if(com == null) {
             return ResponseEntity.badRequest().body("Community not found");
         }
-        com.setDescription(description);
+        com.setDescription(req.description);
         communityRepository.save(com);
         return ResponseEntity.ok(com);
     }
@@ -172,9 +174,30 @@ public class CommunitiesController {
         return ResponseEntity.ok(communities);
     }
 
+    @GetMapping("/{communityName}/Members")
+    public ResponseEntity<?> getCommunityMembers(@PathVariable String communityName) {
+        Community com = communityRepository.findByNameIgnoreCase(communityName);
+        if(com == null) {
+            return ResponseEntity.badRequest().body("Community not found");
+        }
+        return ResponseEntity.ok(communityService.getCommunityMembers(com.getId()));
+    }
+
+    @GetMapping("/{communityName}/Mods")
+    public ResponseEntity<?> getCommunityModerators(@PathVariable String communityName) {
+        Community com = communityRepository.findByNameIgnoreCase(communityName);
+        if(com == null) {
+            return ResponseEntity.badRequest().body("Community not found");
+        }
+        return ResponseEntity.ok(communityService.getCommunityOwnerAndMods(com.getId()));
+    }
 
 
 
+
+    static class EditDescriptionRequest {
+        public String description;
+    }
     static class createCommunityRequest {
         public String name;
         public String description;

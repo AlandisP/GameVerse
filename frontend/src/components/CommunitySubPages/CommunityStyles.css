@@ -1,0 +1,220 @@
+.header-com {
+    display: flex;
+    flex-direction: column;
+    margin: 0;
+    position: relative;
+    background-color: #2f2f2f;
+    margin-bottom: 25px;
+    padding-bottom: 20px;
+    border-radius: 0 0 12px 12px;
+}
+.banner {
+    height: 150px;
+    width: 100vw;
+    background-color: #3f4b5b;
+    border-radius: 0 0 12px 12px;
+    
+}
+.comavatar {
+    position: absolute;
+    top: 90px;
+    left: 30px;
+    height: 120px;
+    width: 120px;
+    background-color: #1c1c1c;
+    border: 4px solid #2f2f2f;
+    border-radius: 1.5rem;
+}
+
+.comdetails {
+    display: flex;
+    flex-direction: column;
+    padding: 20px;
+    margin-top: 40px;
+    margin-left: -.5rem;
+}
+
+.comdetails h2 {
+    padding: 0;
+    margin: 0;
+    margin-top: -.1rem;
+    font-size: 2.5rem;
+}
+
+.categorybox {
+    padding: .3rem;
+    margin: 0;
+    margin-top: -.1rem;
+    font-size: 1rem;
+    font-weight: 500;
+    border: 2px solid white;
+    border-radius: 20px;
+    align-self: flex-start;
+    justify-content: center;
+
+}
+
+.loading {
+    font-size: 3rem;
+    font-weight: bold;
+}
+
+.description-txt {
+    font-size: 1rem;
+    padding: 0;
+}
+
+.members-com {
+    height: auto;
+    background-color: transparent;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    margin-top: -1rem;
+    margin-left: -.5rem;
+    gap: 6px;
+}
+.members-com p {
+    font-size: 1rem;
+}
+
+.memberimg {
+    width: 75px;
+    height: 75px;
+    background-color: transparent;
+    object-fit: contain;
+}
+
+.join-com {
+    justify-content: center;
+    margin-left: auto;
+    color: white;
+    background-color: #3b82f6;
+    border: none;
+    border-radius: 20px;
+    padding: 1rem;
+    cursor: pointer;
+}
+
+.leave-com {
+    justify-content: center;
+    margin-left: auto;
+    color: white;
+    background-color: red;
+    border: none;
+    border-radius: 20px;
+    padding: 1rem;
+    cursor: pointer;
+}
+
+.tabs {
+    border-bottom: 1px solid #444;
+    margin-bottom: 15px;
+    display: flex;
+    justify-content: space-around;
+    background-color: transparredent;
+}
+
+.tabs-s {
+    flex: 1;
+    padding: 12px;
+    background-color: transparent;
+    color: #aaaaaa;
+    border: none;
+    border-bottom: none;
+    font-size: 1rem;
+    cursor: pointer;
+}
+
+.tabs-sa {
+    flex: 1;
+    padding: 12px;
+    background-color: transparent;
+    color: #058BFE;
+    border: none;
+    border-bottom: 3px solid #058BFE;
+    font-size: 1rem;
+    cursor: pointer;
+}
+
+.editcomdesc {
+    margin-top: -1rem;
+    margin-bottom: .5rem;
+    height: 80px;
+    width: 50%;
+    resize: none;
+    border-radius: 20px;
+    background-color: #444;
+    color: white;
+    padding: 10px;
+}
+
+.editingbtns {
+    display: flex;
+    flex-direction: row;
+    background-color: transparent;
+    gap: 10px;
+}
+
+.save {
+    background-color: #3b82f6;
+    padding: 8px 15px;
+    color:white;
+    border: none;
+    border-radius: 20px;
+    cursor: pointer;
+}
+
+.cancel {
+    background-color: #777;
+    padding: 8px 15px;
+    color:white;
+    border: none;
+    border-radius: 20px;
+    cursor: pointer;
+}
+
+.userBlock {
+    display: flex;
+    background-color: grey;
+    width: 500px;
+    border-radius: 20px;
+    padding: 10px;
+    gap: 5px;
+    align-items: center;
+}
+
+.userBlock:hover {
+    cursor: pointer;
+}
+
+.userCircle {
+    margin: 0;
+    border-radius: 50%;
+    height: 75px;
+    width: 75px;
+}
+
+.user-m{
+    justify-content: center;
+    font-size: 2.2rem;
+    font-weight: bold;
+    margin-right: 6px;
+}
+
+.displayBlock {
+    font-size: 1.5rem;
+    background-color: #1c1c1c;
+    font-weight: bolder;
+    border-radius: 10px;
+    padding: 5px;
+}
+
+.memholder {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around;
+    gap: 10px;
+}

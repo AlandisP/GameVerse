@@ -65,8 +65,10 @@ public class PostController {
         String user = userRep.findById(auth.getPrincipal().toString()).get().getUsername();
         target.setALike(user);
         postRepo.save(target);
-        String message = user + " has liked your post";
-        notificationService.createNotification(type, message, userRep.findByUsernameIgnoreCase(target.getUser()).getId());
+        if(!user.equals(target.getUser())){
+            String message = user + " has liked your post";
+            notificationService.createNotification(type, message, userRep.findByUsernameIgnoreCase(target.getUser()).getId());
+        }
         return ResponseEntity.ok().build();
     }
 

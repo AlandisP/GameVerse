@@ -55,12 +55,20 @@ public class Community {
         return postCount;
     }
 
+    public CommunityCategory getCommunityCategory() {
+        return category;
+    }
+
     public void setOwnerId(String id) {
         this.ownerId = id;
     }
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public void setCommunityCategory(CommunityCategory category) {
+        this.category=category;
     }
 
     public void setDescription(String description) {

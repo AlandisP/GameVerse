@@ -4,12 +4,13 @@
     max-width: 1400px;  
     max-height: 100px; */ 
     width: 85%;
-    padding: 1rem;          
+    padding: .7rem;          
     border-radius: 20px;
     display: flex;
     flex-direction: column;
     gap: .2rem;               
     margin: 10px auto 0 auto;
+    overflow-y: hidden;
 }
 
 .join-txt {
@@ -24,6 +25,7 @@
     font-size: 1rem;         
     margin-left: 0;
     line-height: 1.4;
+    margin: 0;
 }
 
 .buttons {
@@ -67,7 +69,7 @@
     display: flex;
     align-items: center;
     /* gap: 1rem; */
-    margin:.05rem
+    margin:0;
 }
 
 
@@ -107,7 +109,7 @@
     margin: .5rem;
     max-height: 30%;
     justify-content: center;
-    margin-top: 0;
+    margin-top: -.5rem;
     
 }
 
@@ -238,7 +240,7 @@
 
 .main-content {
     position: relative;
-    overflow-y: auto;
+    overflow-y: hidden;
     overflow-x: hidden;   /* add this */
     z-index: 1;
 }

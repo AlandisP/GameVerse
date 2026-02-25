@@ -10,6 +10,7 @@ import CommunitiesPage from "./components/CommunitiesPage";
 import ProfilePage from "./components/ProfilePage";
 import Signup from "./components/Signup";
 import NotificationPage from "./components/NotificationPage";
+import CommunityPage from "./components/CommunitySubPages/CommunityPage";
 
 function App() {
   return (
@@ -30,6 +31,8 @@ function App() {
 
           {/* other users' profiles */}
           <Route path="/profile/:username" element={<ProfilePage />} />
+          {/* Community Page */}
+          <Route path = "/communities/:community" element={<CommunityPage/>}/>
 
         </Routes>
       </Router>
