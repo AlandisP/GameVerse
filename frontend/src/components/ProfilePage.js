@@ -3,7 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 import "./styles.css";
 import NavBar from "./NavBar";
-import API_URL from '../config/api';
+import API_URL from "../config/api";
 
 function ProfilePage() {
   const { username } = useParams();
@@ -68,7 +68,6 @@ function ProfilePage() {
     };
 
     if (token || !username) {
-      // If viewing self, we assume token exists
       fetchProfile();
     } else {
       // No token and viewing someone else: still fetch public profile (no auth header)
@@ -119,7 +118,6 @@ function ProfilePage() {
         { headers: { Authorization: `Bearer ${token}` } }
       );
       setIsFollowing(true);
-      // Optimistically update follower count
       setProfile((prev) =>
         prev
           ? { ...prev, followerCount: (prev.followerCount || 0) + 1 }
@@ -143,10 +141,12 @@ function ProfilePage() {
         { headers: { Authorization: `Bearer ${token}` } }
       );
       setIsFollowing(false);
-      // Optimistically update follower count
       setProfile((prev) =>
         prev
-          ? { ...prev, followerCount: Math.max((prev.followerCount || 1) - 1, 0) }
+          ? {
+              ...prev,
+              followerCount: Math.max((prev.followerCount || 1) - 1, 0),
+            }
           : prev
       );
     } catch (err) {
@@ -180,6 +180,17 @@ function ProfilePage() {
 
   const isOwnProfile =
     !username || username.toLowerCase() === loggedInUsername?.toLowerCase();
+
+  const handleDm = () => {
+    // If you want to force login before DM:
+    // if (!token) { navigate("/login"); return; }
+
+    navigate("/messages", {
+      state: {
+        receiverUsername: profile.username,
+      },
+    });
+  };
 
   return (
     <div className="page-container">
@@ -251,7 +262,7 @@ function ProfilePage() {
                 </div>
               </div>
 
-              {/* Right side: Edit Bio for self, Follow/Unfollow for others */}
+              {/* Right side */}
               {isOwnProfile ? (
                 !editMode && (
                   <button
@@ -270,21 +281,38 @@ function ProfilePage() {
                   </button>
                 )
               ) : (
-                <button
-                  onClick={isFollowing ? handleUnfollow : handleFollow}
-                  style={{
-                    marginTop: "10px",
-                    padding: "8px 16px",
-                    backgroundColor: isFollowing ? "#444" : "#058BFE",
-                    color: "white",
-                    border: "none",
-                    borderRadius: "999px",
-                    cursor: "pointer",
-                    minWidth: "100px",
-                  }}
-                >
-                  {isFollowing ? "Unfollow" : "Follow"}
-                </button>
+                <div style={{ display: "flex", gap: "10px" }}>
+                  <button
+                    onClick={isFollowing ? handleUnfollow : handleFollow}
+                    style={{
+                      marginTop: "10px",
+                      padding: "8px 16px",
+                      backgroundColor: isFollowing ? "#444" : "#058BFE",
+                      color: "white",
+                      border: "none",
+                      borderRadius: "999px",
+                      cursor: "pointer",
+                      minWidth: "100px",
+                    }}
+                  >
+                    {isFollowing ? "Unfollow" : "Follow"}
+                  </button>
+
+                  <button
+                    onClick={handleDm}
+                    style={{
+                      marginTop: "10px",
+                      padding: "8px 16px",
+                      backgroundColor: "#2d2d2d",
+                      color: "white",
+                      border: "1px solid #555",
+                      borderRadius: "999px",
+                      cursor: "pointer",
+                    }}
+                  >
+                    DM
+                  </button>
+                </div>
               )}
             </div>
 
