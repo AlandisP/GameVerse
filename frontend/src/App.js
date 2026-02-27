@@ -25,6 +25,8 @@ function App() {
           <Route path="/partyfinder" element={<PartyFinderPage />} />
           <Route path="/communities" element={<CommunitiesPage />} />
           <Route path = "/notifications" element={<NotificationPage/>}/>
+          <Route path="/messages" element={<MessagePage />} />
+          <Route path="/messages/:receiverUsername" element={<MessagePage />} />
 
           {/* your own profile */}
           <Route path="/profile" element={<ProfilePage />} />

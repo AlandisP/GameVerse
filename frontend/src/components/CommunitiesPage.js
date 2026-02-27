@@ -99,7 +99,7 @@ function CommunitiesPage() {
                             <h3>Community Name</h3>
                             <p className='count'>100</p>
                         </div>
-                        <p className='description'>I don't know why I came in this club with you, girl (with you) Don't know why I came in with these diamonds on my chain (shine) </p>
+                        <p className='description'>The ancient oak tree whispered secrets to the wind while the quiet, silver river flowed underneath, and in that moment, time seemed to stop, allowing the world to catch its breath, forgetting all its worries and finding a deep, lasting peace in the silence </p>
                         <button className='joinbtnf'>Join</button>
                     </div>
                 </div>
