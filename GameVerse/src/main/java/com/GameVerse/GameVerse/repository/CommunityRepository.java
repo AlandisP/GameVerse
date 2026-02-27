@@ -11,6 +11,7 @@ import com.GameVerse.GameVerse.model.CommunityCategory;
 public interface CommunityRepository extends MongoRepository<Community, String>{
     List<Community> findByDescription(String description);
     List<Community> findByNameContainingIgnoreCase(String name);
+    List<Community> findByDescriptionContainingIgnoreCase(String description);
     List<Community> findByCategory(CommunityCategory category);
     List<Community> findTop3ByOrderByMemberCountDesc();
     List<Community> findTop3ByCategoryOrderByMemberCountDesc(CommunityCategory category);

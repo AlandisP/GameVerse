@@ -6,21 +6,46 @@ import API_URL from '../../config/api';
 import axios from 'axios';
 import CommunityBlock from './CommunityBlock';
 
-function ExploreCommunities({isOpen, onClose, communities}) {
+function ExploreCommunities({isOpen, onClose, communities, Refresh}) {
     const username = localStorage.getItem('username');
     const userId = localStorage.getItem("userId");
     const token  = localStorage.getItem('token');
     const[categories, setCategories] = useState([]);
+    const [category, setCategory] = useState("");
+    const [search, setSearch] = useState("");
+    const [filtered, setFiltered] = useState(communities);
+    
+    const handleSelectCategory = (cat) => {
+        if(cat === category) {
+            setCategory("");
+        } else {
+            setCategory(cat);
+        }
+    }
+
+    useEffect(() => {
+        setFiltered(communities);
+    }, [communities]);
+
+
+    const searchCommunities = async(q) => {
+        if(!q || q.trim() === "") {
+            setFiltered(communities);
+            return;
+        }
+        setFiltered(communities.filter(c => 
+            c.name.toLowerCase().includes(q.toLowerCase())
+        ));
+    }
 
     const ReadCommunities = () => {
-        const items = communities.map((community, ind) => (
+        const items = (category ? filtered.filter(c => c.communityCategory === category) : filtered).map((community, ind) => (
             <CommunityBlock key={ind} Name={community.name} Description={community.description} Category={community.communityCategory} Members={community.memberCount} OwnerId={community.ownerId} id={community.id}/>
         ));
         return(
             <div>{items}</div>
         )
     }
-    
 
     useEffect(() => {
         const getCategories = async () => {
@@ -33,8 +58,16 @@ function ExploreCommunities({isOpen, onClose, communities}) {
         getCategories();
     }, [token]);
 
-    const cats = categories.map((category,index) =>(
-        <button key={index}>{category}</button>));
+    useEffect(() => {
+        const delayDebounce = setTimeout(() => {
+            searchCommunities(search);
+        }, 300);
+        return () => clearTimeout(delayDebounce);
+    }, [search]); 
+
+
+    const cats = categories.map((cat,index) =>(
+        <button key={index} onClick={() => handleSelectCategory(cat)} className={!(cat===category)?"catbutton":"buttonSelected"}>{cat}</button>));
 
 
     return(
@@ -52,6 +85,7 @@ function ExploreCommunities({isOpen, onClose, communities}) {
                                     className="bar"
                                     type = "text"
                                     placeholder='Search Communities'
+                                    onChange={(c) => setSearch(c.target.value)}
                                 />
                         </div>
                     </div>
