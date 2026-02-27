@@ -182,15 +182,8 @@ function ProfilePage() {
     !username || username.toLowerCase() === loggedInUsername?.toLowerCase();
 
   const handleDm = () => {
-    // If you want to force login before DM:
-    // if (!token) { navigate("/login"); return; }
-
-    navigate("/messages", {
-      state: {
-        receiverUsername: profile.username,
-      },
-    });
-  };
+  navigate(`/messages/${profile.username}`);
+};
 
   return (
     <div className="page-container">

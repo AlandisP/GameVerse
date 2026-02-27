@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { useLocation } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import NavBar from "./NavBar";
 import logo from "../images/search.png";
 
@@ -25,30 +25,42 @@ function getOtherUser(participants, me) {
 }
 
 function MessagePage() {
-  const location = useLocation();
+  const { receiverUsername } = useParams();
+  const navigate = useNavigate();
 
-  const sender = localStorage.getItem("username"); // (later: switch to uid)
-  const receiverFromProfile = location.state?.receiverUsername || "";
+  const sender = localStorage.getItem("username");
 
   const [messageInput, setMessageInput] = useState("");
   const [messages, setMessages] = useState([]);
-
   const [conversations, setConversations] = useState([]);
+
   const [activeConversationId, setActiveConversationId] = useState("");
   const [activeReceiver, setActiveReceiver] = useState("");
 
   const [search, setSearch] = useState("");
 
-  // If we came from a profile DM button, auto-open that thread.
+  // If URL has a receiver, open that conversation
   useEffect(() => {
-    if (!sender || !receiverFromProfile) return;
+    if (!sender || !receiverUsername) return;
 
-    const convoId = getConversationId(sender, receiverFromProfile);
+    const convoId = getConversationId(sender, receiverUsername);
     setActiveConversationId(convoId);
-    setActiveReceiver(receiverFromProfile);
-  }, [sender, receiverFromProfile]);
+    setActiveReceiver(receiverUsername);
 
-  // Load inbox conversation list
+    // Ensure conversation doc exists so it shows in inbox immediately
+    setDoc(
+      doc(db, "conversations", convoId),
+      {
+        participants: [sender, receiverUsername],
+        updatedAt: serverTimestamp(),
+        lastMessage: "",
+        lastSender: "",
+      },
+      { merge: true }
+    );
+  }, [sender, receiverUsername]);
+
+  // Load inbox conversation list (persists across refresh/login)
   useEffect(() => {
     if (!sender) return;
 
@@ -59,14 +71,16 @@ function MessagePage() {
     );
 
     const unsub = onSnapshot(inboxQuery, (snapshot) => {
-      const convos = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
+      const convos = snapshot.docs.map((d) => ({
+        id: d.id,
+        ...d.data(),
+      }));
       setConversations(convos);
     });
 
     return () => unsub();
   }, [sender]);
 
-  // Filtered list (search by other user)
   const filteredConversations = useMemo(() => {
     const s = search.trim().toLowerCase();
     if (!s) return conversations;
@@ -77,7 +91,7 @@ function MessagePage() {
     });
   }, [conversations, search, sender]);
 
-  // Load messages for activeConversationId
+  // Load messages for active conversation
   useEffect(() => {
     if (!activeConversationId) return;
 
@@ -87,7 +101,10 @@ function MessagePage() {
     );
 
     const unsub = onSnapshot(q, (snapshot) => {
-      const list = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
+      const list = snapshot.docs.map((d) => ({
+        id: d.id,
+        ...d.data(),
+      }));
       setMessages(list);
     });
 
@@ -97,9 +114,9 @@ function MessagePage() {
   async function sendMessage() {
     if (!messageInput.trim() || !sender || !activeReceiver) return;
 
-    const convoId = activeConversationId || getConversationId(sender, activeReceiver);
+    const convoId =
+      activeConversationId || getConversationId(sender, activeReceiver);
 
-    // Update conversation metadata (for inbox list)
     await setDoc(
       doc(db, "conversations", convoId),
       {
@@ -111,7 +128,6 @@ function MessagePage() {
       { merge: true }
     );
 
-    // Add message
     await addDoc(collection(db, "conversations", convoId, "messages"), {
       sender,
       receiver: activeReceiver,
@@ -123,8 +139,10 @@ function MessagePage() {
   }
 
   function openConversation(convo) {
+    const other = getOtherUser(convo.participants, sender);
+    navigate(`/messages/${other}`); // ✅ Proper router navigation
     setActiveConversationId(convo.id);
-    setActiveReceiver(getOtherUser(convo.participants, sender));
+    setActiveReceiver(other);
   }
 
   return (
@@ -137,22 +155,18 @@ function MessagePage() {
             width: "350px",
             backgroundColor: "#373737",
             height: "100vh",
-            borderRight: "1px solid #000000ff",
+            borderRight: "1px solid #000",
             display: "flex",
             flexDirection: "column",
           }}
         >
           <div
             style={{
-              borderBottom: "1px solid #000000ff",
-              paddingBottom: "10px",
-              paddingTop: "50px",
-              paddingLeft: "40px",
+              borderBottom: "1px solid #000",
+              padding: "50px 0 10px 40px",
             }}
           >
-            <h1 style={{ color: "white", fontSize: "32px", margin: "0" }}>
-              Messages
-            </h1>
+            <h1 style={{ color: "white", margin: 0 }}>Messages</h1>
           </div>
 
           <div style={{ padding: "20px" }}>
@@ -163,7 +177,6 @@ function MessagePage() {
                 padding: "10px 15px",
                 display: "flex",
                 alignItems: "center",
-                marginBottom: "10px",
               }}
             >
               <img
@@ -176,12 +189,7 @@ function MessagePage() {
                 placeholder="Search"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                style={{
-                  border: "none",
-                  outline: "none",
-                  backgroundColor: "transparent",
-                  width: "100%",
-                }}
+                style={{ border: "none", outline: "none", width: "100%" }}
               />
             </div>
           </div>
@@ -208,12 +216,11 @@ function MessagePage() {
                     cursor: "pointer",
                   }}
                 >
-                  <div style={{ fontWeight: 700 }}>{other || "Unknown"}</div>
+                  <div style={{ fontWeight: 700 }}>{other}</div>
                   <div
                     style={{
                       color: "#bdbdbd",
                       fontSize: "0.9rem",
-                      marginTop: "4px",
                       overflow: "hidden",
                       textOverflow: "ellipsis",
                       whiteSpace: "nowrap",
@@ -227,7 +234,7 @@ function MessagePage() {
           </div>
         </div>
 
-        {/* RIGHT CHAT AREA */}
+        {/* RIGHT SIDE */}
         <div
           style={{
             flex: 1,
@@ -240,9 +247,8 @@ function MessagePage() {
           {/* Header */}
           <div
             style={{
-              borderBottom: "1px solid #000000ff",
-              padding: "18px 20px",
-              paddingTop: "50px",
+              borderBottom: "1px solid #000",
+              padding: "50px 20px 18px",
               color: "white",
               fontWeight: 700,
             }}
@@ -250,46 +256,39 @@ function MessagePage() {
             {activeReceiver ? `@${activeReceiver}` : "Select a conversation"}
           </div>
 
-          {/* MESSAGE BUBBLES */}
+          {/* Messages */}
           <div style={{ flex: 1, overflowY: "auto", padding: "20px" }}>
-            {!activeConversationId ? (
-              <div style={{ color: "#aaaaaa" }}>
-                Pick a conversation on the left to start chatting.
-              </div>
-            ) : (
-              messages.map((msg) => (
+            {messages.map((msg) => (
+              <div
+                key={msg.id}
+                style={{
+                  marginBottom: "10px",
+                  display: "flex",
+                  justifyContent:
+                    msg.sender === sender ? "flex-end" : "flex-start",
+                }}
+              >
                 <div
-                  key={msg.id}
                   style={{
-                    marginBottom: "10px",
-                    display: "flex",
-                    justifyContent:
-                      msg.sender === sender ? "flex-end" : "flex-start",
+                    backgroundColor: msg.sender === sender ? "#4A90E2" : "#444",
+                    padding: "10px 15px",
+                    borderRadius: "20px",
+                    maxWidth: "60%",
+                    color: "white",
                   }}
                 >
-                  <div
-                    style={{
-                      backgroundColor: msg.sender === sender ? "#4A90E2" : "#444",
-                      padding: "10px 15px",
-                      borderRadius: "20px",
-                      maxWidth: "60%",
-                      color: "white",
-                    }}
-                  >
-                    {msg.content}
-                  </div>
+                  {msg.content}
                 </div>
-              ))
-            )}
+              </div>
+            ))}
           </div>
 
-          {/* MESSAGE INPUT */}
+          {/* Input */}
           <div
             style={{
               padding: "15px",
               borderTop: "1px solid black",
               display: "flex",
-              alignItems: "center",
               backgroundColor: "#1f1f1f",
               opacity: activeReceiver ? 1 : 0.5,
             }}
