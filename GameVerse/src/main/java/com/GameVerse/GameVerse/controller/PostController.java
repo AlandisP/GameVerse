@@ -20,6 +20,7 @@ import com.GameVerse.GameVerse.repository.PostRepository;
 import com.GameVerse.GameVerse.repository.UserRepository;
 import com.GameVerse.GameVerse.services.NotificationService;
 
+
 @RestController
 @RequestMapping("/post")
 @CrossOrigin(origins = "http://localhost:3000")
@@ -41,6 +42,12 @@ public class PostController {
     static class PostInf{
         public String id;
     }
+
+    static class commentinf{
+        public String id;
+        public String content;
+    }
+
     @PostMapping("/makepost")
     public ResponseEntity<String> makepost(@RequestBody PostContent content, Authentication auth){
         String username = userRep.findById(auth.getPrincipal().toString()).get().getUsername();
@@ -84,9 +91,27 @@ public class PostController {
         User person = userRep.findById(auth.getPrincipal().toString()).get();
         person.addBookmark(target);
         userRep.save(person);
-        System.out.println("User: "+person.getUsername()+" booked post: "+target.toString());
+        //System.out.println("User: "+person.getUsername()+" booked post: "+target.toString());
         String message = person.getUsername() + " has bookmarked your post.";
         notificationService.createNotification(type, message, userRep.findByUsernameIgnoreCase(postRepo.findById(target).orElse(null).getUser()).getId());
         return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/comment")
+    public ResponseEntity<Boolean> makecomment(@RequestBody commentinf content, Authentication auth){
+        String username = userRep.findById(auth.getPrincipal().toString()).get().getUsername();
+        Post current = postRepo.findById(content.id).get();
+        current.addcomment(username,content.content);
+        postRepo.save(current);
+        return ResponseEntity.ok().body(true);
+    }
+
+    @PostMapping("/getcomments")
+    public ResponseEntity<ArrayList<Post.comment>> getcomment(@RequestBody PostInf content, Authentication auth){
+        //String username = userRep.findById(auth.getPrincipal().toString()).get().getUsername();
+        Post current = postRepo.findById(content.id).get();
+        ArrayList<Post.comment> comments = current.getcomments();
+        
+        return ResponseEntity.ok().body(comments);
     }
 }

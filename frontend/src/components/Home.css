@@ -53,6 +53,7 @@
     flex-direction: row;
     padding-left: 20px;
     padding-bottom: 15px;
+    padding-top: 10px;
     margin-left: 150px;
     margin-top: 20px;
     width: 725px;
@@ -77,6 +78,7 @@
 .Postcontent .inner{
     display: flex;
     flex-direction: column;
+    margin-top: 15px;
 
 }
 
@@ -110,4 +112,25 @@
     margin: 0px;
     margin-left:7px;
     margin-right:15px;
+}
+
+.Comment-Section{
+    border: 2px;
+    background-color: rgba(0, 0, 0, 0.15) !important;
+    border-color: black;
+    border-style: solid;
+    border-radius: 20px;
+    /* border-top: 2px;
+    border-color: black;
+    border-style: solid; */
+    margin-top: 15px;
+    width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.Comment-Section h4{
+    margin-top: 10px;
+    margin-left: 10px;
+    margin-bottom: 10px;
 }
