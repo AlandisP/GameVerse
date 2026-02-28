@@ -7,6 +7,7 @@ import API_URL from '../config/api';
 import axios from 'axios';
 import CreateCommunityOverLay from './CommunitySubPages/CreateCommunityOverlay';
 import ExploreCommunities from './CommunitySubPages/ExploreCommunities';
+import UserCommunities from './CommunitySubPages/UserCommunities';
 
 
 function CommunitiesPage() {
@@ -16,17 +17,12 @@ function CommunitiesPage() {
     const [activeTab, setActiveTab] = useState('communities');
     const [isOpen, setIsOpen] = useState(false);
     const [exploreIsOpen, setIsExploreOpen] = useState(false);
+    const [myComsIsOpen, setMyComsIsOpen] = useState(false);
     const[categories, setCategories] = useState([]);
     const [communities, setCommunities] = useState([]);
     const [userCommunities, setUserCommunities] = useState([]);
     const [selectedCategory, setSelectedCategory] = useState('');
     const navigate = useNavigate();
-
-    const featured = (selectedCategory === ''
-        ? [...communities]
-        : communities.filter(c => c.communityCategory === selectedCategory))
-        .sort((a, b) => b.memberCount - a.memberCount)
-        .slice(0, 3);
 
     const getCommunities = async() => {
         const res = await axios.get(
@@ -44,6 +40,18 @@ function CommunitiesPage() {
         }
     }
 
+    const getUserCommunities = async() => {
+        try {
+            const res = await axios.get(
+            `${API_URL}/communities/memberships`,
+            { headers: { Authorization: `Bearer ${token}` } }
+            );
+            setUserCommunities(res.data);
+        } catch (error) {
+                console.error("failed to get user communities: ", error.response?.data || error.message);
+        }
+    }
+
     
 
     useEffect(() => {
@@ -54,17 +62,7 @@ function CommunitiesPage() {
             );
             setCategories(result.data);
         };
-        const getUserCommunities = async() => {
-            try {
-                const res = await axios.get(
-                `${API_URL}/communities/memberships`,
-                { headers: { Authorization: `Bearer ${token}` } }
-                );
-                setUserCommunities(res.data);
-            } catch (error) {
-                 console.error("failed to get user communities: ", error.response?.data || error.message);
-            }
-        }
+        
         getUserCommunities();
         getCategories();
         getCommunities();
@@ -92,6 +90,23 @@ function CommunitiesPage() {
         setIsExploreOpen(false);
     }
 
+    const handleMyCommunities = () => {
+        setMyComsIsOpen(!myComsIsOpen);
+    }
+
+    const handleCloseMyComs = () => {
+        setMyComsIsOpen(false);
+    }
+
+    const ReadFeaturedCommunities = () => {
+        const filtered = (selectedCategory? communities.filter(c=>c.communityCategory === selectedCategory):communities );
+        const top3 = [...filtered].sort((a,b) => b.memberCount - a.memberCount).slice(0,3);
+        const items = top3.map((community) =>(
+            <FeaturedBlock key={community.id} Name={community.name} Description={community.description} MemberCount={community.memberCount} />
+        ))
+        return <div className='communities-box'>{items}</div>
+    }
+
     
 
     return(
@@ -106,6 +121,7 @@ function CommunitiesPage() {
                 </div>
                 <CreateCommunityOverLay isOpen={isOpen} onClose={handleCloseCommunity} onCommunityCreated={handleCreateCommunity}/>
                 <ExploreCommunities isOpen={exploreIsOpen} onClose={handleCloseExplore} communities={communities}/>
+                <UserCommunities isOpen={myComsIsOpen} onClose={handleCloseMyComs} communities={userCommunities} Refresh={getUserCommunities}/>
                 <div className='comm-top'>
                     <p className='join-txt'>Join the Ultimate Gaming Communities</p>
                     <p className='explain-txt'>Connect with fellow gamers, share experiences, and participate in exclusive events within your favorite communities.</p>
@@ -120,21 +136,12 @@ function CommunitiesPage() {
                         {cats}
                     </div>
                 </div>
-                <div className='communities-box'>
-                    {featured.map((community) => (
-                        <div className='fcommunity' key={community.id}>
-                            <div className='imgbox'></div>
-                            <div className='topbox-txt'>
-                                <h3>{community.name}</h3>
-                                <p className='count'>{community.memberCount}</p>
-                            </div>
-                            <p className='description'>{community.description}</p>
-                            <button className='joinbtnf'>Join</button>
-                        </div>
-                    ))}
-                </div>
+                <ReadFeaturedCommunities/>
                 <div className='mycommunities'>
-                    <h2>My Communities</h2>
+                    <div className='mycom-top'>
+                        <h2>My Communities</h2>
+                        <button className='viewAll' onClick={handleMyCommunities}>View All</button>
+                    </div>
                     <div className='minicoms'>
                         {userCommunities.map((community) => (
                             <div className='minicombox' key={community.id} onClick={() => navigate(`/communities/${community.name}`)}>
@@ -151,6 +158,65 @@ function CommunitiesPage() {
             </div>
         </div>
     );
+}
+
+function FeaturedBlock({Name, Description, MemberCount}) {
+    const userId = localStorage.getItem("userId");
+    const token  = localStorage.getItem('token');
+    const navigate = useNavigate();
+    const [members, setMembers] = useState([]);
+    const [memberCount, setMemberCount] = useState(MemberCount);
+    const isMember = members?.some(member => member.id === userId);
+    const [joined, setJoined] = useState(isMember);
+
+    const handleJoinClick = async(e) => {
+        try {
+            e.stopPropagation();
+            const res = await axios.put(
+                `${API_URL}/communities/${Name}/join`,
+                {},
+                { headers: { Authorization: `Bearer ${token}` } }
+            );
+            setMemberCount(prev => prev + 1);
+            setJoined(true);
+        } catch (error) {
+            console.error("failed to join community: ", error.response?.data || error.message);
+        }
+    }
+
+    useEffect(() => {
+        const GetMembers = async() => {
+            try {
+                const res = await axios.get(
+                    `${API_URL}/communities/${Name}/AllMembers`,
+                    { headers: { Authorization: `Bearer ${token}` } }
+                );
+                setMembers(res.data);
+                const alreadyMember = res.data.some(member => member.id === userId);
+                setJoined(alreadyMember);
+            } catch (error) {
+                console.error("Couldn't fetch the members")
+            }
+        }
+        GetMembers();
+        
+    }, [token])
+
+    return (
+        <div className='fcommunity' onClick={() => navigate(`/communities/${Name}`)}>
+            <div className='imgbox'></div>
+            <div className='topbox-txt'>
+                <h3>{Name}</h3>
+                <p className='count'>{memberCount}</p>
+            </div>
+            <p className='description'>{Description}</p>
+            {
+                !joined?(
+                    <button className='joinbtnf' onClick={handleJoinClick}>Join</button>
+                ):<button className='joinedbtnf'>Joined</button>
+            }
+        </div>
+    )
 }
 
 export default CommunitiesPage;
