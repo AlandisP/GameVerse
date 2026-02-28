@@ -26,6 +26,7 @@ import com.GameVerse.GameVerse.model.PartyFinder;
 import com.GameVerse.GameVerse.model.User;
 import com.GameVerse.GameVerse.repository.PartyFinderRepository;
 import com.GameVerse.GameVerse.repository.UserRepository;
+import com.GameVerse.GameVerse.services.NotificationService;
 import com.GameVerse.GameVerse.services.PartyFinderService;
 
 @RestController
@@ -40,6 +41,11 @@ public class PartyController {
 
     @Autowired
     private PartyFinderRepository partyRepository;
+
+    @Autowired
+    private NotificationService notificationService;
+
+    private static final String type = "Party";
 
     @GetMapping
     public ResponseEntity<?> getAllParties() {
@@ -88,9 +94,9 @@ public class PartyController {
             ? partyRepository.findByCategoriesContaining(category)
             : Collections.emptyList();
 
-    Set<PartyFinder> combined = new HashSet<>();
-    combined.addAll(parties);
-    combined.addAll(byCategory);
+        Set<PartyFinder> combined = new HashSet<>();
+        combined.addAll(parties);
+        combined.addAll(byCategory);
 
         return ResponseEntity.ok(combined);
 
@@ -111,6 +117,8 @@ public class PartyController {
         }
         try {
             String userId = (String) auth.getPrincipal();
+            String message = (repository.findById(userId).orElse(null).getUsername()) + " has joined your party!";
+            notificationService.createNotification(type, message, party.getCreatorId());
             partyService.joinParty(userId, partyname);
             return ResponseEntity.ok(party);
         } catch(RuntimeException ex) {
@@ -126,6 +134,8 @@ public class PartyController {
         }
         String id = party.getId();
         String userId = (String) auth.getPrincipal();
+        String message = (repository.findById(userId).orElse(null).getUsername()) + " has left the your party!";
+        notificationService.createNotification(type, message, party.getCreatorId());
         partyService.removeMember(userId, id);
         return ResponseEntity.ok(party);
     }
@@ -140,6 +150,8 @@ public class PartyController {
         }
 
         partyService.removeMember(user.getId(), party.getId());
+        String message = "You have been kicked from " + party.getName() + " party!";
+        notificationService.createNotification(type, message, user.getId());
         return ResponseEntity.ok().body(party);
     }
     //Delete Party

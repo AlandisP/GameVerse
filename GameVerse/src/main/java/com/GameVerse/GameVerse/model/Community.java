@@ -16,9 +16,13 @@ public class Community {
     private int memberCount;
     private int postCount;
 
-    public Community(String ownerId,String name, String description) {
+    private CommunityCategory category;
+
+    public Community(String ownerId, String name, String description, CommunityCategory category) {
+        this.ownerId = ownerId;
         this.name = name;
         this.description = description;
+        this.category = category;
         memberCount = 1;
         postCount = 0;
     }
@@ -51,12 +55,20 @@ public class Community {
         return postCount;
     }
 
+    public CommunityCategory getCommunityCategory() {
+        return category;
+    }
+
     public void setOwnerId(String id) {
         this.ownerId = id;
     }
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public void setCommunityCategory(CommunityCategory category) {
+        this.category=category;
     }
 
     public void setDescription(String description) {

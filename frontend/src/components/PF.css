@@ -1,7 +1,7 @@
 .top-container {
     display: flex;
     align-items: center;
-    height: 60px;
+    height: 3.3rem;
     background-color: white;
     margin: 20px;
     border-radius: 100px;
@@ -30,7 +30,7 @@ h2 {
     border: none;
     outline: none;
     font-family: system-ui;
-    font-size: 20px;
+    font-size: 1.2rem;
 }
 input::placeholder {
     color: rgba(0, 0, 0, 0.637);
@@ -39,9 +39,10 @@ input::placeholder {
 .createButton {
     display: flex;
     margin-left: auto;
+    align-items: center;
     margin-right: 20px;
     border-radius: 40px;
-    height: 50px;
+    height: 2.8rem;
     background-color: grey;
 }
 
@@ -64,7 +65,7 @@ input::placeholder {
 
 .plus-img {
     width: auto;
-    height: auto;
+    height: 3rem;
     background-color: transparent;
 }
 
@@ -74,7 +75,7 @@ input::placeholder {
     margin: 20px;
     border-radius: 30px;
     background-color: grey;
-    height: 140px;
+    height: 7.8rem;
 }
 
 h3 {
@@ -128,6 +129,7 @@ p {
     border-radius: 20px;
     justify-content: space-between;
     background-color: transparent;
+    gap: 2rem;
 
 }
 

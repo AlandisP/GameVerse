@@ -2,6 +2,7 @@ package com.GameVerse.GameVerse.controller;
 
 
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -16,6 +17,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.PutMapping;
+
 
 import com.GameVerse.GameVerse.model.User;
 import com.GameVerse.GameVerse.repository.UserRepository;
@@ -35,6 +38,7 @@ public class UsersController {
 
     @Autowired
     private UserRepository repository;
+
 
     @GetMapping
     public List<User> getAllUsers() {
@@ -114,6 +118,62 @@ public class UsersController {
         return ResponseEntity.ok(usernames);
 
     }
+
+    @DeleteMapping("/delete-account")
+public ResponseEntity<?> deleteAccount(@RequestBody Map<String, String> body, Authentication auth) {
+    String userId = (String) auth.getPrincipal();
+    String password = body.get("password");
+
+    if (password == null || password.isEmpty())
+        return ResponseEntity.badRequest().body(Map.of("message", "Please provide your password"));
+
+    User user = repository.findById(userId).orElseThrow();
+
+    if (!passwordEncoder.matches(password, user.getPassword()))
+        return ResponseEntity.badRequest().body(Map.of("message", "Incorrect password"));
+
+    repository.deleteById(userId);
+    return ResponseEntity.ok(Map.of("message", "Account deleted successfully"));
+}
+
+@PutMapping("/change-password")
+public ResponseEntity<?> changePassword(@RequestBody Map<String, String> body, Authentication auth) {
+    String userId = (String) auth.getPrincipal();
+    String currentPassword = body.get("currentPassword");
+    String newPassword = body.get("newPassword");
+
+    if (currentPassword == null || newPassword == null)
+        return ResponseEntity.badRequest().body(Map.of("message", "Please provide current and new password"));
+    if (newPassword.length() < 6)
+        return ResponseEntity.badRequest().body(Map.of("message", "Password must be at least 6 characters"));
+
+    User user = repository.findById(userId).orElseThrow();
+
+    if (!passwordEncoder.matches(currentPassword, user.getPassword()))
+        return ResponseEntity.badRequest().body(Map.of("message", "Current password is incorrect"));
+
+    user.setPassword(passwordEncoder.encode(newPassword));
+    repository.save(user);
+    return ResponseEntity.ok(Map.of("message", "Password updated successfully"));
+}
+
+  @PutMapping("/change-username")
+public ResponseEntity<?> changeUsername(@RequestBody Map<String, String> body, Authentication auth) {
+    String userId = (String) auth.getPrincipal();
+    String newUsername = body.get("newUsername");
+
+    if (newUsername == null || newUsername.trim().isEmpty())
+        return ResponseEntity.badRequest().body(Map.of("message", "Username cannot be empty"));
+    if (newUsername.contains(" "))
+        return ResponseEntity.badRequest().body(Map.of("message", "Username cannot contain spaces"));
+    if (repository.existsByUsername(newUsername.trim()))
+        return ResponseEntity.badRequest().body(Map.of("message", "Username already taken"));
+
+    User user = repository.findById(userId).orElseThrow();
+    user.setUsername(newUsername.trim());
+    repository.save(user);
+    return ResponseEntity.ok(Map.of("message", "Username updated successfully"));
+}
 
 
 }

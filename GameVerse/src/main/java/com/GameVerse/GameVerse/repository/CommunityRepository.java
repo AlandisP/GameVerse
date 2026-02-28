@@ -10,6 +10,9 @@ import com.GameVerse.GameVerse.model.Community;
 public interface CommunityRepository extends MongoRepository<Community, String>{
     List<Community> findByDescription(String description);
     List<Community> findByNameContainingIgnoreCase(String name);
+    List<Community> findByDescriptionContainingIgnoreCase(String description);
+    List<Community> findTop3ByOrderByMemberCountDesc();
+    List<Community> findAllByOrderByMemberCountDesc();
     boolean existsByNameIgnoreCase(String name);
     Community findByNameIgnoreCase(String name);
 }

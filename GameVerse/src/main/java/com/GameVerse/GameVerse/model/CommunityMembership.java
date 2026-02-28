@@ -4,9 +4,9 @@ import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 @Document(collection = "memberships")
-public class CommunityMembership {    
+public class CommunityMembership {
+    @Indexed(unique = true)     
     private String id;
-    @Indexed(unique = true) 
     private String userId;
     private String communityId;
     private MemberType type;
