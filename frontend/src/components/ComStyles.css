@@ -73,19 +73,19 @@
 }
 
 
-.featured-com button {
+/* .featured-com button {
     display: flex;
     justify-content: center;   
     align-items: center;       
-    padding: 0.75rem 1.5rem;
+    padding: 0.60rem 1.5rem;
     background-color: rgba(49, 47, 47, 0.685);
     color: white;
     border-radius: 10px;
     cursor: pointer;
-    line-height: 1;            
+    line-height: .5;            
     height: auto;        
     border: 2px solid transparent;      
-}
+} */
 
 
 .featuredbts {
@@ -107,7 +107,7 @@
     flex-direction: row;
     gap: 1rem;
     margin: .5rem;
-    max-height: 30%;
+    max-height: 35%;
     justify-content: center;
     margin-top: -.5rem;
     
@@ -117,23 +117,22 @@
 .fcommunity {
     display: flex;            
     flex-direction: column; 
-    max-width: 25%;
-    min-width:100px;
-    width:23.5%;
-    max-height: 37%;
+    width: 25%;
+    height: 25%;
     background-color: rgb(48, 45, 45);
-    padding: 1.2rem;
+    padding: .8rem;
     border-radius: 10px;
-     
+    margin: .2rem;
 }
 
 .imgbox {
     width: 100%;
     max-height: 25%;
-    min-height: 85px;
-    height: fit-content;
+    min-height: 80px;
     overflow: hidden;
     margin-bottom: 1rem;
+    background-color: grey;
+    border-radius: 10px;
 }
 
 .imgbox img {
@@ -152,11 +151,10 @@
 }
 
 .topbox-txt h3 {
-    font-size: clamp(0.95rem, 0.7vw + 0.35rem, 1.35rem);
+    font-size: clamp(0.95rem, 1rem, 1.35rem);
     margin: 0;
     padding: 0;
     display: flex;
-
 }
 
 .count {
@@ -167,16 +165,21 @@
 }
 
 .description {
+    flex: 1;
     margin-top: 13px;
     color: grey;
     font-size: clamp(0.8rem, 0.6vw + 0.3rem, 1rem);
     line-height: 1.3;
+    text-overflow: ellipsis;
     overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 4;
+     -webkit-box-orient: vertical;
 }
 
 .joinbtnf {
     margin-left: auto;    
-    width: 15%;       
+    width: auto;       
     padding: .5rem;
     border-radius: 10px;    
     background-color: #3b82f6;
@@ -184,6 +187,9 @@
     font-weight: bold;
     font-size: .8rem;
     border: none;
+    margin-top: auto;
+    flex-shrink: 0;
+    white-space: nowrap;
 }
 
 .joinbtn:hover {
@@ -191,13 +197,15 @@
 }
 
 .minicoms {
+    margin: 0;
     max-width: 100%;
     max-height: 18vh;
     height: auto;
     display: flex;
     flex-wrap: wrap;
-    gap: 20px;
+    gap: 8px;
     margin-left: 20px;
+    justify-content: center;
 }
 
 
@@ -207,9 +215,13 @@
     border-radius: 8px;
     display: flex;
     align-items: center;
-    padding: .5rem;
+    padding: .35rem;
     height: auto;
-    margin: 0;
+    margin: none;
+}
+
+.minicombox:hover {
+    cursor: pointer;
 }
 
 .placeholderbox {
@@ -221,6 +233,7 @@
 }
 
 .minicol {
+    margin: 0;
     background-color: transparent;
     justify-content: space-between;
     flex-direction: column;
@@ -240,7 +253,6 @@
 
 .main-content {
     position: relative;
-    overflow-y: hidden;
     overflow-x: hidden;   /* add this */
     z-index: 1;
 }
@@ -249,6 +261,37 @@
     margin-bottom: .5rem;
 }
 
+.catbutton {
+    margin-right: .5rem;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;   
+    align-items: center;       
+    padding: 0.75rem 1.5rem;
+    background-color: rgba(49, 47, 47, 0.685);
+    color: white;
+    border-radius: 10px;
+    cursor: pointer;
+    line-height: 1;            
+    height: auto;        
+    border: 2px solid transparent;      
+}
+
+.buttonSelected {
+    margin-right: .5rem;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;   
+    align-items: center;       
+    padding: 0.75rem 1.5rem;
+    background-color: rgba(49, 47, 47, 0.685);
+    color: white;
+    border-radius: 10px;
+    cursor: pointer;
+    line-height: 1;            
+    height: auto;        
+    border: 2px solid white;      
+}
 
 
 

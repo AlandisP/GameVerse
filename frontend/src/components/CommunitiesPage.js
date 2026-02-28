@@ -18,6 +18,15 @@ function CommunitiesPage() {
     const [exploreIsOpen, setIsExploreOpen] = useState(false);
     const[categories, setCategories] = useState([]);
     const [communities, setCommunities] = useState([]);
+    const [userCommunities, setUserCommunities] = useState([]);
+    const [selectedCategory, setSelectedCategory] = useState('');
+    const navigate = useNavigate();
+
+    const featured = (selectedCategory === ''
+        ? [...communities]
+        : communities.filter(c => c.communityCategory === selectedCategory))
+        .sort((a, b) => b.memberCount - a.memberCount)
+        .slice(0, 3);
 
     const getCommunities = async() => {
         const res = await axios.get(
@@ -26,6 +35,14 @@ function CommunitiesPage() {
         );
         setCommunities(res.data);
     };
+
+    const handleSelectCategory = (cat) => {
+        if(cat === selectedCategory) {
+            setSelectedCategory("");
+        } else {
+            setSelectedCategory(cat);
+        }
+    }
 
     
 
@@ -37,12 +54,26 @@ function CommunitiesPage() {
             );
             setCategories(result.data);
         };
+        const getUserCommunities = async() => {
+            try {
+                const res = await axios.get(
+                `${API_URL}/communities/memberships`,
+                { headers: { Authorization: `Bearer ${token}` } }
+                );
+                setUserCommunities(res.data);
+            } catch (error) {
+                 console.error("failed to get user communities: ", error.response?.data || error.message);
+            }
+        }
+        getUserCommunities();
         getCategories();
         getCommunities();
     }, [token]);
 
-     const cats = categories.map((category,index) =>(
-        <button key={index}>{category}</button>));
+    const cats = categories.map((cat,index) =>(
+        <button key={index} onClick={() => handleSelectCategory(cat)} className={!(cat===selectedCategory)?"catbutton":"buttonSelected"}>{cat}</button>));
+
+
 
     const handleCreateCommunity = () => {
         setIsOpen(!isOpen);
@@ -86,35 +117,34 @@ function CommunitiesPage() {
                 <div className='featured-com'>
                     <h2>Featured Communities</h2>
                     <div className='featuredbts'>
-                        <button>ALL</button>
                         {cats}
                     </div>
                 </div>
                 <div className='communities-box'>
-                    <div className='fcommunity'>
-                        <div className='imgbox'>
-                            <img src={background} alt='tempimg'></img>
+                    {featured.map((community) => (
+                        <div className='fcommunity' key={community.id}>
+                            <div className='imgbox'></div>
+                            <div className='topbox-txt'>
+                                <h3>{community.name}</h3>
+                                <p className='count'>{community.memberCount}</p>
+                            </div>
+                            <p className='description'>{community.description}</p>
+                            <button className='joinbtnf'>Join</button>
                         </div>
-                        <div className='topbox-txt'>
-                            <h3>Community Name</h3>
-                            <p className='count'>100</p>
-                        </div>
-                        <p className='description'>The ancient oak tree whispered secrets to the wind while the quiet, silver river flowed underneath, and in that moment, time seemed to stop, allowing the world to catch its breath, forgetting all its worries and finding a deep, lasting peace in the silence </p>
-                        <button className='joinbtnf'>Join</button>
-                    </div>
+                    ))}
                 </div>
                 <div className='mycommunities'>
                     <h2>My Communities</h2>
                     <div className='minicoms'>
-                        <div className='minicombox'>
-                            <div className='placeholderbox'></div>
-                            <div className='minicol'>
-                                <h3>Community Name</h3>
-                                <p>100 members</p>
+                        {userCommunities.map((community) => (
+                            <div className='minicombox' key={community.id} onClick={() => navigate(`/communities/${community.name}`)}>
+                                <div className='placeholderbox'></div>
+                                <div className='minicol'>
+                                    <h3>{community.name}</h3>
+                                    <p>{community.memberCount} members</p>
+                                </div>
                             </div>
-
-                        </div>
-
+                        ))}
                     </div>
 
                 </div>

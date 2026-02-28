@@ -111,7 +111,7 @@ public class CommunityService {
     }
     // gets all of a user's communities
     public List<Community> getUsersCommunities(String userId) {
-        if(!userRepository.existsByUsername(userId)) {
+        if(!userRepository.existsById(userId)) {
             throw new RuntimeException(" User doesn't exist");
         }
         List<CommunityMembership> arr = cr.findAllByUserId(userId);
