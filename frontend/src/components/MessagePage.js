@@ -1,11 +1,10 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import NavBar from "./NavBar";
 import logo from "../images/search.png";
 
 import { db } from "../firebase";
 import {
-  addDoc,
   collection,
   doc,
   onSnapshot,
@@ -14,6 +13,10 @@ import {
   serverTimestamp,
   setDoc,
   where,
+  updateDoc,
+  writeBatch,
+  getDocs,
+  limit,
 } from "firebase/firestore";
 
 function getConversationId(user1, user2) {
@@ -22,6 +25,14 @@ function getConversationId(user1, user2) {
 
 function getOtherUser(participants, me) {
   return participants?.find((p) => p !== me) || "";
+}
+
+function getConversationPreviewText(convo) {
+  return convo.lastMessageText || convo.lastMessage || "";
+}
+
+function getConversationLastMessageId(convo) {
+  return convo?.lastMessageId || "";
 }
 
 function MessagePage() {
@@ -39,6 +50,15 @@ function MessagePage() {
 
   const [search, setSearch] = useState("");
 
+  // Edit state
+  const [editingId, setEditingId] = useState("");
+  const [editingText, setEditingText] = useState("");
+
+  // New message composer state
+  const [isComposing, setIsComposing] = useState(false);
+  const [newDmUsername, setNewDmUsername] = useState("");
+  const [composeError, setComposeError] = useState("");
+
   // If URL has a receiver, open that conversation
   useEffect(() => {
     if (!sender || !receiverUsername) return;
@@ -47,12 +67,16 @@ function MessagePage() {
     setActiveConversationId(convoId);
     setActiveReceiver(receiverUsername);
 
-    // Ensure conversation doc exists so it shows in inbox immediately
     setDoc(
       doc(db, "conversations", convoId),
       {
         participants: [sender, receiverUsername],
         updatedAt: serverTimestamp(),
+        lastMessageText: "",
+        lastMessageAt: null,
+        lastMessageSender: "",
+        lastMessageId: "",
+        // legacy (optional)
         lastMessage: "",
         lastSender: "",
       },
@@ -111,38 +135,191 @@ function MessagePage() {
     return () => unsub();
   }, [activeConversationId]);
 
+  async function recomputeConversationLastMessage(convoId) {
+    const msgsRef = collection(db, "conversations", convoId, "messages");
+    const qLast = query(msgsRef, orderBy("timestamp", "desc"), limit(25));
+    const snap = await getDocs(qLast);
+
+    const next = snap.docs
+      .map((d) => ({ id: d.id, ...d.data() }))
+      .find((m) => !m.isDeleted);
+
+    const convoRef = doc(db, "conversations", convoId);
+
+    if (!next) {
+      await updateDoc(convoRef, {
+        lastMessageText: "",
+        lastMessageAt: null,
+        lastMessageSender: "",
+        lastMessageId: "",
+        updatedAt: serverTimestamp(),
+        // legacy
+        lastMessage: "",
+        lastSender: "",
+      });
+      return;
+    }
+
+    await updateDoc(convoRef, {
+      lastMessageText: next.content || "",
+      lastMessageAt: next.timestamp || null,
+      lastMessageSender: next.sender || "",
+      lastMessageId: next.id,
+      updatedAt: serverTimestamp(),
+      // legacy
+      lastMessage: next.content || "",
+      lastSender: next.sender || "",
+    });
+  }
+
   async function sendMessage() {
-    if (!messageInput.trim() || !sender || !activeReceiver) return;
+    const text = messageInput.trim();
+    if (!text || !sender || !activeReceiver) return;
 
     const convoId =
       activeConversationId || getConversationId(sender, activeReceiver);
 
-    await setDoc(
-      doc(db, "conversations", convoId),
+    if (!activeConversationId) setActiveConversationId(convoId);
+
+    const convoRef = doc(db, "conversations", convoId);
+    const msgRef = doc(collection(db, "conversations", convoId, "messages"));
+
+    const batch = writeBatch(db);
+
+    batch.set(
+      convoRef,
       {
         participants: [sender, activeReceiver],
         updatedAt: serverTimestamp(),
-        lastMessage: messageInput,
+        lastMessageText: text,
+        lastMessageAt: serverTimestamp(),
+        lastMessageSender: sender,
+        lastMessageId: msgRef.id,
+        // legacy
+        lastMessage: text,
         lastSender: sender,
       },
       { merge: true }
     );
 
-    await addDoc(collection(db, "conversations", convoId, "messages"), {
+    batch.set(msgRef, {
       sender,
       receiver: activeReceiver,
-      content: messageInput,
+      content: text,
       timestamp: serverTimestamp(),
+      editedAt: null,
+      isDeleted: false,
     });
 
+    await batch.commit();
     setMessageInput("");
+  }
+
+  async function editMessage(msg) {
+    const text = editingText.trim();
+    if (!text || !activeConversationId) return;
+
+    const msgRef = doc(
+      db,
+      "conversations",
+      activeConversationId,
+      "messages",
+      msg.id
+    );
+
+    await updateDoc(msgRef, { content: text, editedAt: serverTimestamp() });
+
+    const convo = conversations.find((c) => c.id === activeConversationId);
+    if (getConversationLastMessageId(convo) === msg.id) {
+      await updateDoc(doc(db, "conversations", activeConversationId), {
+        lastMessageText: text,
+        lastMessage: text, // legacy
+        updatedAt: serverTimestamp(),
+      });
+    }
+
+    setEditingId("");
+    setEditingText("");
+  }
+
+  async function deleteMessage(msg) {
+    if (!activeConversationId) return;
+
+    const msgRef = doc(
+      db,
+      "conversations",
+      activeConversationId,
+      "messages",
+      msg.id
+    );
+
+    await updateDoc(msgRef, {
+      isDeleted: true,
+      content: "",
+      deletedAt: serverTimestamp(),
+    });
+
+    const convo = conversations.find((c) => c.id === activeConversationId);
+    if (getConversationLastMessageId(convo) === msg.id) {
+      await recomputeConversationLastMessage(activeConversationId);
+    }
+
+    if (editingId === msg.id) {
+      setEditingId("");
+      setEditingText("");
+    }
+  }
+
+  async function startNewConversation() {
+    const target = newDmUsername.trim();
+
+    if (!sender) return;
+    if (!target) {
+      setComposeError("Enter a username.");
+      return;
+    }
+    if (target.toLowerCase() === sender.toLowerCase()) {
+      setComposeError("You can't message yourself.");
+      return;
+    }
+
+    setComposeError("");
+
+    const convoId = getConversationId(sender, target);
+
+    await setDoc(
+      doc(db, "conversations", convoId),
+      {
+        participants: [sender, target],
+        updatedAt: serverTimestamp(),
+        lastMessageText: "",
+        lastMessageAt: null,
+        lastMessageSender: "",
+        lastMessageId: "",
+        // legacy
+        lastMessage: "",
+        lastSender: "",
+      },
+      { merge: true }
+    );
+
+    setActiveConversationId(convoId);
+    setActiveReceiver(target);
+    navigate(`/messages/${target}`);
+
+    setIsComposing(false);
+    setNewDmUsername("");
+    setEditingId("");
+    setEditingText("");
   }
 
   function openConversation(convo) {
     const other = getOtherUser(convo.participants, sender);
-    navigate(`/messages/${other}`); // ✅ Proper router navigation
+    navigate(`/messages/${other}`);
     setActiveConversationId(convo.id);
     setActiveReceiver(other);
+    setEditingId("");
+    setEditingText("");
   }
 
   return (
@@ -167,7 +344,109 @@ function MessagePage() {
             }}
           >
             <h1 style={{ color: "white", margin: 0 }}>Messages</h1>
+
+            <button
+              onClick={() => {
+                setIsComposing((v) => !v);
+                setComposeError("");
+                setNewDmUsername("");
+              }}
+              style={{
+                marginTop: "12px",
+                padding: "8px 12px",
+                borderRadius: "10px",
+                border: "none",
+                backgroundColor: "#058BFE",
+                color: "white",
+                cursor: "pointer",
+                fontWeight: 700,
+              }}
+            >
+              New message
+            </button>
           </div>
+
+          {isComposing ? (
+            <div style={{ padding: "12px 20px" }}>
+              <div
+                style={{
+                  backgroundColor: "#2f2f2f",
+                  border: "1px solid #444",
+                  borderRadius: "12px",
+                  padding: "12px",
+                  color: "white",
+                }}
+              >
+                <div style={{ fontWeight: 700, marginBottom: "8px" }}>
+                  Start a DM
+                </div>
+                <input
+                  value={newDmUsername}
+                  onChange={(e) => setNewDmUsername(e.target.value)}
+                  placeholder="Enter username (exact)"
+                  style={{
+                    width: "100%",
+                    padding: "10px",
+                    borderRadius: "10px",
+                    border: "none",
+                    outline: "none",
+                    backgroundColor: "#1f1f1f",
+                    color: "white",
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") startNewConversation();
+                  }}
+                />
+                {composeError ? (
+                  <div
+                    style={{
+                      color: "#ffb3b3",
+                      marginTop: "8px",
+                      fontSize: "0.9rem",
+                    }}
+                  >
+                    {composeError}
+                  </div>
+                ) : null}
+
+                <div style={{ display: "flex", gap: "10px", marginTop: "10px" }}>
+                  <button
+                    onClick={startNewConversation}
+                    style={{
+                      flex: 1,
+                      padding: "10px",
+                      borderRadius: "10px",
+                      border: "none",
+                      backgroundColor: "#4A90E2",
+                      color: "white",
+                      cursor: "pointer",
+                      fontWeight: 700,
+                    }}
+                  >
+                    Start
+                  </button>
+                  <button
+                    onClick={() => {
+                      setIsComposing(false);
+                      setComposeError("");
+                      setNewDmUsername("");
+                    }}
+                    style={{
+                      padding: "10px",
+                      borderRadius: "10px",
+                      border: "1px solid #444",
+                      backgroundColor: "transparent",
+                      color: "white",
+                      cursor: "pointer",
+                      fontWeight: 700,
+                    }}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            </div>
+          ) : null}
 
           <div style={{ padding: "20px" }}>
             <div
@@ -199,6 +478,7 @@ function MessagePage() {
             {filteredConversations.map((c) => {
               const other = getOtherUser(c.participants, sender);
               const isActive = c.id === activeConversationId;
+              const preview = getConversationPreviewText(c);
 
               return (
                 <button
@@ -226,7 +506,7 @@ function MessagePage() {
                       whiteSpace: "nowrap",
                     }}
                   >
-                    {c.lastMessage || "No messages yet."}
+                    {preview || "No messages yet."}
                   </div>
                 </button>
               );
@@ -258,29 +538,111 @@ function MessagePage() {
 
           {/* Messages */}
           <div style={{ flex: 1, overflowY: "auto", padding: "20px" }}>
-            {messages.map((msg) => (
-              <div
-                key={msg.id}
-                style={{
-                  marginBottom: "10px",
-                  display: "flex",
-                  justifyContent:
-                    msg.sender === sender ? "flex-end" : "flex-start",
-                }}
-              >
+            {messages.map((msg) => {
+              const isMine = msg.sender === sender;
+
+              return (
                 <div
+                  key={msg.id}
                   style={{
-                    backgroundColor: msg.sender === sender ? "#4A90E2" : "#444",
-                    padding: "10px 15px",
-                    borderRadius: "20px",
-                    maxWidth: "60%",
-                    color: "white",
+                    marginBottom: "10px",
+                    display: "flex",
+                    justifyContent: isMine ? "flex-end" : "flex-start",
                   }}
                 >
-                  {msg.content}
+                  <div style={{ maxWidth: "60%" }}>
+                    <div
+                      style={{
+                        backgroundColor: isMine ? "#4A90E2" : "#444",
+                        padding: "10px 15px",
+                        borderRadius: "20px",
+                        color: "white",
+                        opacity: msg.isDeleted ? 0.7 : 1,
+                      }}
+                    >
+                      {msg.isDeleted ? (
+                        <span style={{ fontStyle: "italic" }}>
+                          Message deleted
+                        </span>
+                      ) : editingId === msg.id ? (
+                        <div>
+                          <input
+                            value={editingText}
+                            onChange={(e) => setEditingText(e.target.value)}
+                            style={{
+                              width: "100%",
+                              padding: "8px",
+                              borderRadius: "10px",
+                              border: "none",
+                              outline: "none",
+                            }}
+                          />
+                          <div
+                            style={{
+                              marginTop: "8px",
+                              display: "flex",
+                              gap: "8px",
+                              justifyContent: "flex-end",
+                            }}
+                          >
+                            <button onClick={() => editMessage(msg)}>
+                              Save
+                            </button>
+                            <button
+                              onClick={() => {
+                                setEditingId("");
+                                setEditingText("");
+                              }}
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div>
+                          {msg.content}
+                          {msg.editedAt ? (
+                            <span
+                              style={{ marginLeft: "8px", fontSize: "0.8rem" }}
+                            >
+                              (edited)
+                            </span>
+                          ) : null}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Controls */}
+                    {isMine && !msg.isDeleted && editingId !== msg.id ? (
+                      <div
+                        style={{
+                          marginTop: "6px",
+                          display: "flex",
+                          justifyContent: "flex-end",
+                          gap: "8px",
+                        }}
+                      >
+                        <button
+                          onClick={() => {
+                            setEditingId(msg.id);
+                            setEditingText(msg.content || "");
+                          }}
+                          style={{ fontSize: "0.8rem" }}
+                        >
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => deleteMessage(msg)}
+                          style={{ fontSize: "0.8rem" }}
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    ) : null}
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
 
           {/* Input */}
@@ -300,6 +662,9 @@ function MessagePage() {
                 activeReceiver ? "Type a message..." : "Select a conversation..."
               }
               disabled={!activeReceiver}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") sendMessage();
+              }}
               style={{
                 flex: 1,
                 padding: "10px",

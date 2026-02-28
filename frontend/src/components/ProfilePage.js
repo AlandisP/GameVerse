@@ -1,418 +1,810 @@
-import React, { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import React, { useEffect, useMemo, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
-import "./styles.css";
 import NavBar from "./NavBar";
+import logo from "../images/search.png";
 import API_URL from "../config/api";
 
-function ProfilePage() {
-  const { username } = useParams();
+import { db } from "../firebase";
+import {
+  collection,
+  doc,
+  onSnapshot,
+  orderBy,
+  query,
+  serverTimestamp,
+  setDoc,
+  where,
+  updateDoc,
+  writeBatch,
+  getDocs,
+  limit,
+} from "firebase/firestore";
+
+function getConversationId(user1, user2) {
+  return user1 < user2 ? `${user1}_${user2}` : `${user2}_${user1}`;
+}
+
+function getOtherUser(participants, me) {
+  return participants?.find((p) => p !== me) || "";
+}
+
+function getConversationPreviewText(convo) {
+  return convo.lastMessageText || convo.lastMessage || "";
+}
+
+function getConversationLastMessageId(convo) {
+  return convo?.lastMessageId || "";
+}
+
+function MessagePage() {
+  const { receiverUsername } = useParams();
   const navigate = useNavigate();
+
+  const sender = localStorage.getItem("username");
   const token = localStorage.getItem("token");
-  const loggedInUsername = localStorage.getItem("username");
 
-  const [profile, setProfile] = useState(null);
-  const [bio, setBio] = useState("");
-  const [loading, setLoading] = useState(true);
-  const [editMode, setEditMode] = useState(false);
-  const [activeTab, setActiveTab] = useState("posts");
-  const [isFollowing, setIsFollowing] = useState(false);
+  const [messageInput, setMessageInput] = useState("");
+  const [messages, setMessages] = useState([]);
+  const [conversations, setConversations] = useState([]);
 
-  useEffect(() => {
-    const fetchProfile = async () => {
-      try {
-        setLoading(true);
-        let res;
+  const [activeConversationId, setActiveConversationId] = useState("");
+  const [activeReceiver, setActiveReceiver] = useState("");
 
-        if (username) {
-          // viewing someone else's profile
-          res = await axios.get(
-            `${API_URL}/profile/${username}`,
-            token
-              ? { headers: { Authorization: `Bearer ${token}` } }
-              : undefined
-          );
-        } else {
-          // viewing own profile
-          res = await axios.get(`${API_URL}/profile`, {
-            headers: { Authorization: `Bearer ${token}` },
-          });
-        }
+  const [search, setSearch] = useState("");
 
-        setProfile(res.data);
-        setBio(res.data.bio || "");
+  // Edit state
+  const [editingId, setEditingId] = useState("");
+  const [editingText, setEditingText] = useState("");
 
-        // If viewing someone else's profile and logged in, fetch follow status
-        if (username && token) {
-          try {
-            const followRes = await axios.get(
-              `${API_URL}/profile/${username}/isFollowing`,
-              { headers: { Authorization: `Bearer ${token}` } }
-            );
-            setIsFollowing(followRes.data === true);
-          } catch (err) {
-            console.error("Error checking follow status:", err);
-          }
-        } else {
-          setIsFollowing(false);
-        }
-      } catch (err) {
-        if (err.response?.status === 404) {
-          setProfile(null);
-        } else {
-          console.error("Error loading profile:", err);
-        }
-      } finally {
-        setLoading(false);
-      }
-    };
+  // New message composer state
+  const [isComposing, setIsComposing] = useState(false);
+  const [newDmUsername, setNewDmUsername] = useState("");
+  const [composeError, setComposeError] = useState("");
 
-    if (token || !username) {
-      fetchProfile();
-    } else {
-      // No token and viewing someone else: still fetch public profile (no auth header)
-      (async () => {
+  // URL param invalid state
+  const [routeError, setRouteError] = useState("");
+
+  async function resolveUsername(username) {
+    const raw = (username || "").trim();
+    if (!raw) return { exists: false, canonical: "" };
+
+    const headers = token ? { Authorization: `Bearer ${token}` } : undefined;
+
+    async function fetchProfile(u) {
+      return axios.get(`${API_URL}/profile/${encodeURIComponent(u)}`, headers ? { headers } : undefined);
+    }
+
+    // Try typed first, then lowercase fallback (case-sensitive backends)
+    try {
+      const res = await fetchProfile(raw);
+
+      // Defensive: if API returns 200 with no profile
+      if (!res?.data || !res.data.username) return { exists: false, canonical: "" };
+
+      return { exists: true, canonical: res.data.username };
+    } catch (err) {
+      if (err?.response?.status === 404) {
         try {
-          setLoading(true);
-          const res = await axios.get(`${API_URL}/profile/${username}`);
-          setProfile(res.data);
-          setBio(res.data.bio || "");
-          setIsFollowing(false);
-        } catch (err) {
-          if (err.response?.status === 404) {
-            setProfile(null);
-          } else {
-            console.error("Error loading profile:", err);
-          }
-        } finally {
-          setLoading(false);
+          const res2 = await fetchProfile(raw.toLowerCase());
+          if (!res2?.data || !res2.data.username) return { exists: false, canonical: "" };
+          return { exists: true, canonical: res2.data.username };
+        } catch (err2) {
+          if (err2?.response?.status === 404) return { exists: false, canonical: "" };
+          return { exists: false, canonical: "", error: "verify_failed" };
         }
-      })();
+      }
+      return { exists: false, canonical: "", error: "verify_failed" };
     }
-  }, [username, token]);
+  }
 
-  const handleSaveBio = async () => {
-    try {
-      await axios.put(
-        `${API_URL}/profile`,
-        { bio },
-        { headers: { Authorization: `Bearer ${token}` } }
+  // ✅ IMPORTANT: Validate receiverUsername from URL before creating convo
+  useEffect(() => {
+    let cancelled = false;
+
+    async function initFromRoute() {
+      setRouteError("");
+
+      if (!sender || !receiverUsername) return;
+
+      // Block self-DM
+      if (receiverUsername.toLowerCase() === sender.toLowerCase()) {
+        setRouteError("You can't message yourself.");
+        setActiveConversationId("");
+        setActiveReceiver("");
+        setMessages([]);
+        return;
+      }
+
+      const result = await resolveUsername(receiverUsername);
+
+      if (cancelled) return;
+
+      if (!result.exists) {
+        setRouteError(
+          result.error ? "Couldn't verify that username right now." : "That username doesn't exist."
+        );
+        setActiveConversationId("");
+        setActiveReceiver("");
+        setMessages([]);
+        return;
+      }
+
+      const canonicalReceiver = result.canonical;
+      const convoId = getConversationId(sender, canonicalReceiver);
+
+      setActiveConversationId(convoId);
+      setActiveReceiver(canonicalReceiver);
+
+      // Ensure conversation doc exists so it shows in inbox immediately
+      await setDoc(
+        doc(db, "conversations", convoId),
+        {
+          participants: [sender, canonicalReceiver],
+          updatedAt: serverTimestamp(),
+          lastMessageText: "",
+          lastMessageAt: null,
+          lastMessageSender: "",
+          lastMessageId: "",
+          // legacy (optional)
+          lastMessage: "",
+          lastSender: "",
+        },
+        { merge: true }
       );
-      setProfile({ ...profile, bio });
-      setEditMode(false);
-    } catch (err) {
-      alert("Error saving bio.");
     }
-  };
 
-  const handleFollow = async () => {
-    if (!token) {
-      navigate("/login");
+    initFromRoute();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [sender, receiverUsername, token]);
+
+  // Load inbox conversation list
+  useEffect(() => {
+    if (!sender) return;
+
+    const inboxQuery = query(
+      collection(db, "conversations"),
+      where("participants", "array-contains", sender),
+      orderBy("updatedAt", "desc")
+    );
+
+    const unsub = onSnapshot(inboxQuery, (snapshot) => {
+      const convos = snapshot.docs.map((d) => ({
+        id: d.id,
+        ...d.data(),
+      }));
+      setConversations(convos);
+    });
+
+    return () => unsub();
+  }, [sender]);
+
+  const filteredConversations = useMemo(() => {
+    const s = search.trim().toLowerCase();
+    if (!s) return conversations;
+
+    return conversations.filter((c) => {
+      const other = getOtherUser(c.participants, sender).toLowerCase();
+      return other.includes(s);
+    });
+  }, [conversations, search, sender]);
+
+  // Load messages for active conversation
+  useEffect(() => {
+    if (!activeConversationId) return;
+
+    const q = query(
+      collection(db, "conversations", activeConversationId, "messages"),
+      orderBy("timestamp", "asc")
+    );
+
+    const unsub = onSnapshot(q, (snapshot) => {
+      const list = snapshot.docs.map((d) => ({
+        id: d.id,
+        ...d.data(),
+      }));
+      setMessages(list);
+    });
+
+    return () => unsub();
+  }, [activeConversationId]);
+
+  async function recomputeConversationLastMessage(convoId) {
+    const msgsRef = collection(db, "conversations", convoId, "messages");
+    const qLast = query(msgsRef, orderBy("timestamp", "desc"), limit(25));
+    const snap = await getDocs(qLast);
+
+    const next = snap.docs
+      .map((d) => ({ id: d.id, ...d.data() }))
+      .find((m) => !m.isDeleted);
+
+    const convoRef = doc(db, "conversations", convoId);
+
+    if (!next) {
+      await updateDoc(convoRef, {
+        lastMessageText: "",
+        lastMessageAt: null,
+        lastMessageSender: "",
+        lastMessageId: "",
+        updatedAt: serverTimestamp(),
+        // legacy
+        lastMessage: "",
+        lastSender: "",
+      });
       return;
     }
 
-    try {
-      await axios.post(
-        `${API_URL}/profile/${profile.username}/follow`,
-        {},
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      setIsFollowing(true);
-      setProfile((prev) =>
-        prev
-          ? { ...prev, followerCount: (prev.followerCount || 0) + 1 }
-          : prev
-      );
-    } catch (err) {
-      console.error("Error following user:", err);
-    }
-  };
+    await updateDoc(convoRef, {
+      lastMessageText: next.content || "",
+      lastMessageAt: next.timestamp || null,
+      lastMessageSender: next.sender || "",
+      lastMessageId: next.id,
+      updatedAt: serverTimestamp(),
+      // legacy
+      lastMessage: next.content || "",
+      lastSender: next.sender || "",
+    });
+  }
 
-  const handleUnfollow = async () => {
-    if (!token) {
-      navigate("/login");
+  async function sendMessage() {
+    const text = messageInput.trim();
+    if (!text || !sender || !activeReceiver) return;
+
+    const convoId =
+      activeConversationId || getConversationId(sender, activeReceiver);
+
+    if (!activeConversationId) setActiveConversationId(convoId);
+
+    const convoRef = doc(db, "conversations", convoId);
+    const msgRef = doc(collection(db, "conversations", convoId, "messages"));
+
+    const batch = writeBatch(db);
+
+    batch.set(
+      convoRef,
+      {
+        participants: [sender, activeReceiver],
+        updatedAt: serverTimestamp(),
+        lastMessageText: text,
+        lastMessageAt: serverTimestamp(),
+        lastMessageSender: sender,
+        lastMessageId: msgRef.id,
+        // legacy
+        lastMessage: text,
+        lastSender: sender,
+      },
+      { merge: true }
+    );
+
+    batch.set(msgRef, {
+      sender,
+      receiver: activeReceiver,
+      content: text,
+      timestamp: serverTimestamp(),
+      editedAt: null,
+      isDeleted: false,
+    });
+
+    await batch.commit();
+    setMessageInput("");
+  }
+
+  async function editMessage(msg) {
+    const text = editingText.trim();
+    if (!text || !activeConversationId) return;
+
+    const msgRef = doc(
+      db,
+      "conversations",
+      activeConversationId,
+      "messages",
+      msg.id
+    );
+
+    await updateDoc(msgRef, {
+      content: text,
+      editedAt: serverTimestamp(),
+    });
+
+    const convo = conversations.find((c) => c.id === activeConversationId);
+    if (getConversationLastMessageId(convo) === msg.id) {
+      await updateDoc(doc(db, "conversations", activeConversationId), {
+        lastMessageText: text,
+        lastMessage: text,
+        updatedAt: serverTimestamp(),
+      });
+    }
+
+    setEditingId("");
+    setEditingText("");
+  }
+
+  async function deleteMessage(msg) {
+    if (!activeConversationId) return;
+
+    const msgRef = doc(
+      db,
+      "conversations",
+      activeConversationId,
+      "messages",
+      msg.id
+    );
+
+    await updateDoc(msgRef, {
+      isDeleted: true,
+      content: "",
+      deletedAt: serverTimestamp(),
+    });
+
+    const convo = conversations.find((c) => c.id === activeConversationId);
+    if (getConversationLastMessageId(convo) === msg.id) {
+      await recomputeConversationLastMessage(activeConversationId);
+    }
+
+    if (editingId === msg.id) {
+      setEditingId("");
+      setEditingText("");
+    }
+  }
+
+  async function startNewConversation() {
+    const typed = newDmUsername.trim();
+
+    if (!sender) return;
+    if (!typed) {
+      setComposeError("Enter a username.");
+      return;
+    }
+    if (typed.toLowerCase() === sender.toLowerCase()) {
+      setComposeError("You can't message yourself.");
       return;
     }
 
-    try {
-      await axios.post(
-        `${API_URL}/profile/${profile.username}/unfollow`,
-        {},
-        { headers: { Authorization: `Bearer ${token}` } }
+    setComposeError("");
+
+    const result = await resolveUsername(typed);
+    if (!result.exists) {
+      setComposeError(
+        result.error ? "Couldn't verify username right now. Try again." : "That username doesn't exist."
       );
-      setIsFollowing(false);
-      setProfile((prev) =>
-        prev
-          ? {
-              ...prev,
-              followerCount: Math.max((prev.followerCount || 1) - 1, 0),
-            }
-          : prev
-      );
-    } catch (err) {
-      console.error("Error unfollowing user:", err);
+      return;
     }
-  };
 
-  const Sidebar = () => <NavBar />;
+    const canonicalTarget = result.canonical;
+    const convoId = getConversationId(sender, canonicalTarget);
 
-  if (loading) {
-    return (
-      <div className="page-container">
-        <Sidebar />
-        <div className="main-content">
-          <h2 style={{ color: "white" }}>Loading profile...</h2>
-        </div>
-      </div>
+    await setDoc(
+      doc(db, "conversations", convoId),
+      {
+        participants: [sender, canonicalTarget],
+        updatedAt: serverTimestamp(),
+        lastMessageText: "",
+        lastMessageAt: null,
+        lastMessageSender: "",
+        lastMessageId: "",
+        // legacy
+        lastMessage: "",
+        lastSender: "",
+      },
+      { merge: true }
     );
+
+    setActiveConversationId(convoId);
+    setActiveReceiver(canonicalTarget);
+    navigate(`/messages/${canonicalTarget}`);
+
+    setIsComposing(false);
+    setNewDmUsername("");
+    setEditingId("");
+    setEditingText("");
   }
 
-  if (!profile) {
-    return (
-      <div className="page-container">
-        <Sidebar />
-        <div className="main-content">
-          <h2 style={{ color: "white" }}>Profile not found.</h2>
-        </div>
-      </div>
-    );
+  function openConversation(convo) {
+    const other = getOtherUser(convo.participants, sender);
+    navigate(`/messages/${other}`);
+    setActiveConversationId(convo.id);
+    setActiveReceiver(other);
+    setEditingId("");
+    setEditingText("");
+    setRouteError("");
   }
-
-  const isOwnProfile =
-    !username || username.toLowerCase() === loggedInUsername?.toLowerCase();
-
-  const handleDm = () => {
-  navigate(`/messages/${profile.username}`);
-};
 
   return (
     <div className="page-container">
-      <Sidebar />
-
-      <div className="main-content" style={{ color: "white" }}>
-        {/* HEADER */}
+      <NavBar />
+      <div className="main-content" style={{ display: "flex", padding: 0 }}>
+        {/* LEFT SIDEBAR */}
         <div
           style={{
-            backgroundColor: "#2f2f2f",
-            paddingBottom: "20px",
-            borderRadius: "0 0 12px 12px",
-            marginBottom: "25px",
-            position: "relative",
+            width: "350px",
+            backgroundColor: "#373737",
+            height: "100vh",
+            borderRight: "1px solid #000",
+            display: "flex",
+            flexDirection: "column",
           }}
         >
-          {/* Banner */}
           <div
             style={{
-              height: "150px",
-              backgroundColor: "#3f4b5b",
-              borderRadius: "0 0 12px 12px",
+              borderBottom: "1px solid #000",
+              padding: "50px 0 10px 40px",
             }}
-          ></div>
+          >
+            <h1 style={{ color: "white", margin: 0 }}>Messages</h1>
 
-          {/* Avatar */}
-          <div
-            style={{
-              position: "absolute",
-              top: "90px",
-              left: "30px",
-              width: "120px",
-              height: "120px",
-              borderRadius: "50%",
-              backgroundColor: "#1c1c1c",
-              border: "4px solid #2f2f2f",
-            }}
-          ></div>
+            <button
+              onClick={() => {
+                setIsComposing((v) => !v);
+                setComposeError("");
+                setNewDmUsername("");
+              }}
+              style={{
+                marginTop: "12px",
+                padding: "8px 12px",
+                borderRadius: "10px",
+                border: "none",
+                backgroundColor: "#058BFE",
+                color: "white",
+                cursor: "pointer",
+                fontWeight: 700,
+              }}
+            >
+              New message
+            </button>
+          </div>
 
-          {/* Username + actions */}
-          <div style={{ padding: "20px", marginTop: "40px" }}>
+          {isComposing ? (
+            <div style={{ padding: "12px 20px" }}>
+              <div
+                style={{
+                  backgroundColor: "#2f2f2f",
+                  border: "1px solid #444",
+                  borderRadius: "12px",
+                  padding: "12px",
+                  color: "white",
+                }}
+              >
+                <div style={{ fontWeight: 700, marginBottom: "8px" }}>
+                  Start a DM
+                </div>
+
+                <input
+                  value={newDmUsername}
+                  onChange={(e) => setNewDmUsername(e.target.value)}
+                  placeholder="Enter username (exact)"
+                  style={{
+                    width: "100%",
+                    padding: "10px",
+                    borderRadius: "10px",
+                    border: "none",
+                    outline: "none",
+                    backgroundColor: "#1f1f1f",
+                    color: "white",
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") startNewConversation();
+                  }}
+                />
+
+                {composeError ? (
+                  <div
+                    style={{
+                      color: "#ffb3b3",
+                      marginTop: "8px",
+                      fontSize: "0.9rem",
+                    }}
+                  >
+                    {composeError}
+                  </div>
+                ) : null}
+
+                <div style={{ display: "flex", gap: "10px", marginTop: "10px" }}>
+                  <button
+                    onClick={startNewConversation}
+                    style={{
+                      flex: 1,
+                      padding: "10px",
+                      borderRadius: "10px",
+                      border: "none",
+                      backgroundColor: "#4A90E2",
+                      color: "white",
+                      cursor: "pointer",
+                      fontWeight: 700,
+                    }}
+                  >
+                    Start
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      setIsComposing(false);
+                      setComposeError("");
+                      setNewDmUsername("");
+                    }}
+                    style={{
+                      padding: "10px",
+                      borderRadius: "10px",
+                      border: "1px solid #444",
+                      backgroundColor: "transparent",
+                      color: "white",
+                      cursor: "pointer",
+                      fontWeight: 700,
+                    }}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            </div>
+          ) : null}
+
+          <div style={{ padding: "20px" }}>
             <div
               style={{
+                backgroundColor: "white",
+                borderRadius: "25px",
+                padding: "10px 15px",
                 display: "flex",
-                justifyContent: "space-between",
                 alignItems: "center",
               }}
             >
-              <div>
-                <h1 style={{ marginBottom: "5px" }}>{profile.username}</h1>
-                <p style={{ marginTop: 0, color: "#aaaaaa" }}>
-                  @{profile.username}
-                </p>
-
-                {/* Follower / Following counts */}
-                <div style={{ display: "flex", gap: "16px", marginTop: "8px" }}>
-                  <span style={{ color: "#aaaaaa" }}>
-                    <strong style={{ color: "white" }}>
-                      {profile.followingCount ?? 0}
-                    </strong>{" "}
-                    Following
-                  </span>
-                  <span style={{ color: "#aaaaaa" }}>
-                    <strong style={{ color: "white" }}>
-                      {profile.followerCount ?? 0}
-                    </strong>{" "}
-                    Followers
-                  </span>
-                </div>
-              </div>
-
-              {/* Right side */}
-              {isOwnProfile ? (
-                !editMode && (
-                  <button
-                    onClick={() => setEditMode(true)}
-                    style={{
-                      marginTop: "10px",
-                      padding: "10px 20px",
-                      backgroundColor: "#058BFE",
-                      color: "white",
-                      border: "none",
-                      borderRadius: "10px",
-                      cursor: "pointer",
-                    }}
-                  >
-                    Edit Bio
-                  </button>
-                )
-              ) : (
-                <div style={{ display: "flex", gap: "10px" }}>
-                  <button
-                    onClick={isFollowing ? handleUnfollow : handleFollow}
-                    style={{
-                      marginTop: "10px",
-                      padding: "8px 16px",
-                      backgroundColor: isFollowing ? "#444" : "#058BFE",
-                      color: "white",
-                      border: "none",
-                      borderRadius: "999px",
-                      cursor: "pointer",
-                      minWidth: "100px",
-                    }}
-                  >
-                    {isFollowing ? "Unfollow" : "Follow"}
-                  </button>
-
-                  <button
-                    onClick={handleDm}
-                    style={{
-                      marginTop: "10px",
-                      padding: "8px 16px",
-                      backgroundColor: "#2d2d2d",
-                      color: "white",
-                      border: "1px solid #555",
-                      borderRadius: "999px",
-                      cursor: "pointer",
-                    }}
-                  >
-                    DM
-                  </button>
-                </div>
-              )}
+              <img
+                src={logo}
+                alt="search"
+                style={{ width: "20px", marginRight: "10px" }}
+              />
+              <input
+                type="text"
+                placeholder="Search"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                style={{ border: "none", outline: "none", width: "100%" }}
+              />
             </div>
+          </div>
 
-            {/* Bio */}
-            {editMode ? (
-              <>
-                <textarea
-                  value={bio}
-                  onChange={(e) => setBio(e.target.value)}
+          {/* Conversation List */}
+          <div style={{ overflowY: "auto", padding: "0 10px 20px 10px" }}>
+            {filteredConversations.map((c) => {
+              const other = getOtherUser(c.participants, sender);
+              const isActive = c.id === activeConversationId;
+              const preview = getConversationPreviewText(c);
+
+              return (
+                <button
+                  key={c.id}
+                  onClick={() => openConversation(c)}
                   style={{
                     width: "100%",
-                    height: "80px",
-                    borderRadius: "10px",
-                    padding: "10px",
-                    backgroundColor: "#444",
+                    textAlign: "left",
+                    padding: "12px 14px",
+                    marginBottom: "8px",
+                    borderRadius: "12px",
+                    border: isActive ? "1px solid #058BFE" : "1px solid #444",
+                    backgroundColor: isActive ? "#2b3a4a" : "#2f2f2f",
                     color: "white",
-                  }}
-                />
-                <br />
-                <button
-                  onClick={handleSaveBio}
-                  style={{
-                    marginTop: "10px",
-                    padding: "8px 15px",
-                    backgroundColor: "#058BFE",
-                    border: "none",
-                    borderRadius: "20px",
                     cursor: "pointer",
-                    color: "white",
                   }}
                 >
-                  Save
+                  <div style={{ fontWeight: 700 }}>{other}</div>
+                  <div
+                    style={{
+                      color: "#bdbdbd",
+                      fontSize: "0.9rem",
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                      whiteSpace: "nowrap",
+                    }}
+                  >
+                    {preview || "No messages yet."}
+                  </div>
                 </button>
-
-                <button
-                  onClick={() => setEditMode(false)}
-                  style={{
-                    marginLeft: "10px",
-                    marginTop: "10px",
-                    padding: "8px 15px",
-                    backgroundColor: "#777",
-                    border: "none",
-                    borderRadius: "20px",
-                    cursor: "pointer",
-                    color: "white",
-                  }}
-                >
-                  Cancel
-                </button>
-              </>
-            ) : (
-              <p>{profile.bio || "No bio yet."}</p>
-            )}
+              );
+            })}
           </div>
         </div>
 
-        {/* TABS */}
+        {/* RIGHT SIDE */}
         <div
           style={{
-            borderBottom: "1px solid #444",
-            marginBottom: "15px",
+            flex: 1,
+            backgroundColor: "#2d2d2d",
+            height: "100vh",
             display: "flex",
-            justifyContent: "space-around",
+            flexDirection: "column",
           }}
         >
-          {["posts", "media", "likes"].map((tab) => (
-            <button
-              key={tab}
-              onClick={() => setActiveTab(tab)}
+          {/* Header */}
+          <div
+            style={{
+              borderBottom: "1px solid #000",
+              padding: "50px 20px 18px",
+              color: "white",
+              fontWeight: 700,
+            }}
+          >
+            {activeReceiver ? `@${activeReceiver}` : "Select a conversation"}
+          </div>
+
+          {/* Route error banner */}
+          {routeError ? (
+            <div
               style={{
-                flex: 1,
-                padding: "12px",
-                backgroundColor: "transparent",
-                color: activeTab === tab ? "#058BFE" : "#aaaaaa",
-                border: "none",
-                borderBottom:
-                  activeTab === tab ? "3px solid #058BFE" : "none",
-                fontSize: "1rem",
-                cursor: "pointer",
+                padding: "12px 20px",
+                borderBottom: "1px solid #000",
+                backgroundColor: "#3a2b2b",
+                color: "#ffb3b3",
               }}
             >
-              {tab.charAt(0).toUpperCase() + tab.slice(1)}
+              {routeError}
+            </div>
+          ) : null}
+
+          {/* Messages */}
+          <div style={{ flex: 1, overflowY: "auto", padding: "20px" }}>
+            {messages.map((msg) => {
+              const isMine = msg.sender === sender;
+
+              return (
+                <div
+                  key={msg.id}
+                  style={{
+                    marginBottom: "10px",
+                    display: "flex",
+                    justifyContent: isMine ? "flex-end" : "flex-start",
+                  }}
+                >
+                  <div style={{ maxWidth: "60%" }}>
+                    <div
+                      style={{
+                        backgroundColor: isMine ? "#4A90E2" : "#444",
+                        padding: "10px 15px",
+                        borderRadius: "20px",
+                        color: "white",
+                        opacity: msg.isDeleted ? 0.7 : 1,
+                      }}
+                    >
+                      {msg.isDeleted ? (
+                        <span style={{ fontStyle: "italic" }}>
+                          Message deleted
+                        </span>
+                      ) : editingId === msg.id ? (
+                        <div>
+                          <input
+                            value={editingText}
+                            onChange={(e) => setEditingText(e.target.value)}
+                            style={{
+                              width: "100%",
+                              padding: "8px",
+                              borderRadius: "10px",
+                              border: "none",
+                              outline: "none",
+                            }}
+                          />
+                          <div
+                            style={{
+                              marginTop: "8px",
+                              display: "flex",
+                              gap: "8px",
+                              justifyContent: "flex-end",
+                            }}
+                          >
+                            <button onClick={() => editMessage(msg)}>
+                              Save
+                            </button>
+                            <button
+                              onClick={() => {
+                                setEditingId("");
+                                setEditingText("");
+                              }}
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div>
+                          {msg.content}
+                          {msg.editedAt ? (
+                            <span
+                              style={{ marginLeft: "8px", fontSize: "0.8rem" }}
+                            >
+                              (edited)
+                            </span>
+                          ) : null}
+                        </div>
+                      )}
+                    </div>
+
+                    {isMine && !msg.isDeleted && editingId !== msg.id ? (
+                      <div
+                        style={{
+                          marginTop: "6px",
+                          display: "flex",
+                          justifyContent: "flex-end",
+                          gap: "8px",
+                        }}
+                      >
+                        <button
+                          onClick={() => {
+                            setEditingId(msg.id);
+                            setEditingText(msg.content || "");
+                          }}
+                          style={{ fontSize: "0.8rem" }}
+                        >
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => deleteMessage(msg)}
+                          style={{ fontSize: "0.8rem" }}
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    ) : null}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Input */}
+          <div
+            style={{
+              padding: "15px",
+              borderTop: "1px solid black",
+              display: "flex",
+              backgroundColor: "#1f1f1f",
+              opacity: activeReceiver && !routeError ? 1 : 0.5,
+            }}
+          >
+            <input
+              value={messageInput}
+              onChange={(e) => setMessageInput(e.target.value)}
+              placeholder={
+                activeReceiver && !routeError
+                  ? "Type a message..."
+                  : "Select a valid conversation..."
+              }
+              disabled={!activeReceiver || !!routeError}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") sendMessage();
+              }}
+              style={{
+                flex: 1,
+                padding: "10px",
+                borderRadius: "20px",
+                border: "none",
+                outline: "none",
+                backgroundColor: "#2d2d2d",
+                color: "white",
+                marginRight: "10px",
+              }}
+            />
+
+            <button
+              onClick={sendMessage}
+              disabled={!activeReceiver || !!routeError}
+              style={{
+                padding: "10px 20px",
+                borderRadius: "20px",
+                border: "none",
+                backgroundColor: "#4A90E2",
+                color: "white",
+                cursor:
+                  activeReceiver && !routeError ? "pointer" : "not-allowed",
+              }}
+            >
+              Send
             </button>
-          ))}
+          </div>
         </div>
-
-        {/* TAB CONTENT */}
-        {activeTab === "posts" && (
-          <p style={{ color: "#888", textAlign: "center", marginTop: "20px" }}>
-            No posts yet.
-          </p>
-        )}
-
-        {activeTab === "media" && (
-          <p style={{ color: "#888", textAlign: "center", marginTop: "20px" }}>
-            No media uploaded yet.
-          </p>
-        )}
-
-        {activeTab === "likes" && (
-          <p style={{ color: "#888", textAlign: "center", marginTop: "20px" }}>
-            No liked posts yet.
-          </p>
-        )}
       </div>
     </div>
   );
 }
 
-export default ProfilePage;
+export default MessagePage;
