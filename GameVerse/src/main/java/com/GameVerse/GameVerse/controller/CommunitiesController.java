@@ -1,13 +1,14 @@
 package com.GameVerse.GameVerse.controller;
 
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -17,6 +18,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import com.GameVerse.GameVerse.model.Community;
 import com.GameVerse.GameVerse.model.CommunityCategory;
@@ -26,7 +28,7 @@ import com.GameVerse.GameVerse.repository.CommunityRepository;
 import com.GameVerse.GameVerse.repository.UserRepository;
 import com.GameVerse.GameVerse.services.CommunityService;
 import com.GameVerse.GameVerse.services.NotificationService;
-@Controller
+@RestController
 @RequestMapping("/communities")
 @CrossOrigin(origins = "http://localhost:3000")
 public class CommunitiesController {
@@ -56,8 +58,15 @@ public class CommunitiesController {
     }
 
     @GetMapping("/matches")
-    public List<Community> getCommunityMatches(@RequestParam String name) {
-        return communityRepository.findByNameContainingIgnoreCase(name);
+    public ResponseEntity<?> getCommunityMatches(@RequestParam String text) {
+        List<Community> byName = communityRepository.findByNameContainingIgnoreCase(text);
+        List<Community> byDescription = communityRepository.findByDescriptionContainingIgnoreCase(text);
+
+        Set<Community> combined = new HashSet<>();
+        combined.addAll(byName);
+        combined.addAll(byDescription);
+
+        return ResponseEntity.ok(combined);
     }
 
     @PostMapping("/createCommunity")
@@ -168,10 +177,14 @@ public class CommunitiesController {
         return ResponseEntity.ok(categories);
     }
 
-    @GetMapping("/{userId}/Memberships")
-    public ResponseEntity<?> getUserCommunities(@PathVariable String userId) {
-        List<Community> communities = communityService.getUsersCommunities(userId);
-        return ResponseEntity.ok(communities);
+    @GetMapping("/memberships")
+    public ResponseEntity<?> getUserCommunities(Authentication auth) {
+         String id = (String) auth.getPrincipal();
+        List<Community> communities = communityService.getUsersCommunities(id);
+        List<Community> limited = communities.stream()
+            .limit(6)
+            .toList();
+        return ResponseEntity.ok(limited);
     }
 
     @GetMapping("/{communityName}/Members")
@@ -192,6 +205,19 @@ public class CommunitiesController {
         return ResponseEntity.ok(communityService.getCommunityOwnerAndMods(com.getId()));
     }
 
+    @GetMapping("/{communityName}/AllMembers")
+    public ResponseEntity<?> getCommunityAllMembers(@PathVariable String communityName) {
+        Community com = communityRepository.findByNameIgnoreCase(communityName);
+        if(com == null) {
+            return ResponseEntity.badRequest().body("Community not found");
+        }
+        return ResponseEntity.ok(communityService.getCommunityAllMembers(com.getId()));
+    }
+
+    @GetMapping("/featured")
+    public ResponseEntity<?> getCommunitiesInOrder() {
+        return ResponseEntity.ok(communityRepository.findAllByOrderByMemberCountDesc());
+    }
 
 
 

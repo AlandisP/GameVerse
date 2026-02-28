@@ -8,12 +8,14 @@ import React, { useState, useRef, useEffect} from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import './PostStyle.css'
-function PostObj ({User, Content, Likes, Liked, id, books}){
+import CommentSection from './Comments'
+function PostObj ({User, Content, Likes, Liked, id, books, commcount}){
         const postid = id;
         const [didLike, setdidLike]= useState(Liked);
         const [didBook, setBook]= useState(false);
         const [falseLikes, setfalseLikes]= useState(Likes);
         const [comments, setComments]= useState(0);
+        const [viewComments, setView]= useState(false);
         const token  = localStorage.getItem('token');
         const navigate = useNavigate();
         useEffect(()=>{
@@ -39,6 +41,9 @@ function PostObj ({User, Content, Likes, Liked, id, books}){
             );
             setBook(!didBook);
         }
+        const viewComs = ()=>{
+            setView(!viewComments);
+        }
         return(
             <div className='Postcontent'>
                 <img className='Others' src={Pfp}/>
@@ -49,12 +54,15 @@ function PostObj ({User, Content, Likes, Liked, id, books}){
                     <div className='Media-Bar'>
                         <img src={didLike ? HeartFull : Heart} onClick={likeinteract}/>
                         <p>{falseLikes}</p>
-                        <img src={commentico}/>
-                        <p>{comments}</p>
+                        <img src={commentico} onClick={viewComs}/>
+                        <p>{commcount}</p>
                         <img className='Bookmark' src={didBook ? BookmarkFull : Bookmark} onClick={bookinteract}/>
                     </div>
+                    {viewComments ? <CommentSection pid={postid}/> : ''}
                 </div>
+                
             </div>
+            
         )
     }
 

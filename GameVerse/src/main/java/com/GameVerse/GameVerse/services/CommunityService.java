@@ -111,7 +111,7 @@ public class CommunityService {
     }
     // gets all of a user's communities
     public List<Community> getUsersCommunities(String userId) {
-        if(!userRepository.existsByUsername(userId)) {
+        if(!userRepository.existsById(userId)) {
             throw new RuntimeException(" User doesn't exist");
         }
         List<CommunityMembership> arr = cr.findAllByUserId(userId);
@@ -154,7 +154,16 @@ public class CommunityService {
             } 
         }
         return users;
+    }
 
+    // Gets all Members + Mods of a Community
+    public List<User> getCommunityAllMembers(String communityId) {
+        List<User> users = new ArrayList<>();
+        List<CommunityMembership> members = cr.findByCommunityId(communityId);
+        for(int i = 0; i < members.size(); i++) {
+            users.add(userRepository.findById(members.get(i).getUserId()).orElse(null));
+        }
+        return users;
     }
 
 }

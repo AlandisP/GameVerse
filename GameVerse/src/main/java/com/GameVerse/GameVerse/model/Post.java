@@ -1,5 +1,6 @@
 package com.GameVerse.GameVerse.model;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -14,7 +15,15 @@ import com.GameVerse.GameVerse.repository.UserRepository;
 public class Post {
 
     
-    
+    public class comment {
+        public String poster;
+        public String content;
+        public comment(String poster,String content){
+            this.poster = poster;
+            this.content = content;
+        }
+    }
+
     @Id
     private String id;
     // @Indexed(unique = true)  
@@ -24,6 +33,7 @@ public class Post {
     private String tag;
     private int likes;
     private Map<String,Boolean> liked;
+    private ArrayList<comment> comments;
 
     public Post(String text, String userId){
         this.text = text;
@@ -31,6 +41,7 @@ public class Post {
         this.tag = "";
         this.likes = 0;
         liked = new HashMap<String,Boolean>();
+        comments = new ArrayList<comment>();
     }
 
     // public Post(String text, String userId, String communityId){
@@ -90,5 +101,22 @@ public class Post {
     }
     public Boolean hasLiked(String user){
         return liked.get(user);
+    }
+    public void addcomment(String poster, String comment){
+        comment newcom = new comment(poster, comment);
+        //System.out.println(newcom.content);
+        // if(comments == null)
+        //     comments = new ArrayList<>();
+        comments.add(newcom);
+        System.out.println(comments.size());
+    }
+    public ArrayList<comment> getcomments(){
+        if(comments == null)
+            comments = new ArrayList<>();
+        return comments;
+    }
+
+    public void setcomments(ArrayList<comment> comments){
+        this.comments = comments;
     }
 }
