@@ -45,7 +45,7 @@ function HomePage() {
             );
             setposts(posts => {
                 const newArray = [...posts]; 
-                newArray.unshift({user:username,text:postbod,likes:0,liked:{},id:pid.data}); 
+                newArray.unshift({user:username,text:postbod,likes:0,liked:{},id:pid.data,comments:[]}); 
                 return newArray; 
             });
         }
