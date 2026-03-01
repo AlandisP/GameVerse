@@ -90,18 +90,18 @@ function SettingsPage() {
     const modalOverlayStyle = {
         position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
         backgroundColor: 'rgba(0, 0, 0, 0.5)',
-        display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000
+        display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 2000
     };
     const modalStyle = {
         background: '#2a2a2a', padding: '20px', borderRadius: '8px',
-        minWidth: '300px', maxWidth: '500px', color: 'white'
+        width: '90%', maxWidth: '500px', color: 'white', boxSizing: 'border-box'
     };
     const modalInputStyle = {
         width: '100%', padding: '10px', margin: '10px 0',
         background: '#1a1a1a', border: '1px solid #444',
-        borderRadius: '4px', color: 'white', boxSizing: 'border-box'
+        borderRadius: '4px', color: 'white', boxSizing: 'border-box',
+        fontSize: '16px'
     };
-
     const modalButtonsStyle = { display: 'flex', gap: '10px', marginTop: '20px' };
     const primaryButtonStyle = { flex: 1, padding: '10px', border: 'none', borderRadius: '4px', background: '#0066cc', color: 'white', cursor: 'pointer' };
     const secondaryButtonStyle = { flex: 1, padding: '10px', border: 'none', borderRadius: '4px', background: '#666', color: 'white', cursor: 'pointer' };
@@ -139,8 +139,8 @@ function SettingsPage() {
                 </div>
 
                 {showUsernameModal && (
-                    <div style={modalOverlayStyle}>
-                        <div style={modalStyle}>
+                    <div style={modalOverlayStyle} onClick={closeAllModals}>
+                        <div style={modalStyle} onClick={(e) => e.stopPropagation()}>
                             <h2 style={{ marginTop: 0, color: 'white' }}>Change Username</h2>
                             <p>Current username: {username}</p>
                             <input className="modal-input" style={modalInputStyle} type="text" placeholder="Enter new username"
@@ -156,8 +156,8 @@ function SettingsPage() {
                 )}
 
                 {showPasswordModal && (
-                    <div style={modalOverlayStyle}>
-                        <div style={modalStyle}>
+                    <div style={modalOverlayStyle} onClick={closeAllModals}>
+                        <div style={modalStyle} onClick={(e) => e.stopPropagation()}>
                             <h2 style={{ marginTop: 0, color: 'white' }}>Change Password</h2>
                             <input className="modal-input" style={modalInputStyle} type="password" placeholder="Current password"
                                 value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} />
@@ -176,8 +176,8 @@ function SettingsPage() {
                 )}
 
                 {showDeleteModal && (
-                    <div style={modalOverlayStyle}>
-                        <div style={modalStyle}>
+                    <div style={modalOverlayStyle} onClick={closeAllModals}>
+                        <div style={modalStyle} onClick={(e) => e.stopPropagation()}>
                             <h2 style={{ marginTop: 0, color: 'white' }}>Delete Account</h2>
                             <p style={{ color: 'red' }}>⚠️ This action cannot be undone!</p>
                             <p>Enter your password to confirm account deletion:</p>

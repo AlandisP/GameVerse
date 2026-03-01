@@ -179,6 +179,96 @@ p {
 
 .members:hover{
     text-decoration: underline;
-    cursor: pointer ;
+    cursor: pointer;
 }
 
+@media (max-width: 768px) {
+    .top-container {
+        margin: 10px;
+        height: 3rem;
+    }
+
+    .search-bar {
+        width: 45vw;
+    }
+
+    .bar {
+        font-size: 1rem;
+    }
+
+    .createButton {
+        margin-right: 10px;
+        height: 2.4rem;
+    }
+
+    .create-button {
+        width: 70px;
+        font-size: 13px;
+    }
+
+    .plus-img {
+        height: 2.4rem;
+    }
+
+    .partyInfo {
+        flex-direction: column;
+        height: auto;
+        margin: 10px;
+        padding: 12px;
+        border-radius: 20px;
+        gap: 10px;
+    }
+
+    .party-img {
+        width: 40px;
+        height: 40px;
+        padding: 0;
+        margin-bottom: 8px;
+    }
+
+    .text-container {
+        width: 100%;
+    }
+
+    h3 {
+        font-size: 15px;
+    }
+
+    .category-list {
+        flex-wrap: wrap;
+        gap: 5px;
+    }
+
+    .catbox {
+        font-size: 12px;
+        padding: 4px;
+    }
+
+    .right {
+        margin-left: 0;
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0;
+        width: 100%;
+    }
+
+    .active {
+        font-size: 13px;
+        padding: 4px 8px;
+    }
+
+    .joinparty,
+    .deleteparty,
+    .leaveparty {
+        height: 38px;
+        width: 80px;
+        font-size: 13px;
+        align-self: center;
+    }
+
+    .noParty {
+        font-size: 16px;
+        margin-left: 10px;
+    }
+}

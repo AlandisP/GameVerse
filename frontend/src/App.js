@@ -11,6 +11,7 @@ import ProfilePage from "./components/ProfilePage";
 import Signup from "./components/Signup";
 import NotificationPage from "./components/NotificationPage";
 import CommunityPage from "./components/CommunitySubPages/CommunityPage";
+import SettingsPage from "./components/SettingsPage";
 
 function App() {
   return (
@@ -36,6 +37,7 @@ function App() {
 
           {/* Community Page */}
           <Route path="/communities/:community" element={<CommunityPage />} />
+          <Route path="/settings" element={<SettingsPage />} />  
         </Routes>
       </Router>
     </div>

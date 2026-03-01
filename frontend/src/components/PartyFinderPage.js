@@ -152,7 +152,7 @@ function PartyFinderPage() {
             <input
                 className="bar"
                 type = "text"
-                placeholder='Enter the name Or Category of a Party you want to find!'
+                placeholder='Enter the name of Party!'
                 onChange={(c) => setSearch(c.target.value)}
             />
         </div>
