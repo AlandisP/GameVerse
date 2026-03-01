@@ -1,5 +1,6 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import axios from "axios";
 import NavBar from "./NavBar";
 import logo from "../images/search.png";
 
@@ -11,13 +12,15 @@ import {
   orderBy,
   query,
   serverTimestamp,
-  setDoc,
-  where,
   updateDoc,
   writeBatch,
   getDocs,
   limit,
+  where,
+  setDoc,
 } from "firebase/firestore";
+
+import API_URL from "../config/api";
 
 function getConversationId(user1, user2) {
   return user1 < user2 ? `${user1}_${user2}` : `${user2}_${user1}`;
@@ -35,11 +38,23 @@ function getConversationLastMessageId(convo) {
   return convo?.lastMessageId || "";
 }
 
+async function validateUsernameExists(username, token) {
+  // Backend: GET /users/exists/{username} -> { exists: true/false }
+  const res = await axios.get(
+    `${API_URL}/users/exists/${encodeURIComponent(username)}`,
+    token
+      ? { headers: { Authorization: `Bearer ${token}` } }
+      : undefined
+  );
+  return Boolean(res.data?.exists);
+}
+
 function MessagePage() {
   const { receiverUsername } = useParams();
   const navigate = useNavigate();
 
   const sender = localStorage.getItem("username");
+  const token = localStorage.getItem("token");
 
   const [messageInput, setMessageInput] = useState("");
   const [messages, setMessages] = useState([]);
@@ -59,34 +74,70 @@ function MessagePage() {
   const [newDmUsername, setNewDmUsername] = useState("");
   const [composeError, setComposeError] = useState("");
 
-  // If URL has a receiver, open that conversation
+
+  const messagesUnsubRef = useRef(null);
+  const inboxUnsubRef = useRef(null);
+
+  // If URL has a receiver, validate they exist first.
   useEffect(() => {
-    if (!sender || !receiverUsername) return;
+    let cancelled = false;
 
-    const convoId = getConversationId(sender, receiverUsername);
-    setActiveConversationId(convoId);
-    setActiveReceiver(receiverUsername);
+    async function openFromUrl() {
+      if (!sender || !receiverUsername) return;
 
-    setDoc(
-      doc(db, "conversations", convoId),
-      {
-        participants: [sender, receiverUsername],
-        updatedAt: serverTimestamp(),
-        lastMessageText: "",
-        lastMessageAt: null,
-        lastMessageSender: "",
-        lastMessageId: "",
-        // legacy (optional)
-        lastMessage: "",
-        lastSender: "",
-      },
-      { merge: true }
-    );
-  }, [sender, receiverUsername]);
+      // Prevent self DM
+      if (receiverUsername.toLowerCase() === sender.toLowerCase()) {
+        setActiveConversationId("");
+        setActiveReceiver("");
+        setMessages([]);
+        return;
+      }
 
-  // Load inbox conversation list (persists across refresh/login)
+      try {
+        const exists = await validateUsernameExists(receiverUsername, token);
+
+        if (cancelled) return;
+
+        if (!exists) {
+          setComposeError(`User "${receiverUsername}" does not exist.`);
+          setActiveConversationId("");
+          setActiveReceiver("");
+          setMessages([]);
+          return;
+        }
+
+        const convoId = getConversationId(sender, receiverUsername);
+
+        // Do NOT create Firestore convo doc here.
+        setActiveConversationId(convoId);
+        setActiveReceiver(receiverUsername);
+        setComposeError("");
+      } catch (e) {
+        if (cancelled) return;
+        console.error(e);
+        setComposeError("Could not validate user.");
+        setActiveConversationId("");
+        setActiveReceiver("");
+        setMessages([]);
+      }
+    }
+
+    openFromUrl();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [sender, receiverUsername, token]);
+
+  // Load inbox conversation list (single stable listener)
   useEffect(() => {
     if (!sender) return;
+
+    // Kill previous inbox listener if any
+    if (inboxUnsubRef.current) {
+      inboxUnsubRef.current();
+      inboxUnsubRef.current = null;
+    }
 
     const inboxQuery = query(
       collection(db, "conversations"),
@@ -94,15 +145,24 @@ function MessagePage() {
       orderBy("updatedAt", "desc")
     );
 
-    const unsub = onSnapshot(inboxQuery, (snapshot) => {
-      const convos = snapshot.docs.map((d) => ({
-        id: d.id,
-        ...d.data(),
-      }));
-      setConversations(convos);
-    });
+    inboxUnsubRef.current = onSnapshot(
+      inboxQuery,
+      (snapshot) => {
+        const convos = snapshot.docs.map((d) => ({
+          id: d.id,
+          ...d.data(),
+        }));
+        setConversations(convos);
+      },
+      (err) => console.error("onSnapshot inbox error:", err)
+    );
 
-    return () => unsub();
+    return () => {
+      if (inboxUnsubRef.current) {
+        inboxUnsubRef.current();
+        inboxUnsubRef.current = null;
+      }
+    };
   }, [sender]);
 
   const filteredConversations = useMemo(() => {
@@ -115,24 +175,49 @@ function MessagePage() {
     });
   }, [conversations, search, sender]);
 
-  // Load messages for active conversation
+  // Load messages for active conversation (NO overlapping listeners)
   useEffect(() => {
-    if (!activeConversationId) return;
+    // Always stop old listener first
+    if (messagesUnsubRef.current) {
+      messagesUnsubRef.current();
+      messagesUnsubRef.current = null;
+    }
+
+    if (
+      !activeConversationId ||
+      typeof activeConversationId !== "string" ||
+      !activeConversationId.trim()
+    ) {
+      setMessages([]);
+      return;
+    }
 
     const q = query(
       collection(db, "conversations", activeConversationId, "messages"),
       orderBy("timestamp", "asc")
     );
 
-    const unsub = onSnapshot(q, (snapshot) => {
-      const list = snapshot.docs.map((d) => ({
-        id: d.id,
-        ...d.data(),
-      }));
-      setMessages(list);
-    });
+    messagesUnsubRef.current = onSnapshot(
+      q,
+      (snapshot) => {
+        const list = snapshot.docs.map((d) => ({
+          id: d.id,
+          ...d.data(),
+        }));
+        setMessages(list);
+      },
+      (err) => {
+        console.error("onSnapshot messages error:", err);
+        setMessages([]);
+      }
+    );
 
-    return () => unsub();
+    return () => {
+      if (messagesUnsubRef.current) {
+        messagesUnsubRef.current();
+        messagesUnsubRef.current = null;
+      }
+    };
   }, [activeConversationId]);
 
   async function recomputeConversationLastMessage(convoId) {
@@ -176,6 +261,19 @@ function MessagePage() {
     const text = messageInput.trim();
     if (!text || !sender || !activeReceiver) return;
 
+    // Validate receiver exists before sending (blocks fake users)
+    try {
+      const exists = await validateUsernameExists(activeReceiver, token);
+      if (!exists) {
+        setComposeError(`User "${activeReceiver}" does not exist.`);
+        return;
+      }
+    } catch (e) {
+      console.error(e);
+      setComposeError("Could not validate user.");
+      return;
+    }
+
     const convoId =
       activeConversationId || getConversationId(sender, activeReceiver);
 
@@ -186,6 +284,7 @@ function MessagePage() {
 
     const batch = writeBatch(db);
 
+    // Create/merge convo doc only when sending first message
     batch.set(
       convoRef,
       {
@@ -213,6 +312,7 @@ function MessagePage() {
 
     await batch.commit();
     setMessageInput("");
+    setComposeError("");
   }
 
   async function editMessage(msg) {
@@ -283,28 +383,28 @@ function MessagePage() {
       return;
     }
 
+    //  Validate exists first
+    try {
+      const exists = await validateUsernameExists(target, token);
+      if (!exists) {
+        setComposeError(`User "${target}" does not exist.`);
+        return;
+      }
+    } catch (e) {
+      console.error(e);
+      setComposeError("Could not validate user.");
+      return;
+    }
+
     setComposeError("");
 
     const convoId = getConversationId(sender, target);
 
-    await setDoc(
-      doc(db, "conversations", convoId),
-      {
-        participants: [sender, target],
-        updatedAt: serverTimestamp(),
-        lastMessageText: "",
-        lastMessageAt: null,
-        lastMessageSender: "",
-        lastMessageId: "",
-        // legacy
-        lastMessage: "",
-        lastSender: "",
-      },
-      { merge: true }
-    );
-
+    
     setActiveConversationId(convoId);
     setActiveReceiver(target);
+
+    // Navigate after setting state (reduces rapid transition issues)
     navigate(`/messages/${target}`);
 
     setIsComposing(false);
@@ -315,11 +415,16 @@ function MessagePage() {
 
   function openConversation(convo) {
     const other = getOtherUser(convo.participants, sender);
-    navigate(`/messages/${other}`);
+
+    
     setActiveConversationId(convo.id);
     setActiveReceiver(other);
+
+    setComposeError("");
     setEditingId("");
     setEditingText("");
+
+    navigate(`/messages/${other}`);
   }
 
   return (
