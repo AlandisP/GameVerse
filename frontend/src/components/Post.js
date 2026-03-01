@@ -9,7 +9,8 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import './PostStyle.css'
 import CommentSection from './Comments'
-function PostObj ({User, Content, Likes, Liked, id, books, commcount}){
+import { shortTimeAgo } from '../utils/shortTimeAgo'
+function PostObj ({User, Content, Likes, Liked, id, books, commcount, CreatedAt}){
         const postid = id;
         const [didLike, setdidLike]= useState(Liked);
         const [didBook, setBook]= useState(false);
@@ -49,7 +50,10 @@ function PostObj ({User, Content, Likes, Liked, id, books, commcount}){
                 <img className='Others' src={Pfp}/>
                 <div className='inner'>
                     {/* <h3>@{User}</h3> */}
-                    <h3 onClick={()=>{navigate(`/profile/${User}`)}}>@{User}</h3>
+                    <div className='top-port'>
+                        <h3 onClick={()=>{navigate(`/profile/${User}`)}}>@{User}</h3>
+                        <p>{CreatedAt?shortTimeAgo(CreatedAt):""}</p>
+                    </div>
                     <p>{Content}</p>
                     <div className='Media-Bar'>
                         <img src={didLike ? HeartFull : Heart} onClick={likeinteract}/>

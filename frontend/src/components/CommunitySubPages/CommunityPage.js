@@ -29,7 +29,6 @@ function CommunityPage() {
         return(
             <div>
                 <h1>Community Posts will go here</h1>
-                <p>Lol</p>
             </div>
         );
     }
@@ -38,7 +37,6 @@ function CommunityPage() {
         return(
             <div>
                 <h1>Post Media Will go here</h1>
-                <p>Lsdfsdfsafsfs</p>
             </div>
         );
     }
@@ -47,7 +45,6 @@ function CommunityPage() {
         return(
             <div>
                 <h1>Mods</h1>
-                <p>ken carson da goat</p>
             </div>
         );
     }

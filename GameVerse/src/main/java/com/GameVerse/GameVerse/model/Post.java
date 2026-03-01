@@ -1,5 +1,6 @@
 package com.GameVerse.GameVerse.model;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -34,6 +35,7 @@ public class Post {
     private int likes;
     private Map<String,Boolean> liked;
     private ArrayList<comment> comments;
+    private Instant createdAt;
 
     public Post(String text, String userId){
         this.text = text;
@@ -42,6 +44,7 @@ public class Post {
         this.likes = 0;
         liked = new HashMap<String,Boolean>();
         comments = new ArrayList<comment>();
+        createdAt = Instant.now();
     }
 
     // public Post(String text, String userId, String communityId){
@@ -118,5 +121,13 @@ public class Post {
 
     public void setcomments(ArrayList<comment> comments){
         this.comments = comments;
+    }
+
+    public Instant getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setTime(Instant time) {
+        this.createdAt = time;
     }
 }
