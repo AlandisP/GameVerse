@@ -20,8 +20,6 @@ import {
   setDoc,
 } from "firebase/firestore";
 
-import API_URL from "../config/api";
-
 function getConversationId(user1, user2) {
   return user1 < user2 ? `${user1}_${user2}` : `${user2}_${user1}`;
 }
@@ -38,15 +36,51 @@ function getConversationLastMessageId(convo) {
   return convo?.lastMessageId || "";
 }
 
-async function validateUsernameExists(username, token) {
-  // Backend: GET /users/exists/{username} -> { exists: true/false }
+/**
+ * Validation via backend.
+ * IMPORTANT: This uses a relative URL so CRA proxy handles it in dev.
+ * Requires in frontend/package.json:
+ *   "proxy": "http://localhost:8080"
+ *
+ * Backend should expose:
+ *   GET /users/exists/{username} -> { exists: true/false }
+ */
+async function validateUsernameExists(username) {
+  // If your backend route is "/users/exist/{username}" (no 's'),
+  // change the URL below to `/users/exist/${...}`.
   const res = await axios.get(
-    `${API_URL}/users/exists/${encodeURIComponent(username)}`,
-    token
-      ? { headers: { Authorization: `Bearer ${token}` } }
-      : undefined
+    `/users/exists/${encodeURIComponent(username)}`
   );
   return Boolean(res.data?.exists);
+}
+
+/**
+ * Ensure the conversation document exists so the inbox list can show it
+ * even before the first message is sent.
+ */
+async function ensureConversationDoc(convoId, sender, receiver) {
+  if (!convoId || !sender || !receiver) return;
+
+  const convoRef = doc(db, "conversations", convoId);
+
+  await setDoc(
+    convoRef,
+    {
+      participants: [sender, receiver],
+      updatedAt: serverTimestamp(),
+
+      // These can be blank until a real message is sent.
+      lastMessageText: "",
+      lastMessageAt: null,
+      lastMessageSender: "",
+      lastMessageId: "",
+
+      // legacy fields if your UI reads them
+      lastMessage: "",
+      lastSender: "",
+    },
+    { merge: true }
+  );
 }
 
 function MessagePage() {
@@ -54,7 +88,6 @@ function MessagePage() {
   const navigate = useNavigate();
 
   const sender = localStorage.getItem("username");
-  const token = localStorage.getItem("token");
 
   const [messageInput, setMessageInput] = useState("");
   const [messages, setMessages] = useState([]);
@@ -74,11 +107,10 @@ function MessagePage() {
   const [newDmUsername, setNewDmUsername] = useState("");
   const [composeError, setComposeError] = useState("");
 
-
   const messagesUnsubRef = useRef(null);
   const inboxUnsubRef = useRef(null);
 
-  // If URL has a receiver, validate they exist first.
+  // If URL has a receiver, validate they exist first, then open/ensure convo.
   useEffect(() => {
     let cancelled = false;
 
@@ -94,8 +126,7 @@ function MessagePage() {
       }
 
       try {
-        const exists = await validateUsernameExists(receiverUsername, token);
-
+        const exists = await validateUsernameExists(receiverUsername);
         if (cancelled) return;
 
         if (!exists) {
@@ -108,7 +139,10 @@ function MessagePage() {
 
         const convoId = getConversationId(sender, receiverUsername);
 
-        // Do NOT create Firestore convo doc here.
+        // Ensure convo doc exists so it appears in inbox list
+        await ensureConversationDoc(convoId, sender, receiverUsername);
+        if (cancelled) return;
+
         setActiveConversationId(convoId);
         setActiveReceiver(receiverUsername);
         setComposeError("");
@@ -127,11 +161,11 @@ function MessagePage() {
     return () => {
       cancelled = true;
     };
-  }, [sender, receiverUsername, token]);
+  }, [sender, receiverUsername]);
 
   // Load inbox conversation list (single stable listener)
   useEffect(() => {
-    if (!sender) return;
+    if (!sender || typeof sender !== "string" || !sender.trim()) return;
 
     // Kill previous inbox listener if any
     if (inboxUnsubRef.current) {
@@ -192,8 +226,10 @@ function MessagePage() {
       return;
     }
 
+    const convId = activeConversationId.trim();
+
     const q = query(
-      collection(db, "conversations", activeConversationId, "messages"),
+      collection(db, "conversations", convId, "messages"),
       orderBy("timestamp", "asc")
     );
 
@@ -263,7 +299,7 @@ function MessagePage() {
 
     // Validate receiver exists before sending (blocks fake users)
     try {
-      const exists = await validateUsernameExists(activeReceiver, token);
+      const exists = await validateUsernameExists(activeReceiver);
       if (!exists) {
         setComposeError(`User "${activeReceiver}" does not exist.`);
         return;
@@ -279,12 +315,15 @@ function MessagePage() {
 
     if (!activeConversationId) setActiveConversationId(convoId);
 
+    // Ensure convo doc exists (safe)
+    await ensureConversationDoc(convoId, sender, activeReceiver);
+
     const convoRef = doc(db, "conversations", convoId);
     const msgRef = doc(collection(db, "conversations", convoId, "messages"));
 
     const batch = writeBatch(db);
 
-    // Create/merge convo doc only when sending first message
+    // Update convo summary fields
     batch.set(
       convoRef,
       {
@@ -383,9 +422,9 @@ function MessagePage() {
       return;
     }
 
-    //  Validate exists first
+    // Validate exists first
     try {
-      const exists = await validateUsernameExists(target, token);
+      const exists = await validateUsernameExists(target);
       if (!exists) {
         setComposeError(`User "${target}" does not exist.`);
         return;
@@ -400,11 +439,12 @@ function MessagePage() {
 
     const convoId = getConversationId(sender, target);
 
-    
+    // Ensure convo doc exists so it appears immediately in the inbox list
+    await ensureConversationDoc(convoId, sender, target);
+
     setActiveConversationId(convoId);
     setActiveReceiver(target);
 
-    // Navigate after setting state (reduces rapid transition issues)
     navigate(`/messages/${target}`);
 
     setIsComposing(false);
@@ -413,10 +453,14 @@ function MessagePage() {
     setEditingText("");
   }
 
-  function openConversation(convo) {
+  async function openConversation(convo) {
     const other = getOtherUser(convo.participants, sender);
 
-    
+    if (!other) return;
+
+    // Ensure convo doc exists (safe)
+    await ensureConversationDoc(convo.id, sender, other);
+
     setActiveConversationId(convo.id);
     setActiveReceiver(other);
 
