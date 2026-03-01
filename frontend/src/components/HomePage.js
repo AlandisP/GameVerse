@@ -73,6 +73,7 @@ function HomePage() {
     const Readposts = () => {
         const bookarray = Array.from(bookmarks);
         const items = posts.map((post,ind)=>{
+            console.log(post);
                 if(bookarray.includes(post["id"])){
                     return <PostObj key={ind} User={post["user"]} Content={post["text"]} Likes={post["likes"]} Liked={parselike(post)} id={post["id"]} commcount={post["comments"].length} books={true}/>
                 }
@@ -89,36 +90,36 @@ function HomePage() {
         <div className="page-container">
             <NavBar/>
             <div className="main-content">
-    <div style={{ 
-        borderBottom: "1px solid #000000ff", 
-        paddingBottom: "10px",
-        marginLeft: "-20px", 
-        paddingLeft: "20px" 
-    }}>
-        <h1 style={{ 
-            color: "white", 
-            textAlign: "left",
-            marginTop: "50px",
-            marginLeft: "20px",
-            marginBottom: "0"
-        }}>
-            Feed
-        </h1>
-    </div>
-    <div id='Post-Body'>
-        {/* <h3 style={{ color: "white", textAlign: "center" }}>
-            Welcome {username}, you are logged in!
-        </h3> */}
-        <div className='Post-Bar'>
-            <img className='PFP' src={Pfp}/>
-            <textarea rows='1' cols='50' maxLength={maxlen} ref={text} onChange={autoresize} placeholder='What are you thinking?'></textarea>
-            <button className='Post' onClick={makepost}>Post</button>
-        </div>
-        <div className='Content'>
-            <Readposts/>
-        </div>
-    </div>
-</div>
+                <div style={{ 
+                    borderBottom: "1px solid #000000ff", 
+                    paddingBottom: "10px",
+                    marginLeft: "-20px", 
+                    paddingLeft: "20px" 
+                }}>
+                    <h1 style={{ 
+                        color: "white", 
+                        textAlign: "left",
+                        marginTop: "50px",
+                        marginLeft: "20px",
+                        marginBottom: "0"
+                    }}>
+                        Feed
+                    </h1>
+                </div>
+                <div id='Post-Body'>
+                    {/* <h3 style={{ color: "white", textAlign: "center" }}>
+                        Welcome {username}, you are logged in!
+                    </h3> */}
+                    <div className='Post-Bar'>
+                        <img className='PFP' src={Pfp}/>
+                        <textarea rows='1' cols='50' maxLength={maxlen} ref={text} onChange={autoresize} placeholder='What are you thinking?'></textarea>
+                        <button className='Post' onClick={makepost}>Post</button>
+                    </div>
+                    <div className='Content'>
+                        <Readposts/>
+                    </div>
+                </div>
+            </div>
         </div>
     );
 }

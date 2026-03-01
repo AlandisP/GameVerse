@@ -4,8 +4,9 @@ import './PostStyle.css'
 import Pfp from '../images/Profile.png'
 import Add from '../images/AddButton.png'
 import msg from '../images/Message.png'
-const token  = localStorage.getItem('token');
+
 function Comment({User, body}){
+    const token  = localStorage.getItem('token');
     return(
         <div className='comment'>
             <img src={Pfp}/>
@@ -15,6 +16,7 @@ function Comment({User, body}){
     )
 }
 function Messagebar({poid,func}){
+    const token  = localStorage.getItem('token');
     const addcomment = async () => {
         const pid = await axios.post(
             'http://localhost:8080/post/comment',{content:postbod,id:poid},
@@ -37,6 +39,7 @@ function Messagebar({poid,func}){
     )
 }
 function CommentSection({pid}){
+    const token  = localStorage.getItem('token');
     // useEffect(async ()=>{
     //     const result = await axios.post(
     //             'http://localhost:8080/post/getcomments',{id:pid},

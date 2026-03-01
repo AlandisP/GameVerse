@@ -1,418 +1,390 @@
+// src/components/ProfilePage.js
 import React, { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
-import "./styles.css";
 import NavBar from "./NavBar";
-import API_URL from "../config/api";
+import PostObj from "./Post";
+import API_URL from "../config/api"; // keep existing config or fallback to http://localhost:8080
 
-function ProfilePage() {
-  const { username } = useParams();
+export default function ProfilePage() {
+  const { username: routeUsername } = useParams();
   const navigate = useNavigate();
+
+  const viewer = localStorage.getItem("username");
   const token = localStorage.getItem("token");
-  const loggedInUsername = localStorage.getItem("username");
+  const headers = token
+    ? { headers: { Authorization: `Bearer ${token}` } }
+    : undefined;
 
   const [profile, setProfile] = useState(null);
-  const [bio, setBio] = useState("");
+  const [routeError, setRouteError] = useState("");
   const [loading, setLoading] = useState(true);
-  const [editMode, setEditMode] = useState(false);
-  const [activeTab, setActiveTab] = useState("posts");
-  const [isFollowing, setIsFollowing] = useState(false);
+
+  const [allPosts, setAllPosts] = useState([]);
+  const [bookmarks, setBookmarks] = useState([]); // array of bookmarked post ids
 
   useEffect(() => {
-    const fetchProfile = async () => {
-      try {
-        setLoading(true);
-        let res;
+    let cancelled = false;
 
-        if (username) {
-          // viewing someone else's profile
-          res = await axios.get(
-            `${API_URL}/profile/${username}`,
-            token
-              ? { headers: { Authorization: `Bearer ${token}` } }
-              : undefined
-          );
-        } else {
-          // viewing own profile
-          res = await axios.get(`${API_URL}/profile`, {
-            headers: { Authorization: `Bearer ${token}` },
-          });
-        }
+    async function init() {
+      setLoading(true);
+      setRouteError("");
+      setProfile(null);
+      setAllPosts([]);
+      setBookmarks([]);
 
-        setProfile(res.data);
-        setBio(res.data.bio || "");
-
-        // If viewing someone else's profile and logged in, fetch follow status
-        if (username && token) {
-          try {
-            const followRes = await axios.get(
-              `${API_URL}/profile/${username}/isFollowing`,
-              { headers: { Authorization: `Bearer ${token}` } }
-            );
-            setIsFollowing(followRes.data === true);
-          } catch (err) {
-            console.error("Error checking follow status:", err);
-          }
-        } else {
-          setIsFollowing(false);
-        }
-      } catch (err) {
-        if (err.response?.status === 404) {
-          setProfile(null);
-        } else {
-          console.error("Error loading profile:", err);
-        }
-      } finally {
+      // If route param is missing, fall back to logged in user
+      const loggedIn = localStorage.getItem("username");
+      const canonical = routeUsername || loggedIn;
+      if (!canonical) {
+        setRouteError("No username provided and no user logged in.");
         setLoading(false);
+        return;
       }
+      setProfile({ username: canonical });
+
+      try {
+        const postsUrl = `${API_URL || "http://localhost:8080"}/post/getposts`;
+        const booksUrl = `${API_URL || "http://localhost:8080"}/post/getbooks`;
+
+        console.log("[ProfilePage] fetching posts from:", postsUrl);
+        const [postsRes, booksRes] = await Promise.all([
+          axios
+            .get(postsUrl, headers ? { headers: headers.headers } : undefined)
+            .catch((e) => e),
+          axios
+            .get(booksUrl, headers ? { headers: headers.headers } : undefined)
+            .catch((e) => e),
+        ]);
+
+        // Log raw responses for debugging
+        console.log(
+          "[ProfilePage] postsRes:",
+          postsRes && postsRes.status,
+          postsRes && postsRes.data,
+        );
+        console.log(
+          "[ProfilePage] booksRes:",
+          booksRes && booksRes.status,
+          booksRes && booksRes.data,
+        );
+
+        const postsData =
+          postsRes && postsRes.data && Array.isArray(postsRes.data)
+            ? postsRes.data
+            : [];
+        const booksData =
+          booksRes && booksRes.data && Array.isArray(booksRes.data)
+            ? booksRes.data
+            : [];
+
+        if (cancelled) return;
+
+        setAllPosts(postsData);
+        setBookmarks(booksData);
+      } catch (err) {
+        console.error("ProfilePage fetch error:", err);
+        setRouteError("Failed to load profile data.");
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    }
+
+    init();
+    return () => {
+      cancelled = true;
     };
+  }, [routeUsername, token]);
 
-    if (token || !username) {
-      fetchProfile();
-    } else {
-      // No token and viewing someone else: still fetch public profile (no auth header)
-      (async () => {
-        try {
-          setLoading(true);
-          const res = await axios.get(`${API_URL}/profile/${username}`);
-          setProfile(res.data);
-          setBio(res.data.bio || "");
-          setIsFollowing(false);
-        } catch (err) {
-          if (err.response?.status === 404) {
-            setProfile(null);
-          } else {
-            console.error("Error loading profile:", err);
-          }
-        } finally {
-          setLoading(false);
-        }
-      })();
-    }
-  }, [username, token]);
-
-  const handleSaveBio = async () => {
-    try {
-      await axios.put(
-        `${API_URL}/profile`,
-        { bio },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      setProfile({ ...profile, bio });
-      setEditMode(false);
-    } catch (err) {
-      alert("Error saving bio.");
-    }
-  };
-
-  const handleFollow = async () => {
-    if (!token) {
-      navigate("/login");
-      return;
-    }
-
-    try {
-      await axios.post(
-        `${API_URL}/profile/${profile.username}/follow`,
-        {},
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      setIsFollowing(true);
-      setProfile((prev) =>
-        prev
-          ? { ...prev, followerCount: (prev.followerCount || 0) + 1 }
-          : prev
-      );
-    } catch (err) {
-      console.error("Error following user:", err);
-    }
-  };
-
-  const handleUnfollow = async () => {
-    if (!token) {
-      navigate("/login");
-      return;
-    }
-
-    try {
-      await axios.post(
-        `${API_URL}/profile/${profile.username}/unfollow`,
-        {},
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      setIsFollowing(false);
-      setProfile((prev) =>
-        prev
-          ? {
-              ...prev,
-              followerCount: Math.max((prev.followerCount || 1) - 1, 0),
-            }
-          : prev
-      );
-    } catch (err) {
-      console.error("Error unfollowing user:", err);
-    }
-  };
-
-  const Sidebar = () => <NavBar />;
-
-  if (loading) {
-    return (
-      <div className="page-container">
-        <Sidebar />
-        <div className="main-content">
-          <h2 style={{ color: "white" }}>Loading profile...</h2>
-        </div>
-      </div>
-    );
-  }
-
-  if (!profile) {
-    return (
-      <div className="page-container">
-        <Sidebar />
-        <div className="main-content">
-          <h2 style={{ color: "white" }}>Profile not found.</h2>
-        </div>
-      </div>
-    );
-  }
-
-  const isOwnProfile =
-    !username || username.toLowerCase() === loggedInUsername?.toLowerCase();
-
-  const handleDm = () => {
-  navigate(`/messages/${profile.username}`);
-};
+  // Derived data
+  const postsByUser = allPosts.filter(
+    (p) =>
+      String(p.user).toLowerCase() ===
+      String(profile?.username || "").toLowerCase(),
+  );
+  const likedByUser = allPosts.filter(
+    (p) => p.liked && p.liked[profile?.username],
+  );
+  // Collect media from posts if any fields exist
+  const mediaItems = allPosts.flatMap((p) => {
+    if (Array.isArray(p.media)) return p.media;
+    if (Array.isArray(p.images)) return p.images;
+    if (Array.isArray(p.mediaUrls)) return p.mediaUrls;
+    if (p.image) return [p.image];
+    if (p.img) return [p.img];
+    return [];
+  });
 
   return (
     <div className="page-container">
-      <Sidebar />
-
-      <div className="main-content" style={{ color: "white" }}>
-        {/* HEADER */}
+      <NavBar />
+      <div className="main-content" style={{ display: "flex", padding: 0 }}>
+        {/* LEFT */}
         <div
           style={{
-            backgroundColor: "#2f2f2f",
-            paddingBottom: "20px",
-            borderRadius: "0 0 12px 12px",
-            marginBottom: "25px",
-            position: "relative",
+            width: "360px",
+            backgroundColor: "#373737",
+            height: "100vh",
+            borderRight: "1px solid #000",
+            display: "flex",
+            flexDirection: "column",
+            padding: "40px",
           }}
         >
-          {/* Banner */}
-          <div
-            style={{
-              height: "150px",
-              backgroundColor: "#3f4b5b",
-              borderRadius: "0 0 12px 12px",
-            }}
-          ></div>
-
-          {/* Avatar */}
-          <div
-            style={{
-              position: "absolute",
-              top: "90px",
-              left: "30px",
-              width: "120px",
-              height: "120px",
-              borderRadius: "50%",
-              backgroundColor: "#1c1c1c",
-              border: "4px solid #2f2f2f",
-            }}
-          ></div>
-
-          {/* Username + actions */}
-          <div style={{ padding: "20px", marginTop: "40px" }}>
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-              }}
-            >
-              <div>
-                <h1 style={{ marginBottom: "5px" }}>{profile.username}</h1>
-                <p style={{ marginTop: 0, color: "#aaaaaa" }}>
-                  @{profile.username}
-                </p>
-
-                {/* Follower / Following counts */}
-                <div style={{ display: "flex", gap: "16px", marginTop: "8px" }}>
-                  <span style={{ color: "#aaaaaa" }}>
-                    <strong style={{ color: "white" }}>
-                      {profile.followingCount ?? 0}
-                    </strong>{" "}
-                    Following
-                  </span>
-                  <span style={{ color: "#aaaaaa" }}>
-                    <strong style={{ color: "white" }}>
-                      {profile.followerCount ?? 0}
-                    </strong>{" "}
-                    Followers
-                  </span>
-                </div>
-              </div>
-
-              {/* Right side */}
-              {isOwnProfile ? (
-                !editMode && (
-                  <button
-                    onClick={() => setEditMode(true)}
-                    style={{
-                      marginTop: "10px",
-                      padding: "10px 20px",
-                      backgroundColor: "#058BFE",
-                      color: "white",
-                      border: "none",
-                      borderRadius: "10px",
-                      cursor: "pointer",
-                    }}
-                  >
-                    Edit Bio
-                  </button>
-                )
-              ) : (
-                <div style={{ display: "flex", gap: "10px" }}>
-                  <button
-                    onClick={isFollowing ? handleUnfollow : handleFollow}
-                    style={{
-                      marginTop: "10px",
-                      padding: "8px 16px",
-                      backgroundColor: isFollowing ? "#444" : "#058BFE",
-                      color: "white",
-                      border: "none",
-                      borderRadius: "999px",
-                      cursor: "pointer",
-                      minWidth: "100px",
-                    }}
-                  >
-                    {isFollowing ? "Unfollow" : "Follow"}
-                  </button>
-
-                  <button
-                    onClick={handleDm}
-                    style={{
-                      marginTop: "10px",
-                      padding: "8px 16px",
-                      backgroundColor: "#2d2d2d",
-                      color: "white",
-                      border: "1px solid #555",
-                      borderRadius: "999px",
-                      cursor: "pointer",
-                    }}
-                  >
-                    DM
-                  </button>
-                </div>
-              )}
+          <div style={{ color: "white" }}>
+            <h2 style={{ margin: 0 }}>
+              {profile ? `@${profile.username}` : "Profile"}
+            </h2>
+            <div style={{ color: "#bdbdbd", marginTop: "8px" }}>
+              {loading
+                ? "Loading..."
+                : routeError
+                  ? routeError
+                  : "Public profile"}
             </div>
 
-            {/* Bio */}
-            {editMode ? (
-              <>
-                <textarea
-                  value={bio}
-                  onChange={(e) => setBio(e.target.value)}
-                  style={{
-                    width: "100%",
-                    height: "80px",
-                    borderRadius: "10px",
-                    padding: "10px",
-                    backgroundColor: "#444",
-                    color: "white",
-                  }}
-                />
-                <br />
-                <button
-                  onClick={handleSaveBio}
-                  style={{
-                    marginTop: "10px",
-                    padding: "8px 15px",
-                    backgroundColor: "#058BFE",
-                    border: "none",
-                    borderRadius: "20px",
-                    cursor: "pointer",
-                    color: "white",
-                  }}
-                >
-                  Save
-                </button>
+            <div style={{ display: "flex", gap: "8px", marginTop: "18px" }}>
+              <button
+                onClick={() => navigate(`/messages/${profile?.username}`)}
+                style={{
+                  padding: "8px 12px",
+                  borderRadius: "10px",
+                  border: "none",
+                  backgroundColor: "#058BFE",
+                  color: "white",
+                  cursor: "pointer",
+                  fontWeight: 700,
+                }}
+              >
+                Message
+              </button>
+            </div>
 
-                <button
-                  onClick={() => setEditMode(false)}
-                  style={{
-                    marginLeft: "10px",
-                    marginTop: "10px",
-                    padding: "8px 15px",
-                    backgroundColor: "#777",
-                    border: "none",
-                    borderRadius: "20px",
-                    cursor: "pointer",
-                    color: "white",
-                  }}
-                >
-                  Cancel
-                </button>
-              </>
-            ) : (
-              <p>{profile.bio || "No bio yet."}</p>
-            )}
+            <div style={{ marginTop: "28px", color: "#bdbdbd" }}>
+              <div>
+                <strong>{postsByUser.length}</strong> posts
+              </div>
+              <div style={{ marginTop: "6px" }}>
+                <strong>{mediaItems.length}</strong> media
+              </div>
+              <div style={{ marginTop: "6px" }}>
+                <strong>{likedByUser.length}</strong> liked posts
+              </div>
+            </div>
           </div>
         </div>
 
-        {/* TABS */}
+        {/* RIGHT */}
         <div
           style={{
-            borderBottom: "1px solid #444",
-            marginBottom: "15px",
+            flex: 1,
+            backgroundColor: "#2d2d2d",
+            height: "100vh",
             display: "flex",
-            justifyContent: "space-around",
+            flexDirection: "column",
           }}
         >
-          {["posts", "media", "likes"].map((tab) => (
-            <button
-              key={tab}
-              onClick={() => setActiveTab(tab)}
-              style={{
-                flex: 1,
-                padding: "12px",
-                backgroundColor: "transparent",
-                color: activeTab === tab ? "#058BFE" : "#aaaaaa",
-                border: "none",
-                borderBottom:
-                  activeTab === tab ? "3px solid #058BFE" : "none",
-                fontSize: "1rem",
-                cursor: "pointer",
-              }}
-            >
-              {tab.charAt(0).toUpperCase() + tab.slice(1)}
-            </button>
-          ))}
+          <div
+            style={{
+              borderBottom: "1px solid #000",
+              padding: "50px 20px 18px",
+              color: "white",
+              fontWeight: 700,
+            }}
+          >
+            {profile ? `@${profile.username}` : "Profile"}
+          </div>
+
+          <ProfileTabs
+            profileUsername={profile?.username}
+            postsByUser={postsByUser}
+            likedPosts={likedByUser}
+            mediaItems={mediaItems}
+            bookmarks={bookmarks}
+          />
         </div>
+      </div>
+    </div>
+  );
+}
 
-        {/* TAB CONTENT */}
-        {activeTab === "posts" && (
-          <p style={{ color: "#888", textAlign: "center", marginTop: "20px" }}>
-            No posts yet.
-          </p>
+/* Tabs */
+function ProfileTabs({
+  profileUsername,
+  postsByUser,
+  likedPosts,
+  mediaItems,
+  bookmarks,
+}) {
+  const [tab, setTab] = useState("posts");
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", flex: 1 }}>
+      <div
+        style={{
+          display: "flex",
+          gap: "8px",
+          padding: "12px 20px",
+          borderBottom: "1px solid #000",
+        }}
+      >
+        <button
+          onClick={() => setTab("posts")}
+          style={tab === "posts" ? activeTabStyle : tabStyle}
+        >
+          Posts
+        </button>
+        <button
+          onClick={() => setTab("media")}
+          style={tab === "media" ? activeTabStyle : tabStyle}
+        >
+          Media
+        </button>
+        <button
+          onClick={() => setTab("likes")}
+          style={tab === "likes" ? activeTabStyle : tabStyle}
+        >
+          Liked
+        </button>
+      </div>
+
+      <div
+        style={{
+          flex: 1,
+          overflowY: "auto",
+          padding: "20px 40px 20px 20px", // less left padding
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "flex-start", // force left alignment
+        }}
+      >
+        {tab === "posts" && (
+          <div>
+            {postsByUser.length === 0 ? (
+              <div style={{ color: "#bdbdbd" }}>No posts yet.</div>
+            ) : (
+              postsByUser.map((p) => {
+                const isBook = Array.isArray(bookmarks)
+                  ? bookmarks.includes(p.id)
+                  : false;
+                const commcount = Array.isArray(p.comments)
+                  ? p.comments.length
+                  : 0;
+                return (
+                  <PostObj
+                    key={p.id}
+                    User={p.user}
+                    Content={p.text}
+                    Likes={p.likes}
+                    Liked={p.liked ? p.liked[profileUsername] : false}
+                    id={p.id}
+                    commcount={commcount}
+                    books={isBook}
+                  />
+                );
+              })
+            )}
+          </div>
         )}
 
-        {activeTab === "media" && (
-          <p style={{ color: "#888", textAlign: "center", marginTop: "20px" }}>
-            No media uploaded yet.
-          </p>
+        {tab === "media" && (
+          <div>
+            {mediaItems.length === 0 ? (
+              <div style={{ color: "#bdbdbd" }}>
+                No media found for this user (your current posts don't include
+                media fields).
+              </div>
+            ) : (
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "repeat(auto-fill, minmax(140px, 1fr))",
+                  gap: "12px",
+                }}
+              >
+                {mediaItems.map((m, i) => (
+                  <div
+                    key={i}
+                    style={{
+                      borderRadius: "8px",
+                      overflow: "hidden",
+                      backgroundColor: "#222",
+                      height: "140px",
+                    }}
+                  >
+                    {String(m).match(/\.(mp4|webm)$/i) ? (
+                      <video
+                        src={m}
+                        controls
+                        style={{
+                          width: "100%",
+                          height: "100%",
+                          objectFit: "cover",
+                        }}
+                      />
+                    ) : (
+                      <img
+                        src={m}
+                        alt={`media-${i}`}
+                        style={{
+                          width: "100%",
+                          height: "100%",
+                          objectFit: "cover",
+                        }}
+                      />
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         )}
 
-        {activeTab === "likes" && (
-          <p style={{ color: "#888", textAlign: "center", marginTop: "20px" }}>
-            No liked posts yet.
-          </p>
+        {tab === "likes" && (
+          <div>
+            {likedPosts.length === 0 ? (
+              <div style={{ color: "#bdbdbd" }}>No liked posts yet.</div>
+            ) : (
+              likedPosts.map((p) => {
+                const isBook = Array.isArray(bookmarks)
+                  ? bookmarks.includes(p.id)
+                  : false;
+                const commcount = Array.isArray(p.comments)
+                  ? p.comments.length
+                  : 0;
+                return (
+                  <PostObj
+                    key={p.id}
+                    User={p.user}
+                    Content={p.text}
+                    Likes={p.likes}
+                    Liked={p.liked ? p.liked[profileUsername] : false}
+                    id={p.id}
+                    commcount={commcount}
+                    books={isBook}
+                  />
+                );
+              })
+            )}
+          </div>
         )}
       </div>
     </div>
   );
 }
 
-export default ProfilePage;
+const tabStyle = {
+  padding: "8px 14px",
+  borderRadius: "10px",
+  border: "1px solid #444",
+  backgroundColor: "#2f2f2f",
+  color: "white",
+  cursor: "pointer",
+  fontWeight: 700,
+};
+
+const activeTabStyle = {
+  ...tabStyle,
+  border: "1px solid #058BFE",
+  backgroundColor: "#2b3a4a",
+};

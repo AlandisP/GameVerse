@@ -21,21 +21,21 @@ function App() {
           <Route path="/signup" element={<Signup />} />
           <Route path="/home" element={<HomePage />} />
           <Route path="/explore" element={<ExplorePage />} />
-          <Route path="/messages" element={<MessagePage />} />
-          <Route path="/partyfinder" element={<PartyFinderPage />} />
-          <Route path="/communities" element={<CommunitiesPage />} />
-          <Route path = "/notifications" element={<NotificationPage/>}/>
+
+          {/* Messages: list and single conversation */}
           <Route path="/messages" element={<MessagePage />} />
           <Route path="/messages/:receiverUsername" element={<MessagePage />} />
 
-          {/* your own profile */}
+          <Route path="/partyfinder" element={<PartyFinderPage />} />
+          <Route path="/communities" element={<CommunitiesPage />} />
+          <Route path="/notifications" element={<NotificationPage />} />
+
+          {/* Profile routes */}
           <Route path="/profile" element={<ProfilePage />} />
-
-          {/* other users' profiles */}
           <Route path="/profile/:username" element={<ProfilePage />} />
-          {/* Community Page */}
-          <Route path = "/communities/:community" element={<CommunityPage/>}/>
 
+          {/* Community Page */}
+          <Route path="/communities/:community" element={<CommunityPage />} />
         </Routes>
       </Router>
     </div>

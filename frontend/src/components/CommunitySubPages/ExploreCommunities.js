@@ -24,8 +24,10 @@ function ExploreCommunities({isOpen, onClose, communities, Refresh}) {
     }
 
     useEffect(() => {
-        setFiltered(communities);
-    }, [communities]);
+        if(isOpen) {
+            setFiltered(communities);
+        }
+    }, [communities, isOpen]);
 
 
     const searchCommunities = async(q) => {

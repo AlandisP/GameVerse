@@ -32,19 +32,19 @@ function CommunityBlock({Name, Description, Members, Category, id, OwnerId}) {
         }
     }
 
-        const handleLeaveClick = async(e) => {
-            e.stopPropagation();
-            try {
-                const res = await axios.put(
-                    `${API_URL}/communities/${Name}/leave`,
-                    {}, { headers: { Authorization: `Bearer ${token}` } }
-                );
-                setMemberCount(prev => prev - 1);
-                setMembers(prev => prev.filter(member => member.id !== userId));
-                setJoined(false);
-            } catch(error) {
-                console.error("failed to leave community: ", error.response?.data || error.message);
-            }
+    const handleLeaveClick = async(e) => {
+        e.stopPropagation();
+        try {
+            const res = await axios.put(
+                `${API_URL}/communities/${Name}/leave`,
+                {}, { headers: { Authorization: `Bearer ${token}` } }
+            );
+            setMemberCount(prev => prev - 1);
+            setMembers(prev => prev.filter(member => member.id !== userId));
+            setJoined(false);
+        } catch(error) {
+            console.error("failed to leave community: ", error.response?.data || error.message);
+        }
     }
 
    useEffect(() => {

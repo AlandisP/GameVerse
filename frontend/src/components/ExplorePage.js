@@ -1,363 +1,225 @@
-// src/components/ExplorePage.js
 import React, { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import api from "../config/api"; // if api.get doesn't exist, we use axios in fetchPosts below
 import NavBar from "./NavBar";
-import searchIcon from "../images/search.png"; // same icon path used in MessagePage
-import API_URL from '../config/api';
+import searchIcon from "../images/search.png";
+import API_URL from "../config/api";
+import PostObj from "./Post";
 
 function ExplorePage() {
   const navigate = useNavigate();
-  const username = localStorage.getItem("username");
-
-  // local token getter (restores previous fix)
   const getToken = () =>
     localStorage.getItem("authToken") || localStorage.getItem("token") || null;
 
-  const [activeTab, setActiveTab] = useState("explore");
-
   const [posts, setPosts] = useState([]);
+  const [displayPosts, setDisplayPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [mode, setMode] = useState("trending");
 
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState([]);
   const [searchLoading, setSearchLoading] = useState(false);
-  const [searchError, setSearchError] = useState(null);
-
-  const postsAbortRef = useRef(null);
-  const searchControllerRef = useRef(null);
   const searchDebounceRef = useRef(null);
 
-  const handleNavClick = (e, path, tab) => {
-    e?.preventDefault();
-    setActiveTab(tab);
-    navigate(path);
+  const shuffle = (arr) => [...arr].sort(() => Math.random() - 0.5);
+
+  const getTimestamp = (p) => {
+    const t = p.createdAt ?? p.timestamp ?? p.date;
+    return t ? new Date(t).getTime() : 0;
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem("authToken");
-    localStorage.removeItem("token");
-    localStorage.removeItem("username");
-    navigate("/login");
+  const trendingScore = (p) => {
+    const likes = Number(p.likes || 0);
+    const ageHours = (Date.now() - getTimestamp(p)) / (1000 * 60 * 60);
+    return likes + 10 / (1 + ageHours);
+  };
+
+  const sortPosts = (data) => {
+    if (mode === "newest") {
+      return [...data].sort((a, b) => getTimestamp(b) - getTimestamp(a));
+    }
+    if (mode === "random") {
+      return shuffle(data);
+    }
+    return [...data].sort((a, b) => trendingScore(b) - trendingScore(a));
   };
 
   useEffect(() => {
     let mounted = true;
-    const controller = new AbortController();
-    postsAbortRef.current = controller;
 
-    const fetchPosts = async () => {
+    async function fetchPosts() {
       setLoading(true);
       setError(null);
-
       try {
         const token = getToken();
-        console.log("fetchPosts token:", token);
-
-        // Use axios.get for compatibility (in case `api` isn't an axios instance)
-        const response = await axios.get("/api/posts/explore", {
-          signal: controller.signal,
-          headers: token ? { Authorization: `Bearer ${token}` } : {},
-        });
-
-        if (!mounted) return;
-        const data = response.data;
-        setPosts(Array.isArray(data) ? data : []);
-      } catch (err) {
-        if (err?.name === "CanceledError" || err?.code === "ERR_CANCELED") {
-          return;
-        }
-        console.error("Failed to fetch posts:", err);
-        if (!mounted) return;
-        setError(
-          err.response?.data?.message || err.message || "Failed to load posts."
+        const res = await axios.get(
+          `${API_URL || "http://localhost:8080"}/post/getposts`,
+          { headers: token ? { Authorization: `Bearer ${token}` } : {} },
         );
+        if (!mounted) return;
+        const data = Array.isArray(res.data) ? res.data : [];
+        setPosts(data);
+        setDisplayPosts(sortPosts(data));
+      } catch (err) {
+        if (!mounted) return;
+        setError("Failed to load posts.");
       } finally {
         if (mounted) setLoading(false);
       }
-    };
+    }
 
     fetchPosts();
-
-    return () => {
-      mounted = false;
-      controller.abort();
-    };
+    return () => (mounted = false);
   }, []);
 
-  const handleToggleLike = async (postId) => {
-    // Optimistic update
-    setPosts((prev) =>
-      prev.map((post) =>
-        post.id === postId
-          ? {
-              ...post,
-              liked: !post.liked,
-              likes: post.liked
-                ? Math.max((post.likes || 1) - 1, 0)
-                : (post.likes || 0) + 1,
-            }
-          : post
-      )
-    );
-
-    try {
-      const token = getToken();
-      await axios.post(
-        `/api/posts/${encodeURIComponent(postId)}/like`,
-        {},
-        {
-          headers: token ? { Authorization: `Bearer ${token}` } : {},
-        }
-      );
-    } catch (err) {
-      console.error("Failed to update like status", err);
-      // revert optimistic update on error
-      setPosts((prev) =>
-        prev.map((post) =>
-          post.id === postId
-            ? {
-                ...post,
-                liked: !post.liked,
-                likes: post.liked
-                  ? Math.max((post.likes || 1) - 1, 0)
-                  : (post.likes || 0) + 1,
-              }
-            : post
-        )
-      );
-    }
-  };
+  useEffect(() => {
+    setDisplayPosts(sortPosts(posts));
+  }, [mode]);
 
   useEffect(() => {
     if (!searchQuery) {
       setSearchResults([]);
-      setSearchError(null);
       return;
     }
 
     if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
 
-    searchDebounceRef.current = setTimeout(() => {
-      if (searchControllerRef.current) searchControllerRef.current.abort();
-
-      const controller = new AbortController();
-      searchControllerRef.current = controller;
-
-      const doSearch = async () => {
-        setSearchLoading(true);
-        setSearchError(null);
-
-        try {
-          const token = getToken();
-          const res = await axios.get(`${API_URL}/users/matches`, {
+    searchDebounceRef.current = setTimeout(async () => {
+      setSearchLoading(true);
+      try {
+        const token = getToken();
+        const res = await axios.get(
+          `${API_URL || "http://localhost:8080"}/users/matches`,
+          {
             params: { text: searchQuery },
-            // headers: token ? { Authorization: `Bearer ${token}` } : {},
-            // signal: controller.signal,
-          });
-
-          const data = res.data;
-          setSearchResults(Array.isArray(data) ? data : []);
-        } catch (err) {
-          if (err?.name === "CanceledError" || err?.code === "ERR_CANCELED")
-            return;
-          console.error("User search failed:", err);
-          setSearchError(
-            err.response?.data?.message || err.message || "Search failed."
-          );
-          setSearchResults([]);
-        } finally {
-          setSearchLoading(false);
-        }
-      };
-
-      doSearch();
+            headers: token ? { Authorization: `Bearer ${token}` } : {},
+          },
+        );
+        setSearchResults(Array.isArray(res.data) ? res.data : []);
+      } catch {
+        setSearchResults([]);
+      } finally {
+        setSearchLoading(false);
+      }
     }, 300);
 
-    return () => {
-      if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
-    };
+    return () => clearTimeout(searchDebounceRef.current);
   }, [searchQuery]);
 
-  useEffect(() => {
-    return () => {
-      if (postsAbortRef.current) postsAbortRef.current.abort();
-      if (searchControllerRef.current) searchControllerRef.current.abort();
-      if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
+  const mapToPostObjProps = (p) => {
+    const user = p.user ?? p.username ?? "Unknown";
+    const content = p.text ?? p.content ?? "";
+    const likes = Number(p.likes || 0);
+    const currentUser = localStorage.getItem("username");
+    const liked =
+      p.liked && typeof p.liked === "object"
+        ? Boolean(p.liked[currentUser])
+        : Boolean(p.liked);
+
+    return {
+      User: user,
+      Content: content,
+      Likes: likes,
+      Liked: liked,
+      id: p.id,
     };
-  }, []);
+  };
 
   return (
     <div className="page-container">
       <NavBar />
-
       <div className="main-content" style={{ display: "flex", padding: 0 }}>
-        {/* LEFT SIDEBAR (holds search) */}
+        {/* Sidebar */}
         <div
           style={{
-            width: "350px",
+            width: 350,
             backgroundColor: "#373737",
             height: "100vh",
-            borderRight: "1px solid #000000ff",
+            borderRight: "1px solid black",
           }}
         >
-          <div
-            style={{
-              borderBottom: "1px solid #000000ff",
-              paddingBottom: "10px",
-              paddingTop: "50px",
-              paddingLeft: "40px",
-            }}
-          >
-            <h1
-              style={{
-                color: "white",
-                fontSize: "32px",
-                margin: "0",
-              }}
-            >
-              Explore
-            </h1>
+          <div style={{ padding: "50px 40px 10px" }}>
+            <h1 style={{ color: "white", margin: 0 }}>Explore</h1>
           </div>
 
-          <div style={{ padding: "20px" }}>
-            {/* Search pill that matches MessagePage */}
+          <div style={{ padding: 20 }}>
             <div
               style={{
                 backgroundColor: "white",
-                borderRadius: "25px",
+                borderRadius: 25,
                 padding: "10px 15px",
                 display: "flex",
                 alignItems: "center",
-                marginBottom: "10px",
               }}
             >
               <img
                 src={searchIcon}
                 alt="search"
-                style={{ width: "20px", marginRight: "10px" }}
+                style={{ width: 20, marginRight: 10 }}
               />
               <input
                 type="text"
                 placeholder="Search users..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                style={{
-                  border: "none",
-                  outline: "none",
-                  backgroundColor: "transparent",
-                  width: "100%",
-                }}
+                style={{ border: "none", outline: "none", width: "100%" }}
               />
             </div>
 
-            {/* show small searching text */}
-            {searchLoading && (
-              <small style={{ color: "#ddd" }}>Searching…</small>
-            )}
-
-            {/* Search results (dropdown style) */}
-            {searchQuery && (
+            {searchResults.map((u) => (
               <div
-                className="search-results"
+                key={u.username || u.id}
                 style={{
-                  marginTop: 8,
-                  maxHeight: 300,
-                  overflowY: "auto",
+                  padding: 8,
+                  marginTop: 6,
+                  backgroundColor: "#3b3b3b",
+                  borderRadius: 8,
                   color: "white",
+                  cursor: "pointer",
                 }}
+                onClick={() => navigate(`/profile/${u.username || u.id}`)}
               >
-                {searchError && (
-                  <div className="search-error" style={{ color: "salmon" }}>
-                    {searchError}
-                  </div>
-                )}
-                {searchResults.map((u) => (
-                  <div
-                    key={u.username || u.id}
-                    style={{
-                      padding: "8px 10px",
-                      borderRadius: 8,
-                      cursor: "pointer",
-                      backgroundColor: "#3b3b3b",
-                      marginBottom: 6,
-                    }}
-                    onClick={() => {
-                      const target = u.username || u.id;
-                      setSearchQuery("");
-                      setSearchResults([]);
-                      navigate(`/profile/${encodeURIComponent(target)}`);
-                    }}
-                  >
-                    <div style={{ fontWeight: 600 }}>
-                      {u.displayName || u.username || u.id}
-                    </div>
-                    {u.username && (
-                      <div style={{ fontSize: 12, color: "#bbb" }}>
-                        @{u.username}
-                      </div>
-                    )}
-                  </div>
-                ))}
+                {u.username || u.id}
               </div>
-            )}
+            ))}
           </div>
         </div>
 
-        {/* RIGHT: content area (posts) */}
+        {/* Main */}
         <div
           style={{
             flex: 1,
             backgroundColor: "#2d2d2d",
             height: "100vh",
             overflowY: "auto",
-            padding: "20px",
+            padding: 20,
             color: "white",
           }}
         >
-          <p style={{ color: "#bbb", marginTop: 4 }}>
-            See what's trending in the community.
-          </p>
+          <div style={{ marginBottom: 10 }}>
+            <select
+              value={mode}
+              onChange={(e) => setMode(e.target.value)}
+              style={{ padding: 6, borderRadius: 6 }}
+            >
+              <option value="trending">Trending</option>
+              <option value="newest">Newest</option>
+              <option value="random">Random</option>
+            </select>
+          </div>
 
-          <section className="posts-area" style={{ marginTop: 16 }}>
-            {loading ? (
-              <h3>Loading posts…</h3>
-            ) : error ? (
-              <div className="error" style={{ color: "salmon" }}>
-                {error}
-              </div>
-            ) : posts.length === 0 ? (
-              <div>No posts found.</div>
-            ) : (
-              posts.map((post) => (
-                <article
-                  key={post.id}
-                  style={{
-                    marginBottom: 12,
-                    background: "#3a3a3a",
-                    padding: 12,
-                    borderRadius: 8,
-                  }}
-                >
-                  <div className="post-header">
-                    <strong>
-                      {post.authorName || post.author || "Unknown"}
-                    </strong>
-                  </div>
-                  <div className="post-body" style={{ marginTop: 8 }}>
-                    {post.content}
-                  </div>
-                  <div className="post-actions" style={{ marginTop: 8 }}>
-                    <button onClick={() => handleToggleLike(post.id)}>
-                      {post.liked ? "Unlike" : "Like"} ({post.likes || 0})
-                    </button>
-                  </div>
-                </article>
-              ))
-            )}
-          </section>
+          {loading ? (
+            <h3>Loading posts…</h3>
+          ) : error ? (
+            <div>{error}</div>
+          ) : displayPosts.length === 0 ? (
+            <div>No posts found.</div>
+          ) : (
+            displayPosts.map((post) => (
+              <PostObj key={post.id} {...mapToPostObjProps(post)} />
+            ))
+          )}
         </div>
       </div>
     </div>
