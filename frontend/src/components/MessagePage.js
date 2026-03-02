@@ -47,7 +47,7 @@ async function validateUsernameExists(username) {
   const token = localStorage.getItem("token");
 
   const res = await axios.get(
-    `${API_URL}/users/exists/${encodeURIComponent(username)}`,
+    `${API_URL}/users/exists/${username}`,
     {
       headers: {
         Authorization: `Bearer ${token}`,
@@ -57,6 +57,7 @@ async function validateUsernameExists(username) {
 
   return Boolean(res.data?.exists);
 }
+
 
 /**
  * Ensure the conversation document exists so the inbox list can show it

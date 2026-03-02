@@ -59,18 +59,6 @@ public class UsersController {
         repository.deleteById(id);
     }
 
-     @GetMapping("/test/populate")
-    public String populateTestData() {
-        repository.deleteAll(); // Clear existing data
-
-        User john = new User("alandis", passwordEncoder.encode("2190"));
-        User q = new User("q", passwordEncoder.encode("1234"));
-        repository.save(john);
-        repository.save(q);
-        
-                                
-        return "Test data inserted! Total users: " + repository.count();
-    }
 
     @GetMapping("/matches")
     public List<User> getUsernameMatches(@RequestParam String text) {
@@ -174,11 +162,10 @@ public ResponseEntity<?> changeUsername(@RequestBody Map<String, String> body, A
     return ResponseEntity.ok(Map.of("message", "Username updated successfully"));
 }
 
-    @GetMapping("/exists")
-    public ResponseEntity<?> userExist(Authentication auth) {
-        String userId = (String) auth.getPrincipal();
-        User currUser = repository.findById(userId).orElseThrow();
-        return ResponseEntity.ok(repository.existsByUsername(currUser.getUsername()));
+    @GetMapping("/exists/{username}")
+    public ResponseEntity<?> userExist(Authentication auth, @PathVariable String username) {
+        boolean exists = repository.existsByUsername(username);
+        return ResponseEntity.ok(Map.of("exists", exists));
     }
 
 }
