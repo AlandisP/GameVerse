@@ -10,6 +10,7 @@ import axios from 'axios';
 import './PostStyle.css'
 import CommentSection from './Comments'
 import { shortTimeAgo } from '../utils/shortTimeAgo'
+import API_URL from '../config/api'
 function PostObj ({User, Content, Likes, Liked, id, books, commcount, CreatedAt}){
         const postid = id;
         const [didLike, setdidLike]= useState(Liked);
@@ -24,7 +25,7 @@ function PostObj ({User, Content, Likes, Liked, id, books, commcount, CreatedAt}
         },[]);
         const likeinteract = async ()=>{
             await axios.post(
-                'http://localhost:8080/post/likepost',{id:id},
+                `${API_URL}/post/likepost`,{id:id},
                 { headers: { Authorization: `Bearer ${token}` } }
             );
             if(didLike){
@@ -37,7 +38,7 @@ function PostObj ({User, Content, Likes, Liked, id, books, commcount, CreatedAt}
         }
         const bookinteract = async ()=>{
             await axios.post(
-                'http://localhost:8080/post/bookpost',{id:id},
+                `${API_URL}/post/bookpost`,{id:id},
                 { headers: { Authorization: `Bearer ${token}` } }
             );
             setBook(!didBook);

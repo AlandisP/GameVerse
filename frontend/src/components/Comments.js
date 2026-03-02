@@ -4,6 +4,7 @@ import './PostStyle.css'
 import Pfp from '../images/Profile.png'
 import Add from '../images/AddButton.png'
 import msg from '../images/Message.png'
+import API_URL from '../config/api';
 
 function Comment({User, body}){
     const token  = localStorage.getItem('token');
@@ -19,7 +20,7 @@ function Messagebar({poid,func}){
     const token  = localStorage.getItem('token');
     const addcomment = async () => {
         const pid = await axios.post(
-            'http://localhost:8080/post/comment',{content:postbod,id:poid},
+            `${API_URL}/post/comment`,{content:postbod,id:poid},
             { headers: { Authorization: `Bearer ${token}` } }
         );
         func();
