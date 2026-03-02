@@ -64,7 +64,7 @@ function CommentSection({pid}){
     }
     const getcomms = async ()=>{
         const result = await axios.post(
-                'http://localhost:8080/post/getcomments',{id:pid},
+                `${API_URL}/post/getcomments`,{id:pid},
                 { headers: { Authorization: `Bearer ${token}` } }
             );
         setcoms(result.data.toReversed());
