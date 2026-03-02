@@ -4,6 +4,8 @@ import axios from "axios";
 import NavBar from "./NavBar";
 import logo from "../images/search.png";
 
+import API_URL from "../config/api";
+
 import { db } from "../firebase";
 import {
   collection,
@@ -38,19 +40,21 @@ function getConversationLastMessageId(convo) {
 
 /**
  * Validation via backend.
- * IMPORTANT: This uses a relative URL so CRA proxy handles it in dev.
- * Requires in frontend/package.json:
- *   "proxy": "http://localhost:8080"
- *
  * Backend should expose:
  *   GET /users/exists/{username} -> { exists: true/false }
  */
 async function validateUsernameExists(username) {
-  // If your backend route is "/users/exist/{username}" (no 's'),
-  // change the URL below to `/users/exist/${...}`.
+  const token = localStorage.getItem("token");
+
   const res = await axios.get(
-    `/users/exists/${encodeURIComponent(username)}`
+    `${API_URL}/users/exists/${encodeURIComponent(username)}`,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
   );
+
   return Boolean(res.data?.exists);
 }
 
