@@ -177,9 +177,8 @@ public ResponseEntity<?> changeUsername(@RequestBody Map<String, String> body, A
     @GetMapping("/exists")
     public ResponseEntity<?> userExist(Authentication auth) {
         String userId = (String) auth.getPrincipal();
-        return ResponseEntity.ok(repository.existsByUsername(userId));
+        User currUser = repository.findById(userId).orElseThrow();
+        return ResponseEntity.ok(repository.existsByUsername(currUser.getUsername()));
     }
-
-
 
 }
