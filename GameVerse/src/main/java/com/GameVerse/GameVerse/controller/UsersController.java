@@ -13,12 +13,11 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.bind.annotation.PutMapping;
-
 
 import com.GameVerse.GameVerse.model.User;
 import com.GameVerse.GameVerse.repository.UserRepository;
@@ -174,6 +173,13 @@ public ResponseEntity<?> changeUsername(@RequestBody Map<String, String> body, A
     repository.save(user);
     return ResponseEntity.ok(Map.of("message", "Username updated successfully"));
 }
+
+    @GetMapping("/exists")
+    public ResponseEntity<?> userExist(Authentication auth) {
+        String userId = (String) auth.getPrincipal();
+        return ResponseEntity.ok(repository.existsByUsername(userId));
+    }
+
 
 
 }

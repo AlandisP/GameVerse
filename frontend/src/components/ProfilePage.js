@@ -280,6 +280,7 @@ function ProfileTabs({
                     id={p.id}
                     commcount={commcount}
                     books={isBook}
+                    CreatedAt={p.createdAt}
                   />
                 );
               })

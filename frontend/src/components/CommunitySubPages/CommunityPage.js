@@ -20,6 +20,7 @@ function CommunityPage() {
     const [membersCom, setMembers] = useState([]);
     const isMember = membersCom?.some(member => member.id === userId);
     const navigate = useNavigate();
+    const [popUpMenu, setPopUpMenu] = useState(false);
 
     const toggleEditing = () => {
         setEditing(!editing);
@@ -241,6 +242,15 @@ function CommunityPage() {
             </div>
     );
 
+}
+
+function PopUpMenu(Username) {
+    
+    return (
+        <div className="popmenu">
+
+        </div>
+    );
 }
 
 export default CommunityPage;
