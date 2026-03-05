@@ -341,6 +341,10 @@
     background-color: rgba(49, 47, 47, 0.233);
 }
 
+.error-txt {
+    color: red;
+    justify-content: center;
+}
 
 
 

@@ -8,6 +8,14 @@ function CreateCommunityOverlay({isOpen, onClose, onCommunityCreated}) {
     const [communityName, setCommunityName] = useState("");
     const [comDescription, setComDescription] = useState("");
     const [categories, setCategories] = useState([]);
+    const [error, setError] = useState("");
+
+    const ClearFields = () => {
+        setError("");
+        setSelectedCategory(null);
+        setComDescription("");
+        setCommunityName("");
+    }
 
 
     const handleSelectCategory = (category) => {
@@ -20,12 +28,19 @@ function CreateCommunityOverlay({isOpen, onClose, onCommunityCreated}) {
 
     const handleDescriptionChange = (e) => {
         setComDescription(e.target.value);
-        e.target.style.height = "auto";               // reset
-        e.target.style.height = `${e.target.scrollHeight}px`; // grow to fit
-
     }
 
     const handleCreate = async() => {
+        if(selectedCategory=== null) {
+            setError("You must select a category.");
+            return;
+        } else if(communityName.trim().length === 0) {
+            setError("You must have a name for your community.");
+            return;
+        } else if(comDescription.trim().length === 0) {
+            setError("You must have a description for your community.");
+            return;
+        }
         const result = await axios.post (
             `${API_URL}/communities/createCommunity`, {name: communityName, description: comDescription, category: selectedCategory},
             { headers: { Authorization: `Bearer ${token}` } }
@@ -60,7 +75,7 @@ function CreateCommunityOverlay({isOpen, onClose, onCommunityCreated}) {
                 <div className='overlay-background2'>
                     <div className='top-portion'>
                         <h1>Create Community</h1>
-                        <button className='close' onClick={onClose}>X</button>
+                        <button className='close' onClick={() => {onClose(); ClearFields();} }>X</button>
                     </div>
                     <div className='comcontent'>
                         <h2 className='headers'>Community Name</h2>
@@ -71,6 +86,7 @@ function CreateCommunityOverlay({isOpen, onClose, onCommunityCreated}) {
                         <div className='select-list'>
                                 {cats}
                         </div>
+                        <p className='error-txt'>{error}</p>
                     </div>
                     <button className='create' onClick={handleCreate}>Create</button>
                 </div>

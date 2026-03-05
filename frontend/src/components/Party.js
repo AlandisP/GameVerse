@@ -36,7 +36,7 @@ function Party({Name, Description, Categories, Count, id, Members, Status, Creat
             refreshCurrent();
         } catch(error) {
             console.error("Couldnt Join Party:", error.response?.data || error.message);
-            alert(error.response?.data);
+            setError({ text: error.response?.data, id: Date.now() });
 
         }
     };
@@ -51,7 +51,7 @@ function Party({Name, Description, Categories, Count, id, Members, Status, Creat
             refreshCurrent();
         } catch(error) {
             console.error("Couldn't delete the party: ", error.response?.data || error.message);
-            alert(error.response?.data);
+            setError({ text: error.response?.data, id: Date.now() });
         }
     }
 
@@ -66,13 +66,14 @@ function Party({Name, Description, Categories, Count, id, Members, Status, Creat
 
         } catch(error) {
             console.error("Couldn't leave the party", error.response.data);
-            alert(error.response?.data);
+            setError({ text: error.response?.data, id: Date.now() });
         }
     }
 
 
     return ( 
         <>
+             <ErrorMessage Message={error} />
             <MembersOverlay isOpen={isOpen} onClose={handleCloseMembers} members={Members} CreatorId={CreatorId} partyName={Name} refresh={refresh} refreshCurrent={refreshCurrent}/>
             <div className='partyInfo'>
                 <img src={sword} alt="sword" className='party-img'></img>

@@ -5,6 +5,7 @@ import NavBar from "../NavBar";
 import API_URL from '../../config/api';
 import "./CommunityStyles.css";
 import members from "../../images/members.png";
+import dots from "../../images/dots.png";
 function CommunityPage() {
     const token = localStorage.getItem("token");
     const username = localStorage.getItem("username");
@@ -219,10 +220,19 @@ function CommunityPage() {
                                     mods.map(mod =>(
                                         <div key={mod.id} className="userBlock" onClick={(e)=>{e.stopPropagation(); navigate(`/profile/${mod.username}`)}}>
                                             <div className="userCircle"></div>
+                                            
                                             <p className="user-m">{mod.username}</p>
                                             {mod.id === currCommunity.ownerId?(
                                               <p className="displayBlock">Owner</p>
                                             ):<p className="displayBlock">Mod</p>}
+                                            <div className="img-holder" onClick={(e) => {e.stopPropagation(); setPopUpMenu(!popUpMenu);}}>
+                                                <img src={dots} alt="whitedots" className="dots"></img>
+                                            </div>
+                                            {
+                                                popUpMenu?(
+                                                    <PopUpMenu/>
+                                                ):""
+                                            }
                                         </div>
                                     ))
                                 }
@@ -233,6 +243,10 @@ function CommunityPage() {
                                     <div key={member.id} className="userBlock" onClick={(e)=>{e.stopPropagation(); navigate(`/profile/${member.username}`)}}>
                                         <div className="userCircle"></div>
                                         <p className="user-m">{member.username}</p>
+                                        <div className="img-holder">
+                                            <img src={dots} alt="whitedots" className="dots"></img>
+                                        </div>
+                                       
                                     </div>
                                 ))
                             }
@@ -244,11 +258,11 @@ function CommunityPage() {
 
 }
 
-function PopUpMenu(Username) {
+function PopUpMenu({Username, X, Y}) {
     
     return (
-        <div className="popmenu">
-
+        <div className="popmenu" style={{top: X + 'em', right: Y + 'em', zIndex:"99999"}}>
+            <h2>This is a popup menu</h2>
         </div>
     );
 }

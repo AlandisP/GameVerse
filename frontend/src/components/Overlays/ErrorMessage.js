@@ -6,7 +6,7 @@ function ErrorMessage({Message}) {
 
     useEffect(() => {
 
-        if(!Message) {
+        if(!Message?.text) {
             setIsVisible(false);
             return;
         }
@@ -21,9 +21,9 @@ function ErrorMessage({Message}) {
 
 
     return(
-        <div className="overlay">
+        <div className="overlay2">
             <div className='hidden'>
-                <p className='errormsg'>{Message}</p>
+                <p className='errormsg'>{Message.text}</p>
             </div>
         </div>
     );

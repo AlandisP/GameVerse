@@ -3,7 +3,8 @@ import "../PF.css";
 import "../Overlay.css";
 import API_URL from '../../config/api';
 import axios from 'axios';
-
+import ErrorMessage from './ErrorMessage';
+import { useActionData } from 'react-router-dom';
 
 function CreatePartyOverlay({isOpen, onClose, onPartyCreated}) {
     const [categories, setCategories] = useState([]);
@@ -12,6 +13,7 @@ function CreatePartyOverlay({isOpen, onClose, onPartyCreated}) {
     const [partyName, setPartyName] = useState("");
     const [partyDescription, setDescription] = useState("");
     const [number, setNumber] = useState('');
+    const [error, setError] = useState("");
 
     const handleSelectCategory = (category) => {
         if (items.includes(category)) {
@@ -46,15 +48,22 @@ function CreatePartyOverlay({isOpen, onClose, onPartyCreated}) {
 
 
     const handleCreate = async() => {
-        const result = await axios.post(
+        try {
+            const result = await axios.post(
             `${API_URL}/parties/createParty`,{name: partyName, description: partyDescription, maxMembers: parseInt(number), categories: items },
             { headers: { Authorization: `Bearer ${token}` } }
-        );
-        setPartyName('');
-        setDescription('');
-        setNumber('');
-        setItems([]);
-        onPartyCreated();
+            );
+            setPartyName('');
+            setDescription('');
+            setNumber('');
+            setItems([]);
+            onPartyCreated();
+            
+        } catch (error) {
+            console.error("Party Creating failed:", error.response?.data || error.message);
+            setError({ text: error.response?.data, id: Date.now() });
+        }
+        
     };
 
     
@@ -66,7 +75,9 @@ function CreatePartyOverlay({isOpen, onClose, onPartyCreated}) {
     return (
         <>
         {isOpen ? (
+            
             <div className='overlay'>
+                 <ErrorMessage Message={error}/>
                 <div className='overlay-background'>
                     <div className='top-portion'>
                         <h1 className='header'>Create Party</h1>

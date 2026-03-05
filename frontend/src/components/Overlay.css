@@ -11,7 +11,23 @@
     bottom: 0;
     left: 0;
     display: flex;
-    z-index: 9999;
+    z-index: 9;
+
+}
+
+.overlay2 {
+    background-color: rgba(0, 0, 0, 0.5);
+    width: 100vw;
+    height: 100vh;
+    justify-content: center;
+    position: fixed;
+    align-items: center;
+    top:0;
+    right:0;
+    bottom: 0;
+    left: 0;
+    display: flex;
+    z-index: 99999;
 
 }
 
@@ -96,16 +112,13 @@
 .catbox2 {
     background-color: rgba(61, 53, 53, 0.76);
     border-radius: .8rem;
-    font-size: .8rem;
+    font-size: 1rem;
     padding: .8rem;
     margin-right: 7px;
     font-weight: bold;
     border: 2px solid transparent;
 }
 
-.catbox2, .catbox2-selected {
-  font-size: clamp(0.8rem, 1vw + 0.2rem, 1.1rem);
-}
 
 
 .catbox2:hover {
@@ -119,12 +132,11 @@
 
 .catbox2-selected {
     background-color: rgba(61, 53, 53, 0.363);
-    border-radius: 15px;
-    font-size: 15px;
-    padding: 15px;
-    margin-right: 10px;
+    border-radius: .8rem;
+    font-size: 1rem;
+    padding: .8rem;
+    margin-right: 7px;
     font-weight: bold;
-    border-style: solid;
     border: 2px solid antiquewhite;
 }
 
@@ -139,6 +151,7 @@
     border: none;
     gap: 1.5rem;
     margin-bottom: 1rem;
+    border: 2px solid transparent;
 }
 
 .headers {
@@ -278,6 +291,13 @@
     background-color: transparent;
     justify-content: space-between;
     gap: 1.5rem;
+}
+
+.errormsg {
+    font-size: 3rem;
+    color: red;
+    font-weight: bold;
+    background-color: black;
 }
 
 
