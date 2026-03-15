@@ -36,6 +36,7 @@ public class Post {
     private int likes;
     private Map<String,Boolean> liked;
     private ArrayList<comment> comments;
+    private String imageUrl;
     private Instant createdAt;
 
     public Post(String text, String userId, String communityId, String communityName){
@@ -139,5 +140,13 @@ public class Post {
 
     public void setCommunityName(String communityName) {
         this.communityName = communityName;
+    }
+
+    public String getImageUrl() {
+        return imageUrl;
+    }
+
+    public void setImageUrl(String imageUrl) {
+        this.imageUrl = imageUrl;
     }
 }
