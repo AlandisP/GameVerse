@@ -126,3 +126,19 @@
     margin: 0;
     color:#282c34;
 }
+
+.info-row {
+    display: flex;
+    flex-direction: row;
+    gap: 5px;
+    align-items: center;
+}
+
+.comname {
+    font-weight: 600;
+}
+
+.comname:hover{
+    cursor: pointer;
+    text-decoration: underline;
+}

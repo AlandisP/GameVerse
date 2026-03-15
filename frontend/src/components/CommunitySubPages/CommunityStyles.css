@@ -220,9 +220,7 @@
     gap: 10px;
 }
 
-.popmenu {
-    position: absolute;
-}
+
 
 .img-holder {
     display: flex;
@@ -240,4 +238,142 @@
 
 .dots:hover {
     cursor: pointer;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+.popmenu {
+    list-style: none;
+    background-color: rgb(75, 69, 69);
+    padding: 12px;
+    border-radius: 20px;
+    animation: fadeIn 0.8s ease forwards;
+    align-items: flex-start;
+    justify-content: center;
+    align-items: center;
+}
+
+.popmenu li{
+    color: white;
+    font-size: 1.2rem;
+    font-weight: bold;
+    padding: 8px 8px;
+    border-radius: 8px
+}
+
+.promote:hover{
+    cursor: pointer;
+    background-color: rgba(0, 128, 0, 0.418);
+}
+
+.kick:hover {
+    cursor: pointer;
+    background-color: rgba(255, 0, 0, 0.445);
+}
+
+.header-top {
+    display: flex;
+    flex-direction: row;
+    background-color: transparent;
+    align-items: center;
+    gap: 3rem;
+}
+
+.settings {
+    width: 35px;
+    height: 35px;
+}
+
+.settings:hover{
+    cursor: pointer;
+}
+
+.overlay-rect {
+    display: flex;
+    flex-direction: column;
+    border-radius: 10px;
+    padding: 20px;
+    gap: 10px;
+    width: 90%;
+    max-width: 500px;
+    background-color: #2a2a2a;
+}
+
+.overlay-rect h2{
+    margin: 0;
+}
+
+.updates {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    gap: 10px;
+    background-color: transparent;
+}
+
+.input-name {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #444;
+    font-size: 1rem;
+    background-color: #1a1a1a;
+    color: white;
+    box-sizing: border-box;
+}
+
+.input-name::placeholder {
+    color: white;
+}
+
+.update{
+    flex: 1;
+    padding: 10px;
+    border: none;
+    border-radius: 4x;
+    background-color: #0066cc;
+    color: white;
+}
+
+.update:hover{
+    cursor: pointer;
+    background-color: #1e4d7c;
+}
+
+.cancel-overlay {
+    flex: 1;
+    padding: 10px;
+    border: none;
+    border-radius: 4x;
+    background-color: #666;
+    color: white;
+}
+
+.cancel-overlay:hover{
+    cursor: pointer;
+    background-color: #444242;
+}
+
+.delete-com {
+    flex: 1;
+    padding: 10px;
+    border: none;
+    border-radius: 4px;
+    color: white;
+    background-color: red;
+}
+
+.delete-com:hover {
+    cursor: pointer;
+    background-color: darkred;
+
+}
+
+.com-posts {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    justify-self: center;
 }

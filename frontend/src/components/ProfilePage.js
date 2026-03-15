@@ -281,6 +281,7 @@ function ProfileTabs({
                     commcount={commcount}
                     books={isBook}
                     CreatedAt={p.createdAt}
+                    CommunityName={p.communityName}
                   />
                 );
               })

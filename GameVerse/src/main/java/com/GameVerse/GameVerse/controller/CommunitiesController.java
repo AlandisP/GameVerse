@@ -22,6 +22,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.GameVerse.GameVerse.model.Community;
 import com.GameVerse.GameVerse.model.CommunityCategory;
+import com.GameVerse.GameVerse.model.CommunityMembership;
+import com.GameVerse.GameVerse.model.MemberType;
 import com.GameVerse.GameVerse.model.User;
 import com.GameVerse.GameVerse.repository.CommunityMembershipRepository;
 import com.GameVerse.GameVerse.repository.CommunityRepository;
@@ -115,35 +117,66 @@ public class CommunitiesController {
         return ResponseEntity.ok().body("Successfully left community");
     }
 
-    @PutMapping("/{communityname}/{username}")
-    public ResponseEntity<?> addModerator(@PathVariable String communityname, @PathVariable String username){
+    @PutMapping("/{communityname}/{username}/kick")
+    public ResponseEntity<?> kickMember(@PathVariable String communityname, @PathVariable String username, Authentication auth) {
+        String id = (String) auth.getPrincipal();
+        User user = repository.findById(id).orElse(null);
+        Community com = communityRepository.findByNameIgnoreCase(communityname);
+        CommunityMembership membership = cmr.findByCommunityIdAndUserId(com.getId(), user.getId());
+        if(membership.getType() != MemberType.MODERATOR && membership.getType() != MemberType.OWNER) {
+            return ResponseEntity.badRequest().body("User doesn't have permission to do this");
+        }
+        if(!communityRepository.existsByNameIgnoreCase(communityname)) {
+            return ResponseEntity.badRequest().body("Community doesn't exist");
+        }
+        if(!repository.existsByUsername(username)) {
+            return ResponseEntity.badRequest().body("User doesn't exist");
+        }
+        communityService.removeMember(communityRepository.findByNameIgnoreCase(communityname).getId(), repository.findByUsernameIgnoreCase(username).getId());
+        return ResponseEntity.ok().body("User has been kicked from the community");
+    }
+
+    @PutMapping("/{communityname}/{username}/mod")
+    public ResponseEntity<?> addModerator(@PathVariable String communityname, @PathVariable String username, Authentication auth){
+        String id = (String) auth.getPrincipal();
+        User userOwner = repository.findById(id).orElse(null);
         Community com = communityRepository.findByNameIgnoreCase(communityname);
         User user = repository.findByUsernameIgnoreCase(username);
+        CommunityMembership membership = cmr.findByCommunityIdAndUserId(com.getId(), userOwner.getId());
         if(com == null || user == null) {
             return ResponseEntity.badRequest().body("User or community doesn't exist");
+        }
+        if(membership.getType() != MemberType.MODERATOR && membership.getType() != MemberType.OWNER) {
+            return ResponseEntity.badRequest().body("User doesn't have permission to do this");
         }
         communityService.addModerator(com.getId(), user.getId());
         return ResponseEntity.ok("Successfuly made the user moderator");
     }
 
-    @PutMapping("/{username}/{communityname}")
-    public ResponseEntity<?> removeModerator(@PathVariable String communityname, @PathVariable String username){
+    @PutMapping("/{communityname}/{username}/demote")
+    public ResponseEntity<?> removeModerator(@PathVariable String communityname, @PathVariable String username, Authentication auth){
+        String id = (String) auth.getPrincipal();
+        User userOwner = repository.findById(id).orElse(null);
         Community com = communityRepository.findByNameIgnoreCase(communityname);
         User user = repository.findByUsernameIgnoreCase(username);
+        CommunityMembership membership = cmr.findByCommunityIdAndUserId(com.getId(), userOwner.getId());
         if(com == null || user == null) {
             return ResponseEntity.badRequest().body("User or community doesn't exist");
+        }
+        if(membership.getType() != MemberType.MODERATOR && membership.getType() != MemberType.OWNER) {
+            return ResponseEntity.badRequest().body("User doesn't have permission to do this");
         }
         communityService.removeModerator(com.getId(), user.getId());
         return ResponseEntity.ok("Successfuly removed the user moderator");
     }
 
     @PutMapping("/{name}/editName")
-    public ResponseEntity<?> editCommunityName(@PathVariable String name, @RequestBody String newName ) {
+    public ResponseEntity<?> editCommunityName(@PathVariable String name, @RequestBody EditNameRequest req ) {
         Community com = communityRepository.findByNameIgnoreCase(name);
-        if(com == null || communityRepository.existsByNameIgnoreCase(newName) == true) {
+        if(com == null || communityRepository.existsByNameIgnoreCase(req.name) == true) {
             return ResponseEntity.badRequest().body("Community not found");
         }
-        com.setName(newName);
+        com.setName(req.name);
         communityRepository.save(com);
         return ResponseEntity.ok(com);
     }
@@ -160,12 +193,17 @@ public class CommunitiesController {
     }
 
     @DeleteMapping("/delete")
-    public ResponseEntity<?> deleteCommunity(@RequestBody String name) {
-        Community com = communityRepository.findByNameIgnoreCase(name);
+    public ResponseEntity<?> deleteCommunity(@RequestBody DeleteCommunityRequest req, Authentication auth) {
+        String id = (String)auth.getPrincipal();
+        User user = repository.findById(id).orElse(null);
+        Community com = communityRepository.findByNameIgnoreCase(req.name);
         if(com == null) {
             return ResponseEntity.badRequest().body("Community not found");
         }
-        communityService.deleteCommunity(name);
+        if(user == null || !user.getId().equals(com.getOwnerId())) {
+            return ResponseEntity.badRequest().body("User isn't the owner of the community");
+        }
+        communityService.deleteCommunity(com.getId());
         return ResponseEntity.ok("Community successfully deleted");
     }
 
@@ -178,11 +216,11 @@ public class CommunitiesController {
     }
 
     @GetMapping("/memberships")
-    public ResponseEntity<?> getUserCommunities(Authentication auth) {
+    public ResponseEntity<?> getUserCommunities(Authentication auth, @RequestParam(defaultValue = "6") int limit) {
          String id = (String) auth.getPrincipal();
         List<Community> communities = communityService.getUsersCommunities(id);
         List<Community> limited = communities.stream()
-            .limit(6)
+            .limit(limit)
             .toList();
         return ResponseEntity.ok(limited);
     }
@@ -219,15 +257,43 @@ public class CommunitiesController {
         return ResponseEntity.ok(communityRepository.findAllByOrderByMemberCountDesc());
     }
 
+    @PutMapping("/{communityName}/TransferOwnership")
+    public ResponseEntity transferLeadership(@PathVariable String communityName, @RequestBody transferOwnershipRequest req, Authentication auth) {
+        String id = (String) auth.getPrincipal();
+        Community community = communityRepository.findByNameIgnoreCase(communityName);
+        User user = repository.findByUsernameIgnoreCase(req.username);
+        if(community == null || user == null) {
+            return ResponseEntity.badRequest().body("User or Community doesn't exist");
+        }
+        if(!community.getOwnerId().equals(id)) {
+            return ResponseEntity.badRequest().body("User isn't allowed to do this");
+        }
+        communityService.transferOwnership(community.getId(), user.getId());
+        return ResponseEntity.ok().body("Successfully made the new user the Owner!");
+    }
 
+
+
+    static class DeleteCommunityRequest {
+        public String name;
+    }
 
     static class EditDescriptionRequest {
         public String description;
     }
+
+    static class EditNameRequest {
+        public String name;
+    }
+
     static class createCommunityRequest {
         public String name;
         public String description;
         public CommunityCategory category;
+    }
+
+    static class transferOwnershipRequest {
+        public String username;
     }
 
     

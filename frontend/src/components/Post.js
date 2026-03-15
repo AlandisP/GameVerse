@@ -11,7 +11,7 @@ import './PostStyle.css'
 import CommentSection from './Comments'
 import { shortTimeAgo } from '../utils/shortTimeAgo'
 import API_URL from '../config/api'
-function PostObj ({User, Content, Likes, Liked, id, books, commcount, CreatedAt}){
+function PostObj ({User, Content, Likes, Liked, id, books, commcount, CreatedAt, CommunityName}){
         const postid = id;
         const [didLike, setdidLike]= useState(Liked);
         const [didBook, setBook]= useState(false);
@@ -47,12 +47,20 @@ function PostObj ({User, Content, Likes, Liked, id, books, commcount, CreatedAt}
             setView(!viewComments);
         }
         return(
+            <div>
             <div className='Postcontent'>
                 <img className='Others' src={Pfp}/>
                 <div className='inner'>
                     {/* <h3>@{User}</h3> */}
                     <div className='top-port'>
-                        <h3 onClick={()=>{navigate(`/profile/${User}`)}}>@{User}</h3>
+                        <div className='info-row'>
+                            <h3 onClick={()=>{navigate(`/profile/${User}`)}}>@{User}</h3>
+                            {
+                                CommunityName?(
+                                    <p className='comname' onClick={()=>{navigate(`/communities/${CommunityName}`)}}>in {CommunityName}</p>
+                                ):""
+                            }
+                        </div>
                         <p>{CreatedAt?shortTimeAgo(CreatedAt):""}</p>
                     </div>
                     <p>{Content}</p>
@@ -67,7 +75,7 @@ function PostObj ({User, Content, Likes, Liked, id, books, commcount, CreatedAt}
                 </div>
                 
             </div>
-            
+            </div>
         )
     }
 

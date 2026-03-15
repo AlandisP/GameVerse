@@ -274,3 +274,8 @@
         flex-direction: column;
     }
 }
+
+.Content {
+    display: flex;
+    justify-content: center;
+}

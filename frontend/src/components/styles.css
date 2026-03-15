@@ -453,3 +453,155 @@ nav.sidebar div,
         text-align: center;
     }
 }
+
+.post-btn {
+    flex: 1;
+    font-weight: bold;
+    padding: 20px;
+    border-radius: 20px;
+    font-size: 1rem;
+    margin: .6rem;
+    background-color: #3b82f6;
+    color: white;
+    border: none;
+}
+
+.post-btn:hover {
+    cursor: pointer;
+    background-color: #1055c4;
+}
+
+.ov-header {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    border: none;
+    border-bottom: 1px solid #3b82f6;
+    
+}
+
+.exitIcon{
+    display: inline-block;
+    font-family: Arial, sans-serif;
+    font-weight: bold;
+    margin-left: auto;
+    font-size: 1.5rem;
+    padding: 5px;
+    cursor: pointer;
+}
+
+.exitIcon:hover {
+    color: red;
+}
+
+.post-hold {
+    display: flex;
+    flex-direction: column;
+    width: 600px;
+    max-width: 100%;
+    padding: 10px 0 10px 0;
+    border-radius: 10px;
+}
+
+.post-hold h2{
+    margin: 0;
+}
+
+.maincontents {
+    display: flex;
+    flex-direction: column;
+    margin: 10px;
+}
+
+.maincontents p {
+    font-size: 1.3rem;
+}
+
+.selects {
+    width: 100%;
+    border: 1px solid #3b82f6;
+    border-radius: 10px;
+    font-size: 1.3rem;
+    background-color: transparent;
+    color: white;
+}
+
+.selects option{
+    background-color: #373737;
+    color: white;
+    border-radius: 10px;
+}
+
+
+
+.postingbod{
+    display: flex;
+    flex-direction: row;
+    margin-top: 20px;
+    gap: 10px;
+    border: 1px solid #3b82f6;
+    padding: 10px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+}
+
+.pfp {
+    height: 50px;
+    width: 50px;
+}
+
+.postarea {
+    resize: none;
+    width: 100%;
+    border: none;
+    background-color: transparent;
+    font-size: 1.2rem;
+    color:whitesmoke;
+    height: 190px;
+    outline: none;
+    border-bottom: 1px solid #3b82f6;
+}
+
+.postarea:se {
+    border: none;
+}
+
+.text-count {
+    margin-left: auto;
+    font-weight: 100;
+}
+
+.column-box {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.upimg {
+    height: 50px;
+    width: 50px;
+    cursor: pointer;
+}
+
+.image-upload > input {
+    display: none;
+}
+
+.pst-btn {
+    padding: 10px;
+    background-color: #3b82f6;
+    color:white;
+    border: none;
+    border-radius: 10px;
+    font-weight: bold;
+    font-size: 1rem;
+    cursor: pointer;
+}
+
+.pst-btn {
+    background-color: #2069dd;
+}
+
+.pst-btn:hover {
+    background-color: #1055c4;
+}

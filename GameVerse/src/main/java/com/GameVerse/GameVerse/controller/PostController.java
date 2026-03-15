@@ -9,15 +9,19 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.GameVerse.GameVerse.model.Community;
 import com.GameVerse.GameVerse.model.Post;
 import com.GameVerse.GameVerse.model.User;
+import com.GameVerse.GameVerse.repository.CommunityRepository;
 import com.GameVerse.GameVerse.repository.PostRepository;
 import com.GameVerse.GameVerse.repository.UserRepository;
+import com.GameVerse.GameVerse.services.CommunityService;
 import com.GameVerse.GameVerse.services.NotificationService;
 
 
@@ -31,9 +35,17 @@ public class PostController {
     private UserRepository userRep;
     @Autowired
     private NotificationService notificationService;
+    @Autowired
+    private CommunityRepository communityRepository;
+    @Autowired
+    private CommunityService communityService;
 
     public static final String type = "Post";
     static class PostContent{
+        public String body;
+    }
+    static class PostCommunityContent{
+        public String id;
         public String body;
     }
     static class nsg{
@@ -51,7 +63,7 @@ public class PostController {
     @PostMapping("/makepost")
     public ResponseEntity<String> makepost(@RequestBody PostContent content, Authentication auth){
         String username = userRep.findById(auth.getPrincipal().toString()).get().getUsername();
-        Post newPost = new Post(content.body,username);
+        Post newPost = new Post(content.body,username, null, null);
         newPost.setTag(userRep.findById(auth.getPrincipal().toString()).get().getPlatform());
         postRepo.save(newPost);
         return ResponseEntity.ok().body(newPost.getId());
@@ -60,6 +72,13 @@ public class PostController {
     // public List<Post> getpost(){
     //     return postRepo.findAll();
     // }
+
+    @PostMapping("/makecommunitypost")
+    public ResponseEntity<?> makecommunitypost(@RequestBody PostCommunityContent content, Authentication auth) {
+        String username = userRep.findById(auth.getPrincipal().toString()).get().getUsername();
+        communityService.communityPost(content.id, username, content.body);
+        return ResponseEntity.ok().body("new Post successfully created");
+    }
     @GetMapping("/getposts")
     public ResponseEntity<List<Post>> getapost(){
         List<Post> result = postRepo.findAll();
@@ -113,5 +132,14 @@ public class PostController {
         ArrayList<Post.comment> comments = current.getcomments();
         
         return ResponseEntity.ok().body(comments);
+    }
+
+    @GetMapping("/{communityName}/posts")
+    public ResponseEntity<?> getCommunityPost(@PathVariable String communityName) {
+        Community com = communityRepository.findByNameIgnoreCase(communityName);
+        if(com == null) {
+            return ResponseEntity.badRequest().body("CommunityDoesnt exist");
+        }
+        return ResponseEntity.ok(postRepo.findAllByCommunityId(com.getId()));
     }
 }

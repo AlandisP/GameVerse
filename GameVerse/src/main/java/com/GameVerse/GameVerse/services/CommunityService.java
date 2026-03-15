@@ -12,7 +12,12 @@ import com.GameVerse.GameVerse.repository.CommunityMembershipRepository;
 import com.GameVerse.GameVerse.repository.CommunityRepository;
 import com.GameVerse.GameVerse.repository.PostRepository;
 import com.GameVerse.GameVerse.repository.UserRepository;
+
 import java.util.*;
+
+import javax.management.RuntimeErrorException;
+
+import com.GameVerse.GameVerse.model.Post;
 @Service
 public class CommunityService {
     @Autowired
@@ -50,8 +55,7 @@ public class CommunityService {
         CommunityMembership cm = new CommunityMembership(userId, communityId, MemberType.MEMBER);
         cr.save(cm);
         com.setMemberCount((int) cr.countByCommunityId(communityId));
-        communityRepository.save(com);
-        
+        communityRepository.save(com);   
     }
 
     public void addModerator(String communityId, String userId) {
@@ -61,10 +65,10 @@ public class CommunityService {
             throw new RuntimeException("Community or User doesn't exist");
         }
         CommunityMembership cm = cr.findByCommunityIdAndUserId(communityId, userId);
-        com.addModerator(userId);
         cm.changeMemberType(MemberType.MODERATOR);
-        cr.save(cm);
-        communityRepository.save(com);
+        cr.save(cm); 
+        com.addModerator(userId);
+        communityRepository.save(com); 
     }
 
     public void removeModerator(String communityId, String userId) {
@@ -73,7 +77,12 @@ public class CommunityService {
         if(com == null || user == null) {
             throw new RuntimeException("Community or User doesn't exist");
         }
-        com.getModeratorIds().remove(userId);
+        CommunityMembership cm = cr.findByCommunityIdAndUserId(communityId, userId);
+        cm.changeMemberType(MemberType.MEMBER);
+        cr.save(cm); 
+        if(com.getModeratorIds() != null) {
+            com.getModeratorIds().remove(userId);
+        }
         communityRepository.save(com);
     }
 
@@ -89,16 +98,16 @@ public class CommunityService {
         communityRepository.save(com);
     }
 
-    // public void communityPost(String communityId, String userId, String text) {
-    //     Community com = communityRepository.findById(communityId).orElse(null);
-    //     User user = userRepository.findById(userId).orElse(null);
-    //     if(com == null || user == null) {
-    //         throw new RuntimeException("Community or User doesn't exist");
-    //     }
-    //     Post post = new Post(text, userId, communityId);
-    //     postRepository.save(post);
-
-    // }
+    public void communityPost(String communityId, String username, String text) {
+        Community com = communityRepository.findById(communityId).orElse(null);
+        User user = userRepository.findByUsernameIgnoreCase(username);
+        if(com == null || user == null) {
+            throw new RuntimeException("Community or User doesn't exist");
+        }
+        Post post = new Post(text, username, communityId, com.getName());
+        post.setTag(user.getPlatform());
+        postRepository.save(post);
+    }
 
     // deletes a community
     public void deleteCommunity(String communityId) {
@@ -166,4 +175,21 @@ public class CommunityService {
         return users;
     }
 
+    // Transfers ownership to another member
+    public void transferOwnership(String communityId, String userId) {
+        User user = userRepository.findById(userId).orElse(null);
+        Community community = communityRepository.findById(communityId).orElse(null);
+        CommunityMembership cMembership = cr.findByCommunityIdAndUserId(communityId, userId); // check if user is in the community
+        if(user == null || community == null) {
+            throw new RuntimeException("community or user is null; User isn't in the community");
+        }
+
+        CommunityMembership cmo = cr.findByCommunityIdAndUserId(communityId, community.getOwnerId());
+        cmo.changeMemberType(MemberType.MODERATOR); // makes the current owner a moderator
+        cMembership.changeMemberType(MemberType.OWNER); // makes the requested user the new owner
+        community.setOwnerId(userId);
+        cr.save(cMembership);
+        cr.save(cmo);
+        communityRepository.save(community);
+    }
 }

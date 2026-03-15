@@ -21,6 +21,7 @@ function CommunitiesPage() {
     const[categories, setCategories] = useState([]);
     const [communities, setCommunities] = useState([]);
     const [userCommunities, setUserCommunities] = useState([]);
+    const [allUserCommunities, setAllUserCommunities] = useState([]);
     const [selectedCategory, setSelectedCategory] = useState('');
     const navigate = useNavigate();
 
@@ -49,6 +50,19 @@ function CommunitiesPage() {
             setUserCommunities(res.data);
         } catch (error) {
                 console.error("failed to get user communities: ", error.response?.data || error.message);
+        }
+    }
+
+    // For the View All button
+    const getAllUserCommunities = async() => {
+        try {
+            const res = await axios.get(
+            `${API_URL}/communities/memberships?limit=10000`,
+            { headers: { Authorization: `Bearer ${token}` } }
+            );
+            setAllUserCommunities(res.data);
+        } catch (error) {
+            console.error("failed to get all user communities: ", error.response?.data || error.message);
         }
     }
 
@@ -92,6 +106,7 @@ function CommunitiesPage() {
 
     const handleMyCommunities = () => {
         setMyComsIsOpen(!myComsIsOpen);
+        getAllUserCommunities();
     }
 
     const handleCloseMyComs = () => {
@@ -121,7 +136,7 @@ function CommunitiesPage() {
                 </div>
                 <CreateCommunityOverLay isOpen={isOpen} onClose={handleCloseCommunity} onCommunityCreated={handleCreateCommunity}/>
                 <ExploreCommunities isOpen={exploreIsOpen} onClose={handleCloseExplore} communities={communities}/>
-                <UserCommunities isOpen={myComsIsOpen} onClose={handleCloseMyComs} communities={userCommunities} Refresh={getUserCommunities}/>
+                <UserCommunities isOpen={myComsIsOpen} onClose={handleCloseMyComs} communities={allUserCommunities} Refresh={getUserCommunities}/>
                 <div className='comm-top'>
                     <p className='join-txt'>Join the Ultimate Gaming Communities</p>
                     <p className='explain-txt'>Connect with fellow gamers, share experiences, and participate in exclusive events within your favorite communities.</p>

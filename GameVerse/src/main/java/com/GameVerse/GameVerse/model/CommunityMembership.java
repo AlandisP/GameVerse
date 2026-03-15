@@ -1,11 +1,11 @@
 package com.GameVerse.GameVerse.model;
 
-import org.springframework.data.mongodb.core.index.Indexed;
+import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 @Document(collection = "memberships")
 public class CommunityMembership {
-    @Indexed(unique = true)     
+    @Id
     private String id;
     private String userId;
     private String communityId;

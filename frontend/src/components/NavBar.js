@@ -3,6 +3,8 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import API_URL from '../config/api';
 import axios from 'axios';
 import './Home.css';
+import Pfp from '../images/Profile.png';
+import imgicon from '../images/uploadimg.png';
 
 function NavBar() {
     const [activeTab, setActiveTab] = useState('');
@@ -11,6 +13,7 @@ function NavBar() {
     const location = useLocation();
     const [count, setCount] = useState(0);
     const token = localStorage.getItem("token");
+    const [isClosed, setIsClosed] = useState(true);
 
     useEffect(() => {
         const path = location.pathname;
@@ -53,6 +56,7 @@ function NavBar() {
 
     return (
         <>
+            <MakePostOverlay isClosed={isClosed} setIsClosed={setIsClosed}/>
             <button className="hamburger" onClick={() => setMenuOpen(!menuOpen)}>
                 <span></span>
                 <span></span>
@@ -76,7 +80,6 @@ function NavBar() {
                         <span className=".logo-text">GameVerse</span>
                     </div>
                 </div>
-
                 <div className="nav-items">
                     <div className="nav-links">
                         <a href="/home" className={activeTab === 'home' ? 'active' : ''} onClick={(e) => handleNavClick(e, '/home', 'home')}>
@@ -126,7 +129,9 @@ function NavBar() {
                             </svg>
                             Profile
                         </a>
+                        <button className='post-btn' onClick={() => setIsClosed(false)}>Post</button>
                     </div>
+                    
                 </div>
 
                 <div className="sidebar-footer">
@@ -147,6 +152,95 @@ function NavBar() {
             </nav>
         </>
     );
+}
+
+function MakePostOverlay({isClosed, setIsClosed}) {
+    const [text, setText] = useState("");
+    const token = localStorage.getItem('token');
+    const [userCommunities, setUserCommunities] = useState([]);
+    const [selectedValue, setSelectedValue] = useState("");
+
+    const getAllUserCommunities = async() => {
+        try {
+            const res = await axios.get(
+            `${API_URL}/communities/memberships?limit=10000`,
+            { headers: { Authorization: `Bearer ${token}` } }
+            );
+            setUserCommunities(res.data);
+        } catch (error) {
+            console.error("failed to get all user communities: ", error.response?.data || error.message);
+        }
+    }
+
+    const makePost = async() => {
+        try {
+            if(text!="" && selectedValue!=""){
+                const res = await axios.post (
+                    `${API_URL}/post/makecommunitypost`, {body: text, id:selectedValue},
+                    { headers: { Authorization: `Bearer ${token}` } }
+                );
+                setIsClosed(true);
+            } else if(text!=""&&selectedValue===""){
+                const res = await axios.post(
+                    `${API_URL}/post/makepost`, {body: text},
+                    { headers: { Authorization: `Bearer ${token}` } }
+                );
+                setIsClosed(true);
+            }
+        } catch (error) {
+           console.error("failed to make a post: ", error.response?.data || error.message); 
+        }
+    }
+
+    const HandleChange = (e) => {
+        setSelectedValue(e.target.value);
+    }
+
+    useEffect(() => {
+        getAllUserCommunities();
+    },[]);
+
+    return(
+        <>
+        {!isClosed?(
+            <div className='overlay'>
+                <div className='post-hold'>
+                    <div className='ov-header'>
+                        <h2>Create Post</h2>
+                        <p className='exitIcon' onClick={() => setIsClosed(true)}>X</p>
+                    </div>
+                    <div className='maincontents'>
+                        <p>Select a Community</p>
+                        <select name='Select Community' className='selects' onChange={HandleChange}>
+                        <option value="">None</option>
+                        {userCommunities.map((community, index) => (
+                            <option key={index} value={community.id}>{community.name}</option>
+                        ))}
+                    </select>
+                    <div className='postingbod'>
+                        <img src={Pfp} alt='pfp' className='pfp'/>
+                        <div className='column-box'>
+                            <textarea  className= 'postarea' placeholder='What are you thinking?' maxLength="280" onChange={(e) => setText(e.target.value)}/>
+                            <div className='image-upload'>
+                                <label for='file-input' >
+                                    <img src={imgicon} alt='upload' className='upimg'/>
+                                </label>
+                                <input id='file-input' type="file" />
+                            </div>
+                        </div>
+                        <p className='text-count'>{text.length}/280</p>
+                    </div>
+                    <button className='pst-btn' onClick={makePost}>Post</button>
+                    </div>
+                    
+                </div>
+
+            </div>
+        ):""}
+            
+        </>
+    );
+
 }
 
 export default NavBar;

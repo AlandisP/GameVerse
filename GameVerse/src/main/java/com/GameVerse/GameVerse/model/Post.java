@@ -31,30 +31,24 @@ public class Post {
     private String text;
     private String userId;
     private String communityId;
+    private String communityName;
     private String tag;
     private int likes;
     private Map<String,Boolean> liked;
     private ArrayList<comment> comments;
     private Instant createdAt;
 
-    public Post(String text, String userId){
+    public Post(String text, String userId, String communityId, String communityName){
         this.text = text;
         this.userId = userId;
         this.tag = "";
         this.likes = 0;
+        this.communityId = communityId;
+        this.communityName = communityName;
         liked = new HashMap<String,Boolean>();
         comments = new ArrayList<comment>();
         createdAt = Instant.now();
     }
-
-    // public Post(String text, String userId, String communityId){
-    //     this.text = text;
-    //     this.userId = userId;
-    //     this.communityId = communityId;
-    //     this.tag = "";
-    //     this.likes = 0;
-    //     liked = new HashMap<String,Boolean>();
-    // }
 
     public String getId(){
         return this.id;
@@ -129,5 +123,21 @@ public class Post {
 
     public void setTime(Instant time) {
         this.createdAt = time;
+    }
+
+    public void setCommunityId(String communityId) {
+        this.communityId = communityId;
+    }
+
+    public String getCommunityId() {
+        return this.communityId;
+    }
+
+    public String getCommunityName() {
+        return communityName;
+    }
+
+    public void setCommunityName(String communityName) {
+        this.communityName = communityName;
     }
 }

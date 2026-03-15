@@ -1,5 +1,6 @@
 package com.GameVerse.GameVerse.model;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.data.annotation.Id;
@@ -10,7 +11,7 @@ public class Community {
     @Id
     private String id;
     private String ownerId;
-    private List<String> moderatorIds;
+    private List<String> moderatorIds = new ArrayList<>();
     private String name;
     private String description;
     private int memberCount;
@@ -76,8 +77,8 @@ public class Community {
     }
 
     public void addModerator(String userId) {
+        if(moderatorIds == null) moderatorIds = new ArrayList<>(); 
         moderatorIds.add(userId);
-        //memberCount++;
     }
 
     public void setMemberCount(int memberCount) {
