@@ -17,9 +17,11 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.GameVerse.GameVerse.model.Community;
 import com.GameVerse.GameVerse.model.Post;
+import com.GameVerse.GameVerse.model.Relationship;
 import com.GameVerse.GameVerse.model.User;
 import com.GameVerse.GameVerse.repository.CommunityRepository;
 import com.GameVerse.GameVerse.repository.PostRepository;
+import com.GameVerse.GameVerse.repository.RelationshipRepository;
 import com.GameVerse.GameVerse.repository.UserRepository;
 import com.GameVerse.GameVerse.services.CommunityService;
 import com.GameVerse.GameVerse.services.NotificationService;
@@ -39,6 +41,8 @@ public class PostController {
     private CommunityRepository communityRepository;
     @Autowired
     private CommunityService communityService;
+    @Autowired
+    private RelationshipRepository relationshipRepository;
 
     public static final String type = "Post";
     static class PostContent{
@@ -85,6 +89,15 @@ public class PostController {
         Collections.reverse(result);
         return ResponseEntity.ok().body(result);
     }
+    @GetMapping("/{username}/posts")
+    public ResponseEntity<?> getUserPosts(@PathVariable String username) {
+        try {
+            return ResponseEntity.ok(fetchUserPosts(username));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
     @PostMapping("/likepost")
     public ResponseEntity<?> likeapost(@RequestBody PostInf info, Authentication auth){
         Post target = postRepo.findByid(info.id);
@@ -134,6 +147,7 @@ public class PostController {
         return ResponseEntity.ok().body(comments);
     }
 
+    //gets all community posts
     @GetMapping("/{communityName}/posts")
     public ResponseEntity<?> getCommunityPost(@PathVariable String communityName) {
         Community com = communityRepository.findByNameIgnoreCase(communityName);
@@ -141,5 +155,34 @@ public class PostController {
             return ResponseEntity.badRequest().body("CommunityDoesnt exist");
         }
         return ResponseEntity.ok(postRepo.findAllByCommunityId(com.getId()));
+    }
+    // gets all Following Posts
+    @GetMapping("/getFollowingPosts")
+    public ResponseEntity<?> getFollowingPost(Authentication auth) {
+        String userId = (String) auth.getPrincipal();
+        List<String> userIds = new ArrayList<>();
+        List<Relationship> following= relationshipRepository.findAllByFollowerId(userId);
+        for (Relationship r: following) {
+            userIds.add(r.getFollowingId());
+        }
+
+        List<Post> followingPosts = new ArrayList<>();
+        for(String id: userIds) {
+            List<Post> userPosts = fetchUserPosts(userRep.findById(userId).orElse(null).getUsername());
+            followingPosts.addAll(userPosts);
+        }
+        Collections.shuffle(followingPosts);
+        return ResponseEntity.ok(followingPosts);
+    }
+
+    // Helper Function(s)
+    private List<Post> fetchUserPosts(String username) {
+        User user = userRep.findByUsernameIgnoreCase(username);
+        if (user == null) {
+            throw new RuntimeException("User doesn't exist");
+        }
+        List<Post> result = postRepo.findAllByUser(username);
+        Collections.reverse(result);
+        return result;
     }
 }

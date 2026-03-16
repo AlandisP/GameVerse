@@ -12,9 +12,9 @@ public interface RelationshipRepository extends MongoRepository<Relationship, St
 
     boolean existsByFollowerIdAndFollowingId(String followerId, String followingId);
     
-    List<Relationship> findByFollowerId(String followerId);
+    List<Relationship> findAllByFollowerId(String followerId);
 
-    List<Relationship> findByFollowingId(String followingId);
+    List<Relationship> findAllByFollowingId(String followingId);
 
     void deleteByFollowerIdAndFollowingId(String followerId, String followingId);
 

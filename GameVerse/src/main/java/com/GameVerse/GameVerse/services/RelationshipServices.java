@@ -59,7 +59,7 @@ public class RelationshipServices {
 
     // ---- GET LIST OF USERS THIS PERSON FOLLOWS ----
     public List<String> getFollowingList(String userId) {
-        return relationshipRepository.findByFollowerId(userId)
+        return relationshipRepository.findAllByFollowerId(userId)
                 .stream()
                 .map(Relationship::getFollowingId)
                 .collect(Collectors.toList());
@@ -67,7 +67,7 @@ public class RelationshipServices {
 
     // ---- GET LIST OF PEOPLE WHO FOLLOW THIS PERSON ----
     public List<String> getFollowerList(String userId) {
-        return relationshipRepository.findByFollowingId(userId)
+        return relationshipRepository.findAllByFollowingId(userId)
                 .stream()
                 .map(Relationship::getFollowerId)
                 .collect(Collectors.toList());
