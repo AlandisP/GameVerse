@@ -109,14 +109,17 @@
     padding: 10px;
 }
 
-.catbox2 {
-    background-color: rgba(61, 53, 53, 0.76);
-    border-radius: .8rem;
-    font-size: 1rem;
-    padding: .8rem;
-    margin-right: 7px;
-    font-weight: bold;
-    border: 2px solid transparent;
+.cats-drop .react-select__control {
+    width: 40%;
+    border-radius: 10px;
+    background-color: white;
+}
+
+.cats-drop option {
+    background-color: #373737;
+    color: white;
+    border-radius: 10px;
+    font-size: 1.7rem;
 }
 
 

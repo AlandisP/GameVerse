@@ -62,6 +62,12 @@ public class PartyController {
         if(partyRepository.findByCreatorId(userId) != null || partyRepository.existsByMembersContaining(userId)) {
             return ResponseEntity.badRequest().body("User already owns a party or is a member of a party");
         }
+        if(req.maxMembers <= 0) {
+            return ResponseEntity.badRequest().body("You cannot have a party with 0 members!");
+        }
+        if(req.maxMembers > 16) {
+            return ResponseEntity.badRequest().body("You cannot have a party with more than 16 members!");
+        }
         PartyFinder party = new PartyFinder(userId, req.name, req.description, req.maxMembers, req.categories);
         partyRepository.save(party);
         return ResponseEntity.ok().body(party.getId());   

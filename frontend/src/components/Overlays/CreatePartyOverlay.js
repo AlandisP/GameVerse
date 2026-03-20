@@ -5,6 +5,7 @@ import API_URL from '../../config/api';
 import axios from 'axios';
 import ErrorMessage from './ErrorMessage';
 import { useActionData } from 'react-router-dom';
+import Select from 'react-select'
 
 function CreatePartyOverlay({isOpen, onClose, onPartyCreated}) {
     const [categories, setCategories] = useState([]);
@@ -15,12 +16,8 @@ function CreatePartyOverlay({isOpen, onClose, onPartyCreated}) {
     const [number, setNumber] = useState('');
     const [error, setError] = useState("");
 
-    const handleSelectCategory = (category) => {
-        if (items.includes(category)) {
-            setItems(items.filter(c => c !== category));
-        } else {
-            setItems([...items, category]);
-        }
+    const handleSelectCategory = (selectedOptions) => {
+        setItems(selectedOptions || []);
     };
 
     useEffect(() => {
@@ -50,7 +47,7 @@ function CreatePartyOverlay({isOpen, onClose, onPartyCreated}) {
     const handleCreate = async() => {
         try {
             const result = await axios.post(
-            `${API_URL}/parties/createParty`,{name: partyName, description: partyDescription, maxMembers: parseInt(number), categories: items },
+            `${API_URL}/parties/createParty`,{name: partyName, description: partyDescription, maxMembers: parseInt(number), categories: items.map(i => i.value) },
             { headers: { Authorization: `Bearer ${token}` } }
             );
             setPartyName('');
@@ -63,13 +60,14 @@ function CreatePartyOverlay({isOpen, onClose, onPartyCreated}) {
             console.error("Party Creating failed:", error.response?.data || error.message);
             setError({ text: error.response?.data, id: Date.now() });
         }
-        
     };
 
-    
+    const options = categories.map(c => ({
+        value: c.id,
+        label: transformString(c)
+    }));
 
-    const cats = categories.map((category,index) =>(
-        <p className={items.includes(category)? 'catbox2-selected' : 'catbox2' } key={index} onClick={() => handleSelectCategory(category)}>{category}</p>));
+    
 
 
     return (
@@ -92,7 +90,8 @@ function CreatePartyOverlay({isOpen, onClose, onPartyCreated}) {
                         <input className='inputs' placeholder='Enter Number of Members' onChange={handleNumberChange}></input>
                         <h2 className='catHeader'>Select Categories</h2>
                         <div className='select-list'>
-                            {cats}
+                            <Select className='cats-drop' name='Select Categories' onChange={handleSelectCategory} isMulti options={options} value={items}>
+                            </Select>
                         </div>
                     </div>
                     <button className='create' onClick={handleCreate}>Create</button>
@@ -105,6 +104,12 @@ function CreatePartyOverlay({isOpen, onClose, onPartyCreated}) {
         </>
 
     );
+
+}
+
+function transformString(text) {
+    const newtext = text.charAt(0).toUpperCase() + text.slice(1).toLowerCase();
+    return newtext.replace(/_/g, " ");
 
 }
 export default CreatePartyOverlay;
