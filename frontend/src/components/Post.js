@@ -22,6 +22,7 @@ function PostObj ({User, Content, Likes, Liked, id, books, commcount, CreatedAt,
         const navigate = useNavigate();
         useEffect(()=>{
             setBook(books);
+            setComments(commcount);
         },[]);
         const likeinteract = async ()=>{
             await axios.post(
@@ -68,10 +69,10 @@ function PostObj ({User, Content, Likes, Liked, id, books, commcount, CreatedAt,
                         <img src={didLike ? HeartFull : Heart} onClick={likeinteract}/>
                         <p>{falseLikes}</p>
                         <img src={commentico} onClick={viewComs}/>
-                        <p>{commcount}</p>
+                        <p>{comments}</p>
                         <img className='Bookmark' src={didBook ? BookmarkFull : Bookmark} onClick={bookinteract}/>
                     </div>
-                    {viewComments ? <CommentSection pid={postid}/> : ''}
+                    {viewComments ? <CommentSection pid={postid} func={setComments}/> : ''}
                 </div>
                 
             </div>

@@ -16,7 +16,7 @@ function Comment({User, body}){
         </div>
     )
 }
-function Messagebar({poid,func}){
+function Messagebar({poid,func,commmnmum, size}){
     const token  = localStorage.getItem('token');
     const addcomment = async () => {
         const pid = await axios.post(
@@ -24,10 +24,11 @@ function Messagebar({poid,func}){
             { headers: { Authorization: `Bearer ${token}` } }
         );
         func();
+        commmnmum(size+1);
     }
     const autoresize = (e) =>{
         text.current.style.height = "fit-content";
-        text.current.style.height = `${text.current.scrollHeight}px`;
+        text.current.style.height = `${text.current.scrollHeight-20}px`;
         setpostbod(e.target.value);
     }
     const text = useRef(null);
@@ -39,15 +40,8 @@ function Messagebar({poid,func}){
         </div>
     )
 }
-function CommentSection({pid}){
+function CommentSection({pid,func}){
     const token  = localStorage.getItem('token');
-    // useEffect(async ()=>{
-    //     const result = await axios.post(
-    //             'http://localhost:8080/post/getcomments',{id:pid},
-    //             { headers: { Authorization: `Bearer ${token}` } }
-    //         );
-    //     console.log(result.data);
-    // },0);
     const [msgenabled, setmsg] = useState(false);
     const [commentlist, setcoms] = useState([]);
     const [updatecomments, setupdate] = useState(false);
@@ -68,7 +62,7 @@ function CommentSection({pid}){
                 { headers: { Authorization: `Bearer ${token}` } }
             );
         setcoms(result.data.toReversed());
-        console.log(result.data);
+        //console.log(result.data);
     }
     useEffect(()=>{
         getcomms();
@@ -81,7 +75,7 @@ function CommentSection({pid}){
                     {/* <img src={Add}/> */}
                     <button onClick={()=>{setmsg(true);getcomms();}}><p>Add</p></button>
                 </div>
-                {msgenabled ? <Messagebar poid={pid} func={getcomms}/> : '' }
+                {msgenabled ? <Messagebar poid={pid} func={getcomms} commmnmum={func} size={commentlist.length}/> : '' }
                 <Comms/>
             </div>
         </div>
