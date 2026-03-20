@@ -6,6 +6,8 @@ import Pfp from '../images/Profile.png'
 import axios from 'axios';
 import PostObj from './Post'
 import API_URL from '../config/api';
+import clip from '../images/PaperClip.png'
+import UploadBox from './MediaUpload';
 
 function HomePage() {
     const navigate = useNavigate();
@@ -18,6 +20,9 @@ function HomePage() {
     const [posts, setposts] = useState([]);
     const [bookmarks, setbooks] = useState([]);
     const [canref, refresh] = useState(0);
+    const [uploadbox, setupload] = useState(false);
+    const [uploadedFile, uploadFile] = useState(null);
+    const clipico = useRef(null);
 
     const handleNavClick = (e, path, tabId) => {
         e.preventDefault();
@@ -87,6 +92,12 @@ function HomePage() {
     useEffect(()=>{
             getposts();
     },[]);
+    //Updating the file visibility in the clip
+    // useEffect(()=>{
+    //     if(uploadFile){
+    //         clipico.current.
+    //     }
+    // },[uploadFile]);
     return(
         <div className="page-container">
             <NavBar GetPosts={getposts}/>
@@ -114,6 +125,7 @@ function HomePage() {
                     <div className='Post-Bar'>
                         <img className='PFP' src={Pfp}/>
                         <textarea rows='1' cols='50' maxLength={maxlen} ref={text} onChange={autoresize} placeholder='What are you thinking?'></textarea>
+                        <img src={clip} className={`clip ${uploadedFile ? "hasfile" : ''}`} ref={clipico} onClick={()=>{setupload(true)}}/>
                         <button className='Post' onClick={makepost}>Post</button>
                     </div>
                     <div className='Content'>
@@ -121,6 +133,7 @@ function HomePage() {
                     </div>
                 </div>
             </div>
+            {uploadbox ? <UploadBox clearvar={setupload} fileinf={{file:uploadedFile,upload:uploadFile}}/> : ''}
         </div>
     );
 }
