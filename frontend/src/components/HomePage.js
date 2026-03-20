@@ -103,7 +103,7 @@ function HomePage() {
     // },[uploadFile]);
     return(
         <div className="page-container">
-            <NavBar/>
+            <NavBar GetPosts={getposts}/>
             <div className="main-content">
                 <div style={{ 
                     borderBottom: "1px solid #000000ff", 

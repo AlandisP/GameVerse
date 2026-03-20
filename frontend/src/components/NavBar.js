@@ -154,7 +154,7 @@ function NavBar() {
     );
 }
 
-function MakePostOverlay({isClosed, setIsClosed}) {
+function MakePostOverlay({isClosed, setIsClosed, GetPosts}) {
     const [text, setText] = useState("");
     const token = localStorage.getItem('token');
     const [userCommunities, setUserCommunities] = useState([]);
@@ -179,12 +179,14 @@ function MakePostOverlay({isClosed, setIsClosed}) {
                     `${API_URL}/post/makecommunitypost`, {body: text, id:selectedValue},
                     { headers: { Authorization: `Bearer ${token}` } }
                 );
+                GetPosts();
                 setIsClosed(true);
             } else if(text!=""&&selectedValue===""){
                 const res = await axios.post(
                     `${API_URL}/post/makepost`, {body: text},
                     { headers: { Authorization: `Bearer ${token}` } }
                 );
+                GetPosts();
                 setIsClosed(true);
             }
         } catch (error) {

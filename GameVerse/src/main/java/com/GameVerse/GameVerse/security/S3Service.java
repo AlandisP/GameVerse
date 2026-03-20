@@ -18,6 +18,9 @@ public class S3Service {
     @Autowired
     private S3Client s3Client;
 
+    @Value("${aws.region}")
+    private String region;
+
     @Value("${aws.bucketName}")
     private String bucketName;
 
@@ -31,6 +34,6 @@ public class S3Service {
                 .build(),
             RequestBody.fromBytes(file.getBytes())
         );
-        return "https://" + bucketName + ".s3.amazonaws.com/" + key;
+        return "https://" + bucketName + ".s3." + region +  ".amazonaws.com/" + key;
     }
 }
