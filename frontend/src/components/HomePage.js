@@ -45,8 +45,11 @@ function HomePage() {
     
     const makepost = async () =>{
         if(postbod!=""){
+            const formdat = new FormData();
+            formdat.append('body',postbod);
+            formdat.append('media',uploadedFile);
             const pid = await axios.post(
-                `${API_URL}/post/makepost`,{body:postbod},
+                `${API_URL}/post/makepost`,formdat,
                 { headers: { Authorization: `Bearer ${token}` } }
             );
             setposts(posts => {

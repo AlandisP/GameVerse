@@ -13,7 +13,9 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.GameVerse.GameVerse.model.Community;
 import com.GameVerse.GameVerse.model.Post;
@@ -23,8 +25,11 @@ import com.GameVerse.GameVerse.repository.CommunityRepository;
 import com.GameVerse.GameVerse.repository.PostRepository;
 import com.GameVerse.GameVerse.repository.RelationshipRepository;
 import com.GameVerse.GameVerse.repository.UserRepository;
+import com.GameVerse.GameVerse.security.S3Service;
 import com.GameVerse.GameVerse.services.CommunityService;
 import com.GameVerse.GameVerse.services.NotificationService;
+
+import software.amazon.awssdk.services.s3.S3Client;
 
 
 @RestController
@@ -43,6 +48,8 @@ public class PostController {
     private CommunityService communityService;
     @Autowired
     private RelationshipRepository relationshipRepository;
+    @Autowired
+    private S3Service s3serv;
 
     public static final String type = "Post";
     static class PostContent{
@@ -65,12 +72,21 @@ public class PostController {
     }
 
     @PostMapping("/makepost")
-    public ResponseEntity<String> makepost(@RequestBody PostContent content, Authentication auth){
+    public ResponseEntity<String> makepost(@RequestParam("body") String content, @RequestParam("media") MultipartFile media, Authentication auth){
+        try{
+        System.out.println(media.getOriginalFilename());
         String username = userRep.findById(auth.getPrincipal().toString()).get().getUsername();
-        Post newPost = new Post(content.body,username, null, null);
+        Post newPost = new Post(content,username, null, null);
         newPost.setTag(userRep.findById(auth.getPrincipal().toString()).get().getPlatform());
-        postRepo.save(newPost);
+        String medianame = s3serv.uploadFile(media);
+        System.out.println("Test media: "+medianame);
+        //postRepo.save(newPost);
         return ResponseEntity.ok().body(newPost.getId());
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.internalServerError().body("000");
+        }
     }
     // @GetMapping("/getposts")
     // public List<Post> getpost(){
