@@ -27,10 +27,16 @@
     margin-top: 10px;
     margin-right: 25px;
     margin-bottom: -20px;
+    background-color: rgba(255, 255, 255, 0);
+    border-style: none;
+    color:white;
+}
+
+.Upload-Box label{
+    margin-top: 60px;
 }
 
 .Upload-Box .box{
-    margin-top: 80px;
     border: 2px;
     border-style:dashed;
     border-color: white;
@@ -40,6 +46,10 @@
     padding-left: 50px;
     padding-right: 50px;
     border-radius: 30px;
+}
+
+.Upload-Box .box p{
+    margin:0px;
 }
 
 .Upload-Box img{
@@ -59,5 +69,35 @@
 }
 
 .FileInf img{
-    margin-top:60px;
+    max-width: 200px;
+    max-height: 150px;
+    width: auto;
+}
+
+.FileInf div{
+    margin-top: 40px;
+    margin-bottom: 40px;
+    height: 150px;
+    display:flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.FileInf button{
+    margin-bottom: 20px;
+    font-size: 16px;
+    border-radius: 20px;
+    border-style: solid;
+}
+
+.FileInf button:active {
+    border-style: groove;
+}
+
+.FileInf .clr{
+    background-color: whitesmoke;
+}
+
+.FileInf .upl{
+    background-color: #65c765;
 }

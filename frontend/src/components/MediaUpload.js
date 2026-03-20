@@ -4,9 +4,14 @@ import axios from 'axios';
 import './upload.css'
 import upload from '../images/Upload.png'
 
-function UploadBox(){
+function UploadBox({clearvar, fileinf}){
     const [file, setfile] = useState(null);
     const [fileurl, setfurl] = useState(null);
+    useEffect(()=>{
+        if(fileinf){
+            setfile(fileinf.file);
+        }
+    },[]);
     useEffect(()=>{
         if(!file){
             setfurl(null);
@@ -36,25 +41,45 @@ function UploadBox(){
             setfile(upload[0]);
         }
     }
+    const clearfile = ()=>{
+        URL.revokeObjectURL(fileurl);
+        setfurl(null);
+        setfile(null);
+        if(fileinf)
+        fileinf.upload(null);
+    }
+    const uploadfile = ()=>{
+        if(fileinf)
+        fileinf.upload(file)
+        close();
+    }
+    const close =()=>{
+        //clearfile();
+        if(clearvar){
+            clearvar(false);
+        }
+    }
     const DispFile = ()=>{
         return(
         <div className='FileInf'>
             <h3>{file.name}</h3>
-            <img src={fileurl}/>
-            <div className='options'>
-                
+            <div>
+                <img src={fileurl}/>
             </div>
+            <button className='clr' onClick={clearfile}>Clear</button>
+            <button className='upl' onClick={uploadfile}>Upload</button>
         </div>
         )
     }
     return(
         <div className='Upload-Container'>
             <div className='Upload-Box' onDrop={ondrag} onDragOver={(event)=> event.preventDefault()}>
-                <p className='Close'>X</p>
+                <button className='Close' onClick={close}>X</button>
                 <h1>Upload Content</h1>
                 {file ? <DispFile/> :
                 <label htmlFor='upload'>
                     <div className='box'>
+                        <p>Drag or Select Media Here</p>
                         <img src={upload}/>
                         <input id='upload' type='file' onChange={onupload}/>
                     </div>

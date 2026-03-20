@@ -287,3 +287,9 @@
     display: flex;
     justify-content: center;
 }
+
+.clip.hasfile{
+    border:2px;
+    border-color: #65c765;   
+    border-style: solid;
+}
