@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.GameVerse.GameVerse.repository.UserRepository;
 
@@ -38,6 +39,7 @@ public class Post {
     private ArrayList<comment> comments;
     private String imageUrl;
     private Instant createdAt;
+    private String medialink;
 
     public Post(String text, String userId, String communityId, String communityName){
         this.text = text;
@@ -148,5 +150,11 @@ public class Post {
 
     public void setImageUrl(String imageUrl) {
         this.imageUrl = imageUrl;
+    }
+    public void setmedia(String newmedia){
+        medialink = newmedia;
+    }
+    public String getmedia(){
+        return medialink;
     }
 }

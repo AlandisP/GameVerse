@@ -31,7 +31,6 @@ import com.GameVerse.GameVerse.services.NotificationService;
 
 import software.amazon.awssdk.services.s3.S3Client;
 
-
 @RestController
 @RequestMapping("/post")
 @CrossOrigin(origins = "http://localhost:3000")
@@ -72,15 +71,18 @@ public class PostController {
     }
 
     @PostMapping("/makepost")
-    public ResponseEntity<String> makepost(@RequestParam("body") String content, @RequestParam("media") MultipartFile media, Authentication auth){
+    public ResponseEntity<String> makepost(@RequestParam("body") String content, @RequestParam(value = "media", required = false) MultipartFile media, Authentication auth){
         try{
-        System.out.println(media.getOriginalFilename());
+        //System.out.println(media.getOriginalFilename());
         String username = userRep.findById(auth.getPrincipal().toString()).get().getUsername();
         Post newPost = new Post(content,username, null, null);
         newPost.setTag(userRep.findById(auth.getPrincipal().toString()).get().getPlatform());
-        String medianame = s3serv.uploadFile(media);
-        System.out.println("Test media: "+medianame);
-        //postRepo.save(newPost);
+        if(media!=null){
+            String medianame = s3serv.uploadFile(media);
+            newPost.setmedia(medianame);
+        }
+        //System.out.println("Test media: "+medianame);
+        postRepo.save(newPost);
         return ResponseEntity.ok().body(newPost.getId());
         }
         catch (Exception e) {

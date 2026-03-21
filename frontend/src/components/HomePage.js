@@ -54,9 +54,10 @@ function HomePage() {
             );
             setposts(posts => {
                 const newArray = [...posts]; 
-                newArray.unshift({user:username,text:postbod,likes:0,liked:{},id:pid.data,comments:[]}); 
+                newArray.unshift({user:username,text:postbod,likes:0,liked:{},id:pid.data,comments:[],media:URL.createObjectURL(uploadedFile)}); 
                 return newArray; 
             });
+            uploadFile(null);
         }
     }
 
@@ -84,9 +85,9 @@ function HomePage() {
         const items = posts.map((post,ind)=>{
             console.log(post);
                 if(bookarray.includes(post["id"])){
-                    return <PostObj key={ind} User={post["user"]} Content={post["text"]} Likes={post["likes"]} Liked={parselike(post)} id={post["id"]} commcount={post["comments"].length} books={true} CreatedAt={post["createdAt"]} CommunityName={post["communityName"]}/>
+                    return <PostObj key={ind} User={post["user"]} Content={post["text"]} Likes={post["likes"]} Liked={parselike(post)} id={post["id"]} commcount={post["comments"].length} books={true} CreatedAt={post["createdAt"]} CommunityName={post["communityName"]} media={post["media"]}/>
                 }
-                return <PostObj key={ind} User={post["user"]} Content={post["text"]} Likes={post["likes"]} Liked={parselike(post)} id={post["id"]} commcount={post["comments"].length} books={false} CreatedAt={post["createdAt"]} CommunityName={post["communityName"]}/>
+                return <PostObj key={ind} User={post["user"]} Content={post["text"]} Likes={post["likes"]} Liked={parselike(post)} id={post["id"]} commcount={post["comments"].length} books={false} CreatedAt={post["createdAt"]} CommunityName={post["communityName"]} media={post["media"]}/>
         });
         return(
             <div>{items}</div>

@@ -11,7 +11,7 @@ import './PostStyle.css'
 import CommentSection from './Comments'
 import { shortTimeAgo } from '../utils/shortTimeAgo'
 import API_URL from '../config/api'
-function PostObj ({User, Content, Likes, Liked, id, books, commcount, CreatedAt, CommunityName}){
+function PostObj ({User, Content, Likes, Liked, id, books, commcount, CreatedAt, CommunityName, media}){
         const postid = id;
         const [didLike, setdidLike]= useState(Liked);
         const [didBook, setBook]= useState(false);
@@ -64,7 +64,8 @@ function PostObj ({User, Content, Likes, Liked, id, books, commcount, CreatedAt,
                         </div>
                         <p>{CreatedAt?shortTimeAgo(CreatedAt):""}</p>
                     </div>
-                    <p>{Content}</p>
+                    <p className='content-p'>{Content}</p>
+                    {media!=null ? <img src={media} className='Post-Media'/> : ''}
                     <div className='Media-Bar'>
                         <img src={didLike ? HeartFull : Heart} onClick={likeinteract}/>
                         <p>{falseLikes}</p>

@@ -142,3 +142,16 @@
     cursor: pointer;
     text-decoration: underline;
 }
+
+.content-p{
+    margin-top: 15px;
+}
+.Post-Media{
+    max-height: 200px;
+    max-width: 500px;
+    width: max-content;
+    height: max-content;
+    padding: 0;
+    object-fit: contain;
+    margin-left: 40px;
+}
