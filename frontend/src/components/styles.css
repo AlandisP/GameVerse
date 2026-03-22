@@ -605,3 +605,10 @@ nav.sidebar div,
 .pst-btn:hover {
     background-color: #1055c4;
 }
+
+.none-yet {
+    color: #888;
+    text-align: center;
+    margin-top: 20px;
+    margin-left: 20px;
+}

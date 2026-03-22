@@ -43,7 +43,7 @@ function CommunityPage() {
     const getCommunityPosts = async() => {
         try {
             const res = await axios.get(
-                `${API_URL}/post/${communityName}/posts`,
+                `${API_URL}/post/${communityName}/community/posts`,
                  { headers: { Authorization: `Bearer ${token}` } }
             );
             setPosts(res.data);

@@ -5,6 +5,9 @@ import java.util.Collections;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -29,8 +32,6 @@ import com.GameVerse.GameVerse.security.S3Service;
 import com.GameVerse.GameVerse.services.CommunityService;
 import com.GameVerse.GameVerse.services.NotificationService;
 
-import software.amazon.awssdk.services.s3.S3Client;
-
 @RestController
 @RequestMapping("/post")
 @CrossOrigin(origins = "http://localhost:3000")
@@ -49,6 +50,8 @@ public class PostController {
     private RelationshipRepository relationshipRepository;
     @Autowired
     private S3Service s3serv;
+    @Autowired
+    private MongoTemplate mongoTemplate;
 
     public static final String type = "Post";
     static class PostContent{
@@ -107,9 +110,10 @@ public class PostController {
         Collections.reverse(result);
         return ResponseEntity.ok().body(result);
     }
+
     @GetMapping("/{username}/posts")
-    public ResponseEntity<?> getUserPosts(@PathVariable String username) {
-        try {
+    public ResponseEntity<?> getUserPosts(@PathVariable String username, Authentication auth) {
+        try{
             return ResponseEntity.ok(fetchUserPosts(username));
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
@@ -166,8 +170,9 @@ public class PostController {
     }
 
     //gets all community posts
-    @GetMapping("/{communityName}/posts")
-    public ResponseEntity<?> getCommunityPost(@PathVariable String communityName) {
+    @GetMapping("/{communityName}/community/posts")
+    public ResponseEntity<?> getCommunityPost(@PathVariable String communityName, Authentication auth) {
+        String username = userRep.findById(auth.getPrincipal().toString()).get().getUsername();
         Community com = communityRepository.findByNameIgnoreCase(communityName);
         if(com == null) {
             return ResponseEntity.badRequest().body("CommunityDoesnt exist");
@@ -193,13 +198,19 @@ public class PostController {
         return ResponseEntity.ok(followingPosts);
     }
 
+    @GetMapping("/liked/{username}")
+    public List<Post> getLikedPosts(@PathVariable String username) {
+        Query query = new Query(Criteria.where("liked." + username).is(true));
+        return mongoTemplate.find(query, Post.class);
+    }
+
     // Helper Function(s)
     private List<Post> fetchUserPosts(String username) {
         User user = userRep.findByUsernameIgnoreCase(username);
         if (user == null) {
             throw new RuntimeException("User doesn't exist");
         }
-        List<Post> result = postRepo.findAllByUser(username);
+        List<Post> result = postRepo.findAllByUserIdIgnoreCase(username);
         Collections.reverse(result);
         return result;
     }
