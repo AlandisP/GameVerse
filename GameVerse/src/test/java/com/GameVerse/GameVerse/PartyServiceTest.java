@@ -33,7 +33,7 @@ class PartyServiceTest {
 
     @Test
     void joinParty_addUserSuccessful() {
-        PartyFinder party = new PartyFinder("123", "Mario Party", "Donkey Kong runs", 4, List.of(Category.PARTY));
+        PartyFinder party = new PartyFinder("123", "Mario Party", "Donkey Kong runs", 4, List.of(Category.CASUAL));
 
         when(partyRepository.findByNameIgnoreCase("Mario Party"))
             .thenReturn(party);
@@ -49,7 +49,7 @@ class PartyServiceTest {
 
     @Test
     void leaveParty_removeUserSuccessful() {
-        PartyFinder party = new PartyFinder("321", "Everything", "we run every game", 3, List.of(Category.DIAMOND));
+        PartyFinder party = new PartyFinder("321", "Everything", "we run every game", 3, List.of(Category.ACTION));
         party.setMembers(new ArrayList<>(List.of("testGamer")));
 
         when(partyRepository.findById("321"))
@@ -63,7 +63,7 @@ class PartyServiceTest {
 
     @Test
     void removeMember_throwsWhenUserNotInParty() {
-        PartyFinder party = new PartyFinder("321", "Everything", "we run every game", 3, List.of(Category.DIAMOND));
+        PartyFinder party = new PartyFinder("321", "Everything", "we run every game", 3, List.of(Category.ADVENTURE));
         party.setMembers(new ArrayList<>(List.of("someOtherUser")));
 
         when(partyRepository.findById("321"))
@@ -78,7 +78,7 @@ class PartyServiceTest {
 
     @Test
     void deleteParty_Successful() {
-        PartyFinder party = new PartyFinder("123", "Mario Party", "Donkey Kong runs", 4, List.of(Category.PARTY));
+        PartyFinder party = new PartyFinder("123", "Mario Party", "Donkey Kong runs", 4, List.of(Category.ACTION));
         when(partyRepository.findById("123"))
             .thenReturn(Optional.of(party));
         partyService.deleteParty("123");
@@ -100,7 +100,7 @@ class PartyServiceTest {
 
     @Test
     void joinParty_throwsWhenPartyIsFull() {
-        PartyFinder party = new PartyFinder("123", "Mario Party", "Donkey Kong runs", 2, List.of(Category.PARTY));
+        PartyFinder party = new PartyFinder("123", "Mario Party", "Donkey Kong runs", 2, List.of(Category.ACTION));
 
         // Fill the party to max capacity
         party.setMembers(new ArrayList<>(List.of("user1", "user2")));

@@ -1,6 +1,5 @@
 package com.GameVerse.GameVerse.controller;
 
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -20,6 +19,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.client.RestTemplate;
 
 import com.GameVerse.GameVerse.model.Category;
 import com.GameVerse.GameVerse.model.PartyFinder;
@@ -68,9 +68,17 @@ public class PartyController {
         if(req.maxMembers > 16) {
             return ResponseEntity.badRequest().body("You cannot have a party with more than 16 members!");
         }
+        if(req.name.equals("")) {
+            return ResponseEntity.badRequest().body("Party needs a name");
+        }
         PartyFinder party = new PartyFinder(userId, req.name, req.description, req.maxMembers, req.categories);
         partyRepository.save(party);
         return ResponseEntity.ok().body(party.getId());   
+    }
+
+    @GetMapping("/categories")
+    public ResponseEntity<?> getAllCategories() {
+        return ResponseEntity.ok(Category.grouped());
     }
 
     @GetMapping("/myParty")
@@ -84,8 +92,8 @@ public class PartyController {
     }
 
     @GetMapping("/{partyName}")
-    public ResponseEntity<?> getParty(@PathVariable String name) {
-        PartyFinder party = partyRepository.findByNameIgnoreCase(name);
+    public ResponseEntity<?> getParty(@PathVariable String partyName) {
+        PartyFinder party = partyRepository.findByNameIgnoreCase(partyName);
         if(party == null) {
             return ResponseEntity.badRequest().body("Party doesn't exist");
         }
@@ -175,28 +183,47 @@ public class PartyController {
         return ResponseEntity.ok("party successfully deleted");
     }
 
-    // Testing 
-    @GetMapping("/test/populate")
-    public String populateParties() {
-        User owner = repository.findById("6972526f3692577e2dafccdc").orElse(null);
-        List<Category> cats = Arrays.asList(Category.COOP, Category.PRO, Category.SEASON2);
-        List<Category> cats2 = Arrays.asList(Category.COOP, Category.PRO, Category.MARVELRIVALS);
-        PartyFinder party = new PartyFinder(owner.getId(), "Elden Ring Coop Testing", "Consort Radahn and Miquella Boss Fight", 4,cats );
+    @PostMapping("/{partyName}/editParty")
+    public ResponseEntity<?> editParty(@RequestBody createPartyRequest req, Authentication auth, @PathVariable String partyName) {
+        PartyFinder party = partyRepository.findByNameIgnoreCase(partyName);
+        String userId = (String) auth.getPrincipal();
+        if(partyRepository.existsByName(req.name) && !party.getName().equals(partyRepository.findByNameIgnoreCase(partyName).getName())) {
+            return ResponseEntity.badRequest().body("Party name already exists");
+        }
+        if(req.maxMembers <= 0) {
+            return ResponseEntity.badRequest().body("You cannot have a party with 0 members!");
+        }
+        if(req.maxMembers > 16) {
+            return ResponseEntity.badRequest().body("You cannot have a party with more than 16 members!");
+        }
+        if(req.name.equals("")) {
+            return ResponseEntity.badRequest().body("Party Needs a name");
+        }
+        if(party.getMembers().size() > req.maxMembers) {
+            return ResponseEntity.badRequest().body("You cannot set the members less than whats in the party");
+        }
+        party.setName(req.name);
+        party.setDescription(req.description);
+        party.setCategories(req.categories);
+        party.setMaxMembers(req.maxMembers);
         partyRepository.save(party);
-        partyService.joinParty(repository.findByUsernameIgnoreCase("ripbuck").getId(), party.getId());
-        PartyFinder party2 = new PartyFinder("697252a43692577e2dafccde", "Rivals Platinum Rounds", "No Noobs allowed", 6, cats2);
-        //partyRepository.save(party);
-        partyRepository.save(party2);
-        return "parties successfully created!";
+        return ResponseEntity.ok().body(party.getId());   
     }
 
-    @GetMapping("/categories")
-    public ResponseEntity<?> getAllCategories() {
-        List<String> categories = Arrays.stream(Category.values())
-            .map(Enum::name)
-            .collect(Collectors.toList());
-        return ResponseEntity.ok(categories);
+
+    // Party Image stuff
+     @GetMapping("/random-image")
+    public ResponseEntity<?> getRandomImage() {
+        RestTemplate restTemplate = new RestTemplate();
+        
+        String url = "https://api.nekosapi.com/v4/images/random?limit=1&rating=safe";
+        
+        ResponseEntity<Object> response = restTemplate.getForEntity(url, Object.class);
+        return ResponseEntity.ok(response.getBody());
     }
+
+
+    
 
 
 

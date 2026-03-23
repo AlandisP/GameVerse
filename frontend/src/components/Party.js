@@ -1,9 +1,10 @@
 import "./PF.css";
 import sword from '../images/sword.png';
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import API_URL from "../config/api";
 import axios from "axios";
 import MembersOverlay from "./Overlays/MembersOverlay";
+import EditPartyOverlay from "./Overlays/EditPartyOverlay";
 import ErrorMessage from "./Overlays/ErrorMessage";
 
 function Party({Name, Description, Categories, Count, id, Members, Status, CreatorId, refresh, refreshCurrent}) {
@@ -14,8 +15,10 @@ function Party({Name, Description, Categories, Count, id, Members, Status, Creat
     const isOwner = (userId===CreatorId);
     const isMember = Members.includes(userId);
     const [isOpen, setIsOpen] = useState(false);
+    const [isOpen2, setIsOpen2] = useState(false);
+    const [image, setImage] = useState('');
     const cats = categories.map((category,index) =>(
-        <p className='catbox' key={index}> {category}</p>));
+        <p className='catbox' key={index}> {transformString(category)}</p>));
     
     const handleOpenMembers = () => {
         setIsOpen(!isOpen);
@@ -23,6 +26,10 @@ function Party({Name, Description, Categories, Count, id, Members, Status, Creat
 
     const handleCloseMembers = () => {
         setIsOpen(false);
+    }
+
+    const handleCloseEdit = () => {
+        setIsOpen2(false);
     }
 
     const buttonTest = async () => {
@@ -70,13 +77,29 @@ function Party({Name, Description, Categories, Count, id, Members, Status, Creat
         }
     }
 
+    useEffect(() => {
+        const getImage = async() => {
+            try {
+                const res = await axios.get(
+                    `${API_URL}/parties/random-image`,
+                    { headers: { Authorization: `Bearer ${token}` } }
+                );
+                setImage(res.data[0].url);
+            } catch(error){
+                console.error('Failed to fetch image:', error);
+            }
+        }
+        getImage();
+    },[token])
+
 
     return ( 
         <>
-             <ErrorMessage Message={error} />
+            <ErrorMessage Message={error} />
             <MembersOverlay isOpen={isOpen} onClose={handleCloseMembers} members={Members} CreatorId={CreatorId} partyName={Name} refresh={refresh} refreshCurrent={refreshCurrent}/>
+            <EditPartyOverlay isOpen={isOpen2} onClose={handleCloseEdit} Name={Name} Description={Description} Count={Count} refresh={refresh} refreshCurrent={refreshCurrent} Categories={Categories}/>
             <div className='partyInfo'>
-                <img src={sword} alt="sword" className='party-img'></img>
+                <img src={image?.url} alt="randomimg" className='party-img'></img>
                 <div className='text-container'>
                     <h3>{Name}</h3>
                     <p>{Description}</p>
@@ -89,7 +112,10 @@ function Party({Name, Description, Categories, Count, id, Members, Status, Creat
                     <p className='active'>{Status}</p>
                     {
                         isOwner?(
-                            <button className='deleteparty' onClick={handleDeleteParty}>Delete</button>
+                            <div className="owner-party">
+                                <button className="joinparty" onClick={() => setIsOpen2(true)}>Edit</button>
+                                <button className='deleteparty' onClick={handleDeleteParty}>Delete</button>
+                            </div>
                         ): isMember? (
                             <button className='leaveparty' onClick={handleLeaveParty}>Leave Party</button>
                         ): <button className='joinparty' onClick={buttonTest}>Join Party</button>
@@ -100,4 +126,9 @@ function Party({Name, Description, Categories, Count, id, Members, Status, Creat
     );
 }
 
+function transformString(text) {
+    const newtext = text.charAt(0).toUpperCase() + text.slice(1).toLowerCase();
+    return newtext.replace(/_/g, " ");
+
+}
 export default Party;

@@ -32,6 +32,7 @@ public class SecurityConfiguration {
                 .requestMatchers("/auth/**").permitAll()  // Allow all /auth endpoints
                 .requestMatchers("/users/**").permitAll()
                 .requestMatchers("/parties/test/**").permitAll()
+                .requestMatchers("parties/random-image/**").permitAll()
                 .anyRequest().authenticated())
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)  // FIXED
             .csrf(csrf -> csrf.disable())

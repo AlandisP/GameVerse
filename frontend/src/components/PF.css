@@ -64,7 +64,7 @@ input::placeholder {
 
 
 .plus-img {
-    width: auto;
+    width: 3rem;
     height: 3rem;
     background-color: transparent;
 }
@@ -180,6 +180,13 @@ p {
 .members:hover{
     text-decoration: underline;
     cursor: pointer;
+}
+
+.owner-party {
+    display: flex;
+    flex-direction: row;
+    background-color: transparent;
+    gap: 10px;
 }
 
 @media (max-width: 768px) {

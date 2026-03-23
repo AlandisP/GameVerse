@@ -94,6 +94,22 @@ public class PartyFinder {
         this.members = members;
     }
 
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public void setCategories(List<Category> cats) {
+        this.categories = cats;
+    }
+
+    public void setMaxMembers(int mems) {
+        this.maxMembers = mems;
+    }
+
 
 
     

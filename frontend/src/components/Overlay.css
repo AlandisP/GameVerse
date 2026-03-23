@@ -1,4 +1,3 @@
-
 .overlay {
     background-color: rgba(0, 0, 0, 0.5);
     width: 100vw;
@@ -12,7 +11,6 @@
     left: 0;
     display: flex;
     z-index: 9;
-
 }
 
 .overlay2 {
@@ -32,58 +30,68 @@
 }
 
 .overlay-background {
-    background-color: grey;
     text-align: center;
     width: 80%;
     height: 75%;
     align-items: center;
     justify-content: center;
     border-radius: 40px;
-    border: 10px solid #3b82f6;
+    border: 3px solid #3b82f6;
+}
+
+.overlay-background-party {
+    display: flex;
+    flex-direction: column;
+    height: auto;
+    border-radius: 40px;
+    border: 3px solid #3b82f6;
 }
 
 .header {
     align-self: center;
-    padding: 0px;
-    font-size: 2rem;
-    margin: .5rem;
-
+    padding: 2px 10px;
+    font-size: 1.5rem;
+    margin: 0;
+    margin-bottom: 0;
 }
 
 .top-portion{
     display: flex;
     background-color: transparent;
     width: 100%;
-    justify-content: center;
     align-items: center;
-    border-bottom: 5px solid #3b82f6;
+    border-bottom: 1px solid #3b82f6;
     position: relative;
-    margin: 0;
+    padding: 0;
+    margin-bottom: 0;
 }
 
 .top-portion button {
     position: absolute;
-    right: 20px
+    right: 20px;
 }
 
 .headers, .catHeader {
   font-size: 1.8rem;
-  margin: .5rem;
+  margin: .2rem;
+  margin-top: 0;
 }
 
 
 .close {
     padding: 10px;
-    font-size: 3rem;
+    font-size: 2rem;
     border-radius: 2rem;
     font-weight: bold;
     background: none;
     border: none;
     color: white;
+    font-family: Arial, sans-serif;
+    margin: 0;
 }
 .close:hover {
-    background-color: rgb(230, 26, 26);
-    color: white;
+    color: red;
+    cursor: pointer;
 }
 
 .contents {
@@ -95,83 +103,102 @@
     
 }
 
+.contents-party {
+    background-color: transparent;
+    overflow-y: auto;
+    padding-left: 10px;
+    margin-top: 0;
+    padding-top: 0;
+    flex: 1;
+}
+
 .catHeader{
     padding: 0;
     margin: 20px;
-    font-size: 1.8rem;
+    font-size: 1.5rem;
 }
 
-.select-list{
+.modes{
     display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
+    flex-direction: column;
     background-color: transparent;
     padding: 10px;
+    margin-top: -10px;
 }
 
-.cats-drop .react-select__control {
-    width: 40%;
-    border-radius: 10px;
-    background-color: white;
+.catbox2 {
+    background-color: rgb(44, 42, 42);
+    border-radius: .8rem;
+    font-size: 1rem;
+    padding: .3rem;
+    margin-right: 7px;
+    font-weight: bold;
+    border: 2px solid transparent;
 }
-
-.cats-drop option {
-    background-color: #373737;
-    color: white;
-    border-radius: 10px;
-    font-size: 1.7rem;
-}
-
-
 
 .catbox2:hover {
-    background-color: rgba(61, 53, 53, 0.363);
+    background-color: rgb(44, 42, 42);
     cursor: pointer;
 }
 
 .catbox2:active {
-    background-color: rgba(61, 53, 53, 0.363);
+    background-color: rgb(44, 42, 42);
 }
 
 .catbox2-selected {
-    background-color: rgba(61, 53, 53, 0.363);
-    border-radius: .8rem;
+    background-color: rgb(44, 42, 42);
+    border-radius: .5rem;
     font-size: 1rem;
-    padding: .8rem;
+    padding: .3rem;
     margin-right: 7px;
     font-weight: bold;
     border: 2px solid antiquewhite;
 }
 
+.select-list{
+    display: flex;
+    flex-wrap: wrap;
+    background-color: transparent;
+    padding: 10px;
+    margin-bottom: -20px;
+}
+
 .create {
-    margin-top: 20px;
-    padding:20px;
+    padding:2px 15px;
     font-size: clamp(1rem, 1vw + 0.2rem, 1.3rem);
     border-radius: 40px;
     background-color: #3b82f6;
     color: white;
     font-weight: bold;
-    border: none;
-    gap: 1.5rem;
-    margin-bottom: 1rem;
     border: 2px solid transparent;
+    margin-top: auto;
+    margin-bottom: 10px;
+    align-self: center;
+    width: 30%;
 }
 
 .headers {
     padding: 0;
-    margin: 10px;
+    font-size: 1.3rem;
+    margin-bottom: 3px;
+    margin-top: 15px;
 }
 
 .inputs {
     border: none;
-    padding: 20px;
-    background: none;
-    border-bottom: 5px solid black;
+    padding: 10px;
+    background: rgb(44, 42, 42);
     border-radius: 10px;
-    font-size: 1.3px;
+    font-size: 1rem;
     width: 70%;
-    text-align: center;
-    outline: none;
+    outline: 2px solid #3b82f6;
+    color: white;
+    margin-top: 4px;
+    margin-bottom: -10px;
+}
+
+.inputs::placeholder {
+    color: white;
 }
 
 .inputs2 {
@@ -193,13 +220,10 @@
     color:#373737
 }
 
-.inputs, .inputs2 {
-  font-size: clamp(0.9rem, 1vw + 0.3rem, 1.2rem);
-}
 
 
 .create:hover {
-    border: 2px solid black;
+    border: 2px solid white;
 }
 
 .member-overlay{
@@ -302,5 +326,12 @@
     font-weight: bold;
     background-color: black;
 }
+
+.subs {
+    font-weight: bold;
+    margin: 0;
+    margin-bottom: -5px;
+}
+
 
 

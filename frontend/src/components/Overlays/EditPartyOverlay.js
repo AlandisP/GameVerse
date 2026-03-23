@@ -6,18 +6,18 @@ import axios from 'axios';
 import ErrorMessage from './ErrorMessage';
 import { useActionData } from 'react-router-dom';
 
-function CreatePartyOverlay({isOpen, onClose, onPartyCreated}) {
+function EditPartyOverlay({isOpen, onClose, Name, Description, Categories, Count, Members,refresh, refreshCurrent}) {
     const [genre, setGenres] = useState([]);
     const [partyfocused, setPartyFocused] = useState([]);
     const [playstyle, setPlaystyle] = useState([]);
     const [gamemodes, setGamemodes] = useState([]);
     const [social, setSocial] = useState([]);
     const [platforms, setPlatforms] = useState([]);
-    const[items, setItems] = useState([]);
+    const[items, setItems] = useState(Categories??[]);
     const token  = localStorage.getItem('token');
-    const [partyName, setPartyName] = useState("");
-    const [partyDescription, setDescription] = useState("");
-    const [number, setNumber] = useState('');
+    const [partyName, setPartyName] = useState(Name);
+    const [partyDescription, setDescription] = useState(Description);
+    const [number, setNumber] = useState(Count);
     const [error, setError] = useState("");
 
     const handleSelectCategory = (category) => {
@@ -28,6 +28,7 @@ function CreatePartyOverlay({isOpen, onClose, onPartyCreated}) {
         }
     };
     useEffect(() => {
+        console.log("categories prop:",Categories);
         const getCategories = async () => {
             const result = await axios.get(
                 `${API_URL}/parties/categories`,
@@ -38,7 +39,7 @@ function CreatePartyOverlay({isOpen, onClose, onPartyCreated}) {
             setPlaystyle(result.data.playstyle);
             setPartyFocused(result.data.partyFocused);
             setSocial(result.data.social);
-            setPlatforms(result.data.platform)
+            setPlatforms(result.data.platform);
         };
         getCategories();
     }, [token]);
@@ -56,17 +57,17 @@ function CreatePartyOverlay({isOpen, onClose, onPartyCreated}) {
     }
 
 
-    const handleCreate = async() => {
+    const handleEdit = async() => {
         try {
             const result = await axios.post(
-            `${API_URL}/parties/createParty`,{name: partyName, description: partyDescription, maxMembers: parseInt(number), categories: items},
+            `${API_URL}/parties/${Name}/editParty`,{name: partyName, description: partyDescription, maxMembers: parseInt(number), categories: items},
             { headers: { Authorization: `Bearer ${token}` } }
             );
             setPartyName('');
             setDescription('');
             setNumber('');
             setItems([]);
-            onPartyCreated();
+            refreshCurrent();
             
         } catch (error) {
             console.error("Party Creating failed:", error.response?.data || error.message);
@@ -112,16 +113,16 @@ function CreatePartyOverlay({isOpen, onClose, onPartyCreated}) {
                  <ErrorMessage Message={error}/>
                 <div className='overlay-background-party'>
                     <div className='top-portion'>
-                        <h1 className='header'>Create Party</h1>
+                        <h1 className='header'>Edit Party</h1>
                         <button className='close' onClick={onClose}>X</button>
                     </div>
                     <div className='contents-party'>
-                        <h2 className='headers'>Party Name</h2>
-                        <input className='inputs' placeholder='Enter Party Name' onChange={handleNameChange}></input>
+                        <h2 className='headers'>Name</h2>
+                        <input className='inputs' value={partyName} placeholder='Enter Party Name' onChange={handleNameChange}></input>
                         <h2 className='headers'>Description</h2>
-                        <input className='inputs' placeholder='Enter Party Description' onChange={handleDescriptionChange}></input>
-                        <h2 className='headers' type="number">Number of Members</h2>
-                        <input className='inputs' placeholder='Enter Number of Members' onChange={handleNumberChange}></input>
+                        <input className='inputs' value={partyDescription} placeholder='Enter Party Description' onChange={handleDescriptionChange}></input>
+                        <h2 className='headers' type="number" placeholder='Enter Number of Members'>Number of Members</h2>
+                        <input className='inputs' value={number} onChange={handleNumberChange}></input>
                         <h2 className='headers'>Select Categories</h2>
                         <div className='modes'>
                             <p className='subs'>Genre</p>
@@ -138,7 +139,7 @@ function CreatePartyOverlay({isOpen, onClose, onPartyCreated}) {
                             <div className='select-list'>{plats}</div>
                         </div>
                     </div>
-                    <button className='create' onClick={handleCreate}>Create</button>
+                    <button className='create' onClick={handleEdit}>Edit</button>
                 </div>
 
             </div>
@@ -156,4 +157,4 @@ function transformString(text) {
     return newtext.replace(/_/g, " ");
 
 }
-export default CreatePartyOverlay;
+export default EditPartyOverlay;
