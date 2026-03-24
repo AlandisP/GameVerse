@@ -100,6 +100,12 @@ public class UserProfileController {
         return ResponseEntity.ok("Profile Updates Successfully");
     }
 
+    @GetMapping("/getmedia/{user}")
+    public ResponseEntity<String> getUserPFP(@PathVariable String user) {
+            User person = repository.findByUsernameIgnoreCase(user);
+            return ResponseEntity.ok(person.getpfp());
+    }
+
     @PutMapping("/password")
     public ResponseEntity<?> editUserPassword(@RequestBody PasswordChangeRequest req, Authentication auth) {
         String userId = (String) auth.getPrincipal();

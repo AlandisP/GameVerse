@@ -315,15 +315,6 @@ function ProfilePageTwo() {
           }}
         >
           {/* Banner */}
-          {bannerUrl=="" ?
-          <div
-            style={{
-              height: "150px",
-              backgroundColor: "#3f4b5b",
-              borderRadius: "0 0 12px 12px",
-            }}
-          ></div>
-          :
           <div
             style={{
               height: "190px",
@@ -331,14 +322,14 @@ function ProfilePageTwo() {
               borderRadius: "0 0 12px 12px",
             }}
           >
+          {bannerUrl=="" ?
             <img src={bannerUrl} style={{
             width:"100%",
             height:"100%",
               objectFit: "fill"
             }}/>
+            : "" }
           </div>
-          
-          }
 
           {/* Avatar */}
           {pfpUrl=="" ? 

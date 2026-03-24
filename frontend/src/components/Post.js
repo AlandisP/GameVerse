@@ -18,11 +18,15 @@ function PostObj ({User, Content, Likes, Liked, id, books, commcount, CreatedAt,
         const [falseLikes, setfalseLikes]= useState(Likes);
         const [comments, setComments]= useState(0);
         const [viewComments, setView]= useState(false);
+        const [posterPfp, setposterPfp] = useState("");
         const token  = localStorage.getItem('token');
         const navigate = useNavigate();
         useEffect(()=>{
             setBook(books);
             setComments(commcount);
+            // axios.get(`${API_URL}/profile/getmedia/${User}`,{ headers: { Authorization: `Bearer ${token}` } }).then((e)=>{
+            //     console.log(e.data);
+            // });
         },[]);
         const likeinteract = async ()=>{
             await axios.post(

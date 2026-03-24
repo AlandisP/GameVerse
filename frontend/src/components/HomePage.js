@@ -83,7 +83,7 @@ function HomePage() {
     const Readposts = () => {
         const bookarray = Array.from(bookmarks);
         const items = posts.map((post,ind)=>{
-            console.log(post);
+            //console.log(post);
                 if(bookarray.includes(post["id"])){
                     return <PostObj key={ind} User={post["user"]} Content={post["text"]} Likes={post["likes"]} Liked={parselike(post)} id={post["id"]} commcount={post["comments"].length} books={true} CreatedAt={post["createdAt"]} CommunityName={post["communityName"]} media={post["media"]}/>
                 }

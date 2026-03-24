@@ -11,12 +11,13 @@ import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.GameVerse.GameVerse.repository.UserRepository;
+import com.GameVerse.GameVerse.services.UserService;
 
 @Document(collection = "posts")
 public class Post {
+    @Autowired
+    UserService userTools;
 
-    
     public class comment {
         public String poster;
         public String content;
@@ -40,7 +41,7 @@ public class Post {
     private String imageUrl;
     private Instant createdAt;
     private String medialink;
-    private String testvar;
+    private String pfpvar;
 
     public Post(String text, String userId, String communityId, String communityName){
         this.text = text;
@@ -159,7 +160,8 @@ public class Post {
         return medialink;
     }
     
-    public String gettestvar(){
-        return "test";
+    public String getpfpvar(){
+        //return 'userRep.findByUsernameIgnoreCase("GDAWG").getpfp()';
+        return userTools.getUserPFP(userId);
     }
 }
