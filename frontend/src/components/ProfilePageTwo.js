@@ -326,7 +326,7 @@ function ProfilePageTwo() {
           :
           <div
             style={{
-              height: "150px",
+              height: "190px",
               backgroundColor: "#3f4b5b",
               borderRadius: "0 0 12px 12px",
             }}
@@ -368,7 +368,7 @@ function ProfilePageTwo() {
           }
 
           {/* Username + actions */}
-          <div style={{ padding: "20px", marginTop: "40px" }}>
+          <div style={{ padding: "20px", marginTop: "0px" }}>
             <div
               style={{
                 display: "flex",
