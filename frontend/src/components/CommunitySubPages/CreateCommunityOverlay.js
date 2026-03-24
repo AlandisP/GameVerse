@@ -72,7 +72,7 @@ function CreateCommunityOverlay({isOpen, onClose, onCommunityCreated}) {
         <>
         {isOpen?(
             <div className='overlay'>
-                <div className='overlay-background2'>
+                <div className='overlay-background-party'>
                     <div className='top-portion'>
                         <h1>Create Community</h1>
                         <button className='close' onClick={() => {onClose(); ClearFields();} }>X</button>

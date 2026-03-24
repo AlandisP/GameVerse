@@ -131,7 +131,6 @@
     border-radius: .8rem;
     font-size: 1rem;
     padding: .3rem;
-    margin-right: 7px;
     font-weight: bold;
     border: 2px solid transparent;
 }
@@ -161,6 +160,7 @@
     background-color: transparent;
     padding: 10px;
     margin-bottom: -20px;
+    gap: 4px
 }
 
 .create {
@@ -203,21 +203,23 @@
 
 .inputs2 {
     border: none;
-    padding: 20px;
+    padding: 10px;
     background: none;
-    border-bottom: 5px solid black;
     border-radius: 10px;
-    font-size: 20px;
-    width: 70%;
-    text-align: center;
-    outline: none;
+    font-size: 1rem;
+    width: 90%;
+    height: 100px;
+    outline: 1px solid #3b82f6;
     resize: none;
-    height: fit-content;
     overflow-y: hidden;
+    background-color: rgb(44, 42, 42);
+    color: white;
+    font-family: Arial, Helvetica, sans-serif;
 }
 
 .inputs2::placeholder {
-    color:#373737
+    color:white;
+    font-family: Arial, Helvetica, sans-serif;
 }
 
 
@@ -318,6 +320,7 @@
     background-color: transparent;
     justify-content: space-between;
     gap: 1.5rem;
+    margin-left: 10px;
 }
 
 .errormsg {

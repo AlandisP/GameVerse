@@ -5,6 +5,7 @@ import API_URL from '../../config/api';
 import axios from 'axios';
 import ErrorMessage from './ErrorMessage';
 import { useActionData } from 'react-router-dom';
+import { generatePath } from 'react-router-dom';
 
 function CreatePartyOverlay({isOpen, onClose, onPartyCreated}) {
     const [genre, setGenres] = useState([]);
@@ -19,6 +20,9 @@ function CreatePartyOverlay({isOpen, onClose, onPartyCreated}) {
     const [partyDescription, setDescription] = useState("");
     const [number, setNumber] = useState('');
     const [error, setError] = useState("");
+    
+
+    
 
     const handleSelectCategory = (category) => {
         if (items.includes(category)) {

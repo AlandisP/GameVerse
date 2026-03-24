@@ -64,7 +64,7 @@ input::placeholder {
 
 
 .plus-img {
-    width: 3rem;
+    width: auto;
     height: 3rem;
     background-color: transparent;
 }
@@ -74,8 +74,13 @@ input::placeholder {
     padding: 10px;
     margin: 20px;
     border-radius: 30px;
-    background-color: grey;
+    background-color: rgb(44, 42, 42);
     height: 7.8rem;
+    border: 1px solid grey;
+    gap: 7px;
+    min-width: 400px;
+    overflow: hidden;
+
 }
 
 h3 {
@@ -91,16 +96,31 @@ p {
 }
 
 .party-img {
-    border-radius: 50px;
-    padding: 10px;
+    border-radius: 10px;
+    padding: 3px;
+    width: auto;
+    height: auto;
 }
 
 .text-container{
     background-color: transparent;
     display: flex;
     flex-direction: column;
+    flex-grow: 1;
 }
 
+.text-container h3{
+    color: #3b82f6 ;
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: bolder;
+    margin-bottom: 10px;
+    font-size: 1.5rem;
+}
+
+.text-container p {
+    color: #d1d5db;
+    font-family: 'Space Grotesk', sans-serif;
+}
 .category-list {
     display: flex;
     flex-direction: row;
@@ -114,6 +134,7 @@ p {
     padding: 5px;
     margin-right: 5px;
     font-weight: bold;
+    border: 1px solid grey;
 
 }
 
@@ -126,6 +147,7 @@ p {
     display: flex;
     flex-direction: column;
     height: auto;
+    width: auto;
     border-radius: 20px;
     justify-content: space-between;
     background-color: transparent;
@@ -160,16 +182,17 @@ p {
 .deleteparty, .leaveparty{
     align-self: flex-end;
     border-radius: 10px;
-    background-color: red;
+    background-color: rgba(255, 0, 0, 0.432);
     color: white;
     height: 50px;
     width: 100px;
-    font-size: 15px;
-    border: none;
+    font-size: 1rem;
+    border: 1px solid red;
 }
 
 .deleteparty:hover, .leaveparty:hover{
     background-color: darkred;
+    cursor: pointer;
 }
 
 .noParty{
@@ -180,6 +203,10 @@ p {
 .members:hover{
     text-decoration: underline;
     cursor: pointer;
+}
+
+.members{
+    color: #d1d5db;
 }
 
 .owner-party {
@@ -224,6 +251,7 @@ p {
         padding: 12px;
         border-radius: 20px;
         gap: 10px;
+        overflow: hidden;
     }
 
     .party-img {
@@ -278,4 +306,17 @@ p {
         font-size: 16px;
         margin-left: 10px;
     }
+}
+
+.editparty {
+    align-self: flex-end;
+    border-radius: 10px;
+    background-color: #373737;
+    color: white;
+    height: 50px;
+    width: 100px;
+    font-size: 1rem;
+    border: 1px solid grey;
+    font-weight: bold;
+
 }

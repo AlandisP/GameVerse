@@ -19,7 +19,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.client.RestTemplate;
 
 import com.GameVerse.GameVerse.model.Category;
 import com.GameVerse.GameVerse.model.PartyFinder;
@@ -208,18 +207,6 @@ public class PartyController {
         party.setMaxMembers(req.maxMembers);
         partyRepository.save(party);
         return ResponseEntity.ok().body(party.getId());   
-    }
-
-
-    // Party Image stuff
-     @GetMapping("/random-image")
-    public ResponseEntity<?> getRandomImage() {
-        RestTemplate restTemplate = new RestTemplate();
-        
-        String url = "https://api.nekosapi.com/v4/images/random?limit=1&rating=safe";
-        
-        ResponseEntity<Object> response = restTemplate.getForEntity(url, Object.class);
-        return ResponseEntity.ok(response.getBody());
     }
 
 
