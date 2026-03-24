@@ -84,11 +84,11 @@ public class UserProfileController {
             String userId = (String) auth.getPrincipal();
             User user = repository.findById(userId).get();
             if(pfp!=null){
-                String newpfp = s3serv.uploadFile(pfp, user.getUsername(), "Profile");
+                String newpfp = s3serv.staticMedia(pfp, user.getUsername(), "ProfilePic");
                 user.setpfp(newpfp);
             }
             if(banner!=null){
-                String newbanner = s3serv.uploadFile(banner, user.getUsername(), "Profile");
+                String newbanner = s3serv.staticMedia(banner, user.getUsername(), "Banner");
                 user.setbanner(newbanner);
             }
             repository.save(user);

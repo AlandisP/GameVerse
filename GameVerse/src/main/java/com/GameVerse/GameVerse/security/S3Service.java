@@ -44,4 +44,17 @@ public class S3Service {
     public String uploadFile(MultipartFile file, String user) throws IOException {
         return uploadFile(file, user, "Media");
     }
+
+    public String staticMedia(MultipartFile file, String user, String type) throws IOException {
+        String key = user + "/Profile/"+type;
+        s3Client.putObject(
+            PutObjectRequest.builder()
+                .bucket(bucketName)
+                .key(key)
+                .contentType(file.getContentType())
+                .build(),
+            RequestBody.fromBytes(file.getBytes())
+        );
+        return "https://" + bucketName + ".s3." + region +  ".amazonaws.com/" + key;
+    }
 }

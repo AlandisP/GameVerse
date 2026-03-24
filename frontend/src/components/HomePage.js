@@ -9,6 +9,8 @@ import API_URL from '../config/api';
 import clip from '../images/PaperClip.png'
 import UploadBox from './MediaUpload';
 
+const urlprefab = "https://gameverse-media-026955879175-us-east-2-an.s3.us-east-2.amazonaws.com/";
+
 function HomePage() {
     const navigate = useNavigate();
     const username = localStorage.getItem('username');
@@ -23,6 +25,7 @@ function HomePage() {
     const [uploadbox, setupload] = useState(false);
     const [uploadedFile, uploadFile] = useState(null);
     const clipico = useRef(null);
+    const [imgsrc, setimgsrc] = useState(urlprefab+username+"/Profile/ProfilePic");
 
     const handleNavClick = (e, path, tabId) => {
         e.preventDefault();
@@ -54,7 +57,8 @@ function HomePage() {
             );
             setposts(posts => {
                 const newArray = [...posts]; 
-                newArray.unshift({user:username,text:postbod,likes:0,liked:{},id:pid.data,comments:[],media:URL.createObjectURL(uploadedFile)}); 
+                const mediaurl = uploadedFile!=null ? URL.createObjectURL(uploadedFile) : null;
+                newArray.unshift({user:username,text:postbod,likes:0,liked:{},id:pid.data,comments:[],media:mediaurl}); 
                 return newArray; 
             });
             uploadFile(null);
@@ -127,7 +131,7 @@ function HomePage() {
                         Welcome {username}, you are logged in!
                     </h3> */}
                     <div className='Post-Bar'>
-                        <img className='PFP' src={Pfp}/>
+                        <img className='PFP' src={imgsrc} onError={()=>{setimgsrc(Pfp)}}/>
                         <textarea rows='1' cols='50' maxLength={maxlen} ref={text} onChange={autoresize} placeholder='What are you thinking?'></textarea>
                         <img src={clip} className={`clip ${uploadedFile ? "hasfile" : ''}`} ref={clipico} onClick={()=>{setupload(true)}}/>
                         <button className='Post' onClick={makepost}>Post</button>

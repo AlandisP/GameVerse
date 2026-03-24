@@ -6,11 +6,14 @@ import Add from '../images/AddButton.png'
 import msg from '../images/Message.png'
 import API_URL from '../config/api';
 
+const urlprefab = "https://gameverse-media-026955879175-us-east-2-an.s3.us-east-2.amazonaws.com/";
+
 function Comment({User, body}){
     const token  = localStorage.getItem('token');
+    const [imgsrc, setimgsrc] = useState(urlprefab+User+"/Profile/ProfilePic");
     return(
         <div className='comment'>
-            <img src={Pfp}/>
+            <img src={imgsrc} style={{borderRadius:"50%"}} onError={()=>{setimgsrc(Pfp)}}/>
             <p>{User}: </p>
             <p>{body}</p>
         </div>

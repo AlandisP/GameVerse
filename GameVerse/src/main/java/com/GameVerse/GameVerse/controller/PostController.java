@@ -84,6 +84,10 @@ public class PostController {
             String medianame = s3serv.uploadFile(media, username);
             newPost.setmedia(medianame);
         }
+        // if(media!=null){
+        //     String medianame = s3serv.testFile(media);
+        //     newPost.setmedia(medianame);
+        // }
         //System.out.println("Test media: "+medianame);
         postRepo.save(newPost);
         return ResponseEntity.ok().body(newPost.getId());

@@ -20,6 +20,8 @@ function PostObj ({User, Content, Likes, Liked, id, books, commcount, CreatedAt,
         const [viewComments, setView]= useState(false);
         const [posterPfp, setposterPfp] = useState("");
         const token  = localStorage.getItem('token');
+        const urlprefab = "https://gameverse-media-026955879175-us-east-2-an.s3.us-east-2.amazonaws.com/";
+        const [imgsrc, setimgsrc] = useState(urlprefab+User+"/Profile/ProfilePic");
         const navigate = useNavigate();
         useEffect(()=>{
             setBook(books);
@@ -54,7 +56,7 @@ function PostObj ({User, Content, Likes, Liked, id, books, commcount, CreatedAt,
         return(
             <div>
             <div className='Postcontent'>
-                <img className='Others' src={Pfp}/>
+                <img className='Others' src={imgsrc} onError={()=>{setimgsrc(Pfp)}}/>
                 <div className='inner'>
                     {/* <h3>@{User}</h3> */}
                     <div className='top-port'>
