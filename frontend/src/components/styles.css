@@ -501,6 +501,7 @@ nav.sidebar div,
     max-width: 100%;
     padding: 10px 0 10px 0;
     border-radius: 10px;
+    border: 3px solid #3b82f6;
 }
 
 .post-hold h2{
@@ -604,4 +605,11 @@ nav.sidebar div,
 
 .pst-btn:hover {
     background-color: #1055c4;
+}
+
+.none-yet {
+    color: #888;
+    text-align: center;
+    margin-top: 20px;
+    margin-left: 20px;
 }

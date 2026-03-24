@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.GameVerse.GameVerse.model.User;
+import com.GameVerse.GameVerse.repository.PostRepository;
 import com.GameVerse.GameVerse.repository.UserRepository;
 import com.GameVerse.GameVerse.services.NotificationService;
 import com.GameVerse.GameVerse.services.RelationshipServices;
@@ -34,6 +35,9 @@ public class UserProfileController {
 
     @Autowired
     private NotificationService notificationService;
+
+    @Autowired
+    private PostRepository postRepository;
 
     private static final String type = "Profile";
 
@@ -159,6 +163,7 @@ public class UserProfileController {
         boolean isFollowing = relationshipServices.isFollowing(followerId, target.getId());
         return ResponseEntity.ok(isFollowing);
     }
+
 
     // ---------- REQUEST CLASSES ----------
 

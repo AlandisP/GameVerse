@@ -1,10 +1,18 @@
 import "./PF.css";
 import sword from '../images/sword.png';
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import API_URL from "../config/api";
 import axios from "axios";
 import MembersOverlay from "./Overlays/MembersOverlay";
+import EditPartyOverlay from "./Overlays/EditPartyOverlay";
 import ErrorMessage from "./Overlays/ErrorMessage";
+import img1 from "../images/gen1.png";
+import img2 from "../images/gen2.png";
+import img3 from "../images/gen3.png";
+import img4 from "../images/gen4.png";
+import img5 from "../images/gen5.png";
+import img6 from "../images/gen6.png";
+import img7 from "../images/gen7.png";
 
 function Party({Name, Description, Categories, Count, id, Members, Status, CreatorId, refresh, refreshCurrent}) {
     const token = localStorage.getItem("token");
@@ -14,8 +22,12 @@ function Party({Name, Description, Categories, Count, id, Members, Status, Creat
     const isOwner = (userId===CreatorId);
     const isMember = Members.includes(userId);
     const [isOpen, setIsOpen] = useState(false);
+    const [isOpen2, setIsOpen2] = useState(false);
+    const [image, setImage] = useState('');
+    const num = Math.floor(Math.random()*(7-1 +1)) +1;
+    const img = num==1?img1:num===2?img2:num===3?img3:num===4?img4:num===5?img5:num===6?img6:img7;
     const cats = categories.map((category,index) =>(
-        <p className='catbox' key={index}> {category}</p>));
+        <p className='catbox' key={index}> {transformString(category)}</p>));
     
     const handleOpenMembers = () => {
         setIsOpen(!isOpen);
@@ -23,6 +35,10 @@ function Party({Name, Description, Categories, Count, id, Members, Status, Creat
 
     const handleCloseMembers = () => {
         setIsOpen(false);
+    }
+
+    const handleCloseEdit = () => {
+        setIsOpen2(false);
     }
 
     const buttonTest = async () => {
@@ -69,14 +85,13 @@ function Party({Name, Description, Categories, Count, id, Members, Status, Creat
             setError({ text: error.response?.data, id: Date.now() });
         }
     }
-
-
     return ( 
         <>
-             <ErrorMessage Message={error} />
+            <ErrorMessage Message={error} />
             <MembersOverlay isOpen={isOpen} onClose={handleCloseMembers} members={Members} CreatorId={CreatorId} partyName={Name} refresh={refresh} refreshCurrent={refreshCurrent}/>
+            <EditPartyOverlay isOpen={isOpen2} onClose={handleCloseEdit} Name={Name} Description={Description} Count={Count} refresh={refresh} refreshCurrent={refreshCurrent} Categories={Categories}/>
             <div className='partyInfo'>
-                <img src={sword} alt="sword" className='party-img'></img>
+                <img src={img} alt="randomimg" className='party-img'></img>
                 <div className='text-container'>
                     <h3>{Name}</h3>
                     <p>{Description}</p>
@@ -86,10 +101,13 @@ function Party({Name, Description, Categories, Count, id, Members, Status, Creat
                     <p className='members' onClick={handleOpenMembers}> {Members.length}/{Count} Players</p>
                 </div>
                 <div className='right'>
-                    <p className='active'>{Status}</p>
+                    <p className='active'>{transformString(Status)}</p>
                     {
                         isOwner?(
-                            <button className='deleteparty' onClick={handleDeleteParty}>Delete</button>
+                            <div className="owner-party">
+                                <button className="editparty" onClick={() => setIsOpen2(true)}>Edit</button>
+                                <button className='deleteparty' onClick={handleDeleteParty}>Delete</button>
+                            </div>
                         ): isMember? (
                             <button className='leaveparty' onClick={handleLeaveParty}>Leave Party</button>
                         ): <button className='joinparty' onClick={buttonTest}>Join Party</button>
@@ -100,4 +118,9 @@ function Party({Name, Description, Categories, Count, id, Members, Status, Creat
     );
 }
 
+function transformString(text) {
+    const newtext = text.charAt(0).toUpperCase() + text.slice(1).toLowerCase();
+    return newtext.replace(/_/g, " ");
+
+}
 export default Party;

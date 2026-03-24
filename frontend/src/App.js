@@ -7,7 +7,7 @@ import ExplorePage from "./components/ExplorePage";
 import MessagePage from "./components/MessagePage";
 import PartyFinderPage from "./components/PartyFinderPage";
 import CommunitiesPage from "./components/CommunitiesPage";
-import ProfilePage from "./components/ProfilePage";
+import ProfilePageTwo from "./components/ProfilePageTwo";
 import Signup from "./components/Signup";
 import NotificationPage from "./components/NotificationPage";
 import CommunityPage from "./components/CommunitySubPages/CommunityPage";
@@ -32,8 +32,8 @@ function App() {
           <Route path="/notifications" element={<NotificationPage />} />
 
           {/* Profile routes */}
-          <Route path="/profile" element={<ProfilePage />} />
-          <Route path="/profile/:username" element={<ProfilePage />} />
+          <Route path="/profile" element={<ProfilePageTwo />} />
+          <Route path="/profile/:username" element={<ProfilePageTwo />} />
 
           {/* Community Page */}
           <Route path="/communities/:community" element={<CommunityPage />} />

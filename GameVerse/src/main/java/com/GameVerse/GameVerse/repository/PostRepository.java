@@ -3,6 +3,7 @@ package com.GameVerse.GameVerse.repository;
 import java.util.List;
 
 import org.springframework.data.mongodb.repository.MongoRepository;
+import org.springframework.data.mongodb.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import com.GameVerse.GameVerse.model.Post;
@@ -13,5 +14,7 @@ public interface PostRepository extends MongoRepository<Post, String>{
     Post findByuserId(String userId);
     Post findByid(String id);
     List<Post> findAllByCommunityId(String communityId);
-    List<Post> findAllByUser(String username);
+    List<Post> findAllByUserIdIgnoreCase(String username);
+    @Query(value = "{'liked.username' : ?0}")
+    List<Post> findAllByLikedUsername(String username);
 }
