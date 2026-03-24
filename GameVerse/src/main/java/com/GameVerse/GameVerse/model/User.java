@@ -20,6 +20,9 @@ public class User {
     private String bio;
     private String platform;
     private Role role;
+    
+    private String pfp;
+    private String banner;
 
     // These are COUNT values only.
     private int followerCount;
@@ -130,4 +133,17 @@ public class User {
     // public void setbookMarks(ArrayList<String> input){
     //     bookMarks = input;
     // }
+
+    public void setpfp(String url){
+        pfp = url;
+    }
+    public String getpfp(){
+        return pfp;
+    }
+    public void setbanner(String url){
+        banner = url;
+    }
+    public String getbanner(){
+        return banner;
+    }
 }

@@ -1,5 +1,7 @@
 package com.GameVerse.GameVerse.controller;
 
+import java.io.IOException;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -11,7 +13,10 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
+import com.GameVerse.GameVerse.security.S3Service;
 
 import com.GameVerse.GameVerse.model.User;
 import com.GameVerse.GameVerse.repository.PostRepository;
@@ -38,6 +43,9 @@ public class UserProfileController {
 
     @Autowired
     private PostRepository postRepository;
+
+    @Autowired
+    private S3Service s3serv;
 
     private static final String type = "Profile";
 
@@ -69,6 +77,27 @@ public class UserProfileController {
         }
 
         return ResponseEntity.ok(user);
+    }
+    @PostMapping("/setmedia")
+    public ResponseEntity<?> editUserMedia(@RequestParam(value = "pfp", required = false) MultipartFile pfp, @RequestParam(value = "banner", required = false) MultipartFile banner, Authentication auth) {
+        try{
+            String userId = (String) auth.getPrincipal();
+            User user = repository.findById(userId).get();
+            if(pfp!=null){
+                String newpfp = s3serv.uploadFile(pfp, user.getUsername(), "Profile");
+                user.setpfp(newpfp);
+            }
+            if(banner!=null){
+                String newbanner = s3serv.uploadFile(banner, user.getUsername(), "Profile");
+                user.setbanner(newbanner);
+            }
+            repository.save(user);
+        }
+        catch(IOException e){
+            e.printStackTrace();
+        }
+
+        return ResponseEntity.ok("Profile Updates Successfully");
     }
 
     @PutMapping("/password")

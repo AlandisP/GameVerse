@@ -5,6 +5,7 @@ import "./styles.css";
 import NavBar from "./NavBar";
 import API_URL from "../config/api";
 import PostObj from './Post'
+import UploadBox from './MediaUpload';
 
 function ProfilePageTwo() {
     const { username } = useParams();
@@ -21,6 +22,17 @@ function ProfilePageTwo() {
     const [posts, setPosts] = useState([]);
     const [likedposts, setLikedPosts] = useState([]);
 
+
+    //Profile pictures code
+    //#####################
+    const [isUploading, enableUpload] = useState(0);
+    const [pfp, setpfp] = useState(null);
+    const [banner, setbanner] = useState(null);
+    const [pfpUrl, setpfpUrl] = useState("");
+    const [pfpUrltemp, setpfpUrlt] = useState("");
+    const [bannerUrl, setbannerUrl] = useState("");
+    const [bannerUrltemp, setbannerUrlt] = useState("");
+    //#####################
 
     const parselike = (postinf)=>{
         const array = postinf["liked"];
@@ -117,6 +129,10 @@ function ProfilePageTwo() {
 
         setProfile(res.data);
         setBio(res.data.bio || "");
+        if(res.data.pfp!=null)
+        setpfpUrl(res.data.pfp);
+        if(res.data.banner!=null)
+        setbannerUrl(res.data.banner);
         
 
         // If viewing someone else's profile and logged in, fetch follow status
@@ -178,6 +194,17 @@ function ProfilePageTwo() {
         { headers: { Authorization: `Bearer ${token}` } }
       );
       setProfile({ ...profile, bio });
+      if(pfp!=null||banner!=null){
+        console.log(pfp);
+        const formdat = new FormData();
+        formdat.append('pfp',pfp);
+        formdat.append('banner',banner);
+        await axios.post(
+            `${API_URL}/profile/setmedia`,formdat,
+            { headers: { Authorization: `Bearer ${token}` } }
+        );
+        console.log("media updated");
+      }
       setEditMode(false);
     } catch (err) {
       alert("Error saving bio.");
@@ -276,7 +303,6 @@ function ProfilePageTwo() {
   return (
     <div className="page-container">
       <Sidebar />
-
       <div className="main-content" style={{ color: "white" }}>
         {/* HEADER */}
         <div
@@ -289,6 +315,7 @@ function ProfilePageTwo() {
           }}
         >
           {/* Banner */}
+          {bannerUrl=="" ?
           <div
             style={{
               height: "150px",
@@ -296,8 +323,25 @@ function ProfilePageTwo() {
               borderRadius: "0 0 12px 12px",
             }}
           ></div>
+          :
+          <div
+            style={{
+              height: "150px",
+              backgroundColor: "#3f4b5b",
+              borderRadius: "0 0 12px 12px",
+            }}
+          >
+            <img src={bannerUrl} style={{
+            width:"100%",
+            height:"100%",
+              objectFit: "fill"
+            }}/>
+          </div>
+          
+          }
 
           {/* Avatar */}
+          {pfpUrl=="" ? 
           <div
             style={{
               position: "absolute",
@@ -310,6 +354,18 @@ function ProfilePageTwo() {
               border: "4px solid #2f2f2f",
             }}
           ></div>
+          :
+          <img src={pfpUrl} style={{
+              position: "absolute",
+              top: "90px",
+              left: "30px",
+              width: "120px",
+              height: "120px",
+              borderRadius: "50%",
+              backgroundColor: "#1c1c1c",
+              border: "4px solid #2f2f2f",
+            }}/>
+          }
 
           {/* Username + actions */}
           <div style={{ padding: "20px", marginTop: "40px" }}>
@@ -358,7 +414,7 @@ function ProfilePageTwo() {
                       cursor: "pointer",
                     }}
                   >
-                    Edit Bio
+                    Edit Profile
                   </button>
                 )
               ) : (
@@ -400,9 +456,14 @@ function ProfilePageTwo() {
             {/* Bio */}
             {editMode ? (
               <>
+              <div className="Profile-Media-Edit">
+                <button onClick={()=>{enableUpload(1)}}>Edit Profile Picture</button>
+                <button onClick={()=>{enableUpload(2)}}>Edit Banner</button>
+              </div>
                 <textarea
                   value={bio}
                   onChange={(e) => setBio(e.target.value)}
+                  className="Bio-Edit"
                   style={{
                     width: "100%",
                     height: "80px",
@@ -507,6 +568,8 @@ function ProfilePageTwo() {
           </>
         )}
       </div>
+      {isUploading==1 ? <UploadBox clearvar={enableUpload} fileinf={{file:pfp,upload:setpfp}}/> : ''}
+      {isUploading==2 ? <UploadBox clearvar={enableUpload} fileinf={{file:banner,upload:setbanner}}/> : ''}
     </div>
   );
 }

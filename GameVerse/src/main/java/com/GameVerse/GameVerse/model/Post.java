@@ -40,6 +40,7 @@ public class Post {
     private String imageUrl;
     private Instant createdAt;
     private String medialink;
+    private String testvar;
 
     public Post(String text, String userId, String communityId, String communityName){
         this.text = text;
@@ -156,5 +157,9 @@ public class Post {
     }
     public String getmedia(){
         return medialink;
+    }
+    
+    public String gettestvar(){
+        return "test";
     }
 }
