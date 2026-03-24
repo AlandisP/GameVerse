@@ -15,8 +15,8 @@ import com.GameVerse.GameVerse.services.UserService;
 
 @Document(collection = "posts")
 public class Post {
-    @Autowired
-    UserService userTools;
+    // @Autowired
+    // UserService userTools;
 
     public class comment {
         public String poster;
@@ -162,6 +162,6 @@ public class Post {
     
     public String getpfpvar(){
         //return 'userRep.findByUsernameIgnoreCase("GDAWG").getpfp()';
-        return userTools.getUserPFP(userId);
+        return "";
     }
 }
