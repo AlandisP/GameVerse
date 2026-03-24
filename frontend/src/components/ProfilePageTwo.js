@@ -322,7 +322,7 @@ function ProfilePageTwo() {
               borderRadius: "0 0 12px 12px",
             }}
           >
-          {bannerUrl=="" ?
+          {bannerUrl!="" ?
             <img src={bannerUrl} style={{
             width:"100%",
             height:"100%",
