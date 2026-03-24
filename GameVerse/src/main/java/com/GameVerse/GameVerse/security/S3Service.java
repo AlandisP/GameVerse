@@ -24,8 +24,12 @@ public class S3Service {
     @Value("${aws.bucketName}")
     private String bucketName;
 
-    public String uploadFile(MultipartFile file) throws IOException {
-        String key = UUID.randomUUID().toString() + "_" + file.getOriginalFilename();
+    public String uploadFile(MultipartFile file, String user, String type) throws IOException {
+        String randomUID = UUID.randomUUID().toString() + "_";
+        if(type.equals("Profile")){
+            randomUID = "";
+        }
+        String key = user + "/" + type + "/" + randomUID + file.getOriginalFilename();
         s3Client.putObject(
             PutObjectRequest.builder()
                 .bucket(bucketName)
@@ -35,5 +39,9 @@ public class S3Service {
             RequestBody.fromBytes(file.getBytes())
         );
         return "https://" + bucketName + ".s3." + region +  ".amazonaws.com/" + key;
+    }
+
+    public String uploadFile(MultipartFile file, String user) throws IOException {
+        return uploadFile(file, user, "Media");
     }
 }
