@@ -38,7 +38,7 @@ function ProfilePageTwo() {
         setpfpUrlt(pfpUrl);
         setpfpUrl(URL.createObjectURL(pfp));
       }
-      if(editMode&&!pfp){
+      if(editMode&&!pfp&&pfpUrltemp!=""){
         setpfpUrl(pfpUrltemp);
         URL.revokeObjectURL(pfp);
       }
@@ -48,7 +48,7 @@ function ProfilePageTwo() {
         setbannerUrlt(bannerUrl);
         setbannerUrl(URL.createObjectURL(banner));
       }
-      if(editMode&&!banner){
+      if(editMode&&!banner&&bannerUrltemp!=""){
         setbannerUrl(bannerUrltemp);
         URL.revokeObjectURL(banner);
       }
