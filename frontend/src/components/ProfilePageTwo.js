@@ -497,7 +497,7 @@ function ProfilePageTwo() {
                 </button>
               </>
             ) : (
-              <p>{profile.bio || "No bio yet."}</p>
+              <p style={{marginTop:"10px"}}>{profile.bio || "No bio yet."}</p>
             )}
           </div>
         </div>
