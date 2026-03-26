@@ -32,6 +32,40 @@ function ProfilePageTwo() {
     const [pfpUrltemp, setpfpUrlt] = useState("");
     const [bannerUrl, setbannerUrl] = useState("");
     const [bannerUrltemp, setbannerUrlt] = useState("");
+
+    useEffect(()=>{
+      if(editMode&&pfp){
+        setpfpUrlt(pfpUrl);
+        setpfpUrl(URL.createObjectURL(pfp));
+      }
+      if(editMode&&!pfp&&pfpUrltemp!=""){
+        setpfpUrl(pfpUrltemp);
+        URL.revokeObjectURL(pfp);
+      }
+    },pfp);
+    useEffect(()=>{
+      if(editMode&&banner){
+        setbannerUrlt(bannerUrl);
+        setbannerUrl(URL.createObjectURL(banner));
+      }
+      if(editMode&&!banner&&bannerUrltemp!=""){
+        setbannerUrl(bannerUrltemp);
+        URL.revokeObjectURL(banner);
+      }
+    },banner);
+    const cancelEdit = ()=>{
+      if(pfp){
+        setpfpUrl(pfpUrltemp);
+        URL.revokeObjectURL(pfp);
+        setpfp(null);
+      }
+      if(banner){
+        setbannerUrl(bannerUrltemp);
+        URL.revokeObjectURL(banner);
+        setbanner(null);
+      }
+      setEditMode(false);
+    }
     //#####################
 
     const parselike = (postinf)=>{
@@ -322,7 +356,7 @@ function ProfilePageTwo() {
               borderRadius: "0 0 12px 12px",
             }}
           >
-          {bannerUrl=="" ?
+          {bannerUrl!="" ?
             <img src={bannerUrl} style={{
             width:"100%",
             height:"100%",
@@ -481,7 +515,7 @@ function ProfilePageTwo() {
                 </button>
 
                 <button
-                  onClick={() => setEditMode(false)}
+                  onClick={() => cancelEdit()}
                   style={{
                     marginLeft: "10px",
                     marginTop: "10px",
@@ -497,7 +531,7 @@ function ProfilePageTwo() {
                 </button>
               </>
             ) : (
-              <p>{profile.bio || "No bio yet."}</p>
+              <p style={{marginTop:"10px"}}>{profile.bio || "No bio yet."}</p>
             )}
           </div>
         </div>
