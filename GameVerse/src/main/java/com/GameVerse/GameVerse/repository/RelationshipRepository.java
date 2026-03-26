@@ -17,6 +17,10 @@ public interface RelationshipRepository extends MongoRepository<Relationship, St
     List<Relationship> findAllByFollowingId(String followingId);
 
     void deleteByFollowerIdAndFollowingId(String followerId, String followingId);
+    
+    void deleteAllByFollowerId(String followerId);
+
+    void deleteAllByFollowingId(String followingId);
 
     long countByFollowerId(String followerId);
 

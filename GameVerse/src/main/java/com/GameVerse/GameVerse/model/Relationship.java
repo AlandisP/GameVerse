@@ -1,12 +1,13 @@
 package com.GameVerse.GameVerse.model;
 
-import org.springframework.data.mongodb.core.index.Indexed;
+import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 @Document(collection = "relationships")
 public class Relationship {
+    @Id
     private String id;
-    @Indexed(unique = true) 
+    //@Indexed(unique = true) 
     private String followerId;
     private String followingId;
 

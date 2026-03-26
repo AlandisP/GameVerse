@@ -21,6 +21,7 @@ import com.GameVerse.GameVerse.security.S3Service;
 import com.GameVerse.GameVerse.model.User;
 import com.GameVerse.GameVerse.repository.PostRepository;
 import com.GameVerse.GameVerse.repository.UserRepository;
+import com.GameVerse.GameVerse.services.BlockedService;
 import com.GameVerse.GameVerse.services.NotificationService;
 import com.GameVerse.GameVerse.services.RelationshipServices;
 
@@ -46,6 +47,9 @@ public class UserProfileController {
 
     @Autowired
     private S3Service s3serv;
+
+    @Autowired
+    private BlockedService blockedService;
 
     private static final String type = "Profile";
 
@@ -198,6 +202,50 @@ public class UserProfileController {
         boolean isFollowing = relationshipServices.isFollowing(followerId, target.getId());
         return ResponseEntity.ok(isFollowing);
     }
+
+    // Blocking Logic
+    @PostMapping("/block/{username}")
+    public ResponseEntity<?> blockUser(@PathVariable String username, Authentication auth) {
+        String userId = (String) auth.getPrincipal();
+        User blocked = repository.findByUsernameIgnoreCase(username);
+        if(blocked == null) {
+            return ResponseEntity.badRequest().body("user doesnt exist");
+        }
+        if(userId.equals(blocked.getId())) {
+            return ResponseEntity.badRequest().body("You cant block yourself");
+        }
+        try{
+            blockedService.blockUser(userId, blocked.getId());
+            return ResponseEntity.ok().body("Successfully blocked user");
+        } catch(RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @PostMapping("/unblock/{username}")
+    public ResponseEntity<?> unblockUser(@PathVariable String username, Authentication auth) {
+        String userId = (String) auth.getPrincipal();
+        User blocked = repository.findByUsernameIgnoreCase(username);
+        if(blocked == null) {
+            return ResponseEntity.badRequest().body("user doesnt exist");
+        }
+        if(userId.equals(blocked.getId())) {
+            return ResponseEntity.badRequest().body("You cant block yourself");
+        }
+        try{
+            blockedService.unblockUser(userId, blocked.getId());
+            return ResponseEntity.ok().body("Successfully unblocked user");
+        } catch(RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @GetMapping("/getBlockList")
+    public ResponseEntity<?> getBlockList(Authentication auth) {
+        String userId = (String) auth.getPrincipal();
+        return ResponseEntity.ok(blockedService.getBlockList(userId));
+    }
+
 
 
     // ---------- REQUEST CLASSES ----------

@@ -1,7 +1,6 @@
 package com.GameVerse.GameVerse.model;
 
 import java.util.ArrayList;
-import java.util.List;
 
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.Indexed;
@@ -27,6 +26,7 @@ public class User {
     // These are COUNT values only.
     private int followerCount;
     private int followingCount;
+    private int blockedCount;
 
     private ArrayList<String> bookMarks;
 
@@ -40,6 +40,7 @@ public class User {
         this.role = Role.USER;
         this.followerCount = 0;
         this.followingCount = 0;
+        this.blockedCount = 0;
         bookMarks = new ArrayList<>();
     }
 
@@ -109,6 +110,14 @@ public class User {
 
     public void setFollowingCount(int followingCount) {
         this.followingCount = followingCount;
+    }
+
+    public int getBlockedCount() {
+        return blockedCount;
+    }
+
+    public void setBlockedCount(int blockedCount) {
+        this.blockedCount = blockedCount;
     }
 
     public void addBookmark(String post){
