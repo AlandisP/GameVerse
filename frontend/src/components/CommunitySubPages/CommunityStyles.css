@@ -264,6 +264,10 @@
     border-radius: 8px
 }
 
+.popmenu-container {
+    background-color: transparent;
+}
+
 .promote:hover{
     cursor: pointer;
     background-color: rgba(0, 128, 0, 0.418);

@@ -3,6 +3,7 @@ package com.GameVerse.GameVerse.controller;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.MongoTemplate;
@@ -20,15 +21,18 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.GameVerse.GameVerse.model.BlockingRelationship;
 import com.GameVerse.GameVerse.model.Community;
 import com.GameVerse.GameVerse.model.Post;
 import com.GameVerse.GameVerse.model.Relationship;
 import com.GameVerse.GameVerse.model.User;
+import com.GameVerse.GameVerse.repository.BlockedRelationshipRepository;
 import com.GameVerse.GameVerse.repository.CommunityRepository;
 import com.GameVerse.GameVerse.repository.PostRepository;
 import com.GameVerse.GameVerse.repository.RelationshipRepository;
 import com.GameVerse.GameVerse.repository.UserRepository;
 import com.GameVerse.GameVerse.security.S3Service;
+import com.GameVerse.GameVerse.services.BlockedService;
 import com.GameVerse.GameVerse.services.CommunityService;
 import com.GameVerse.GameVerse.services.NotificationService;
 
@@ -52,6 +56,10 @@ public class PostController {
     private S3Service s3serv;
     @Autowired
     private MongoTemplate mongoTemplate;
+    @Autowired
+    private BlockedRelationshipRepository blockedRepository;
+    @Autowired
+    private BlockedService blockedService;
 
     public static final String type = "Post";
     static class PostContent{
@@ -109,8 +117,22 @@ public class PostController {
         return ResponseEntity.ok().body("new Post successfully created");
     }
     @GetMapping("/getposts")
-    public ResponseEntity<List<Post>> getapost(){
-        List<Post> result = postRepo.findAll();
+    public ResponseEntity<List<Post>> getapost(Authentication auth){
+        String userId = (String) auth.getPrincipal();
+        // users that the auth has blocked
+        List<String> blockedIds = getBlockedIds(userId);
+        // list of users that auth is blocked by
+        List<String> nopes = blockedService.getBlockedListIds(userId);
+        List<Post> result = postRepo.findAll()
+            .stream()
+            .filter(post -> {
+                User poster = userRep.findByUsernameIgnoreCase(post.getUser());
+                return poster != null 
+                    && !blockedIds.contains(poster.getId())
+                    && !nopes.contains(poster.getId());
+            })
+            .collect(Collectors.toList());
+
         Collections.reverse(result);
         return ResponseEntity.ok().body(result);
     }
@@ -176,27 +198,39 @@ public class PostController {
     //gets all community posts
     @GetMapping("/{communityName}/community/posts")
     public ResponseEntity<?> getCommunityPost(@PathVariable String communityName, Authentication auth) {
-        String username = userRep.findById(auth.getPrincipal().toString()).get().getUsername();
+        String userId = (String) auth.getPrincipal();
+        List<String> blockedIds = getBlockedIds(userId);
+        List<String> nopes = blockedService.getBlockedListIds(userId);
         Community com = communityRepository.findByNameIgnoreCase(communityName);
         if(com == null) {
             return ResponseEntity.badRequest().body("CommunityDoesnt exist");
         }
-        return ResponseEntity.ok(postRepo.findAllByCommunityId(com.getId()));
+        List<Post> posts = postRepo.findAllByCommunityId(com.getId())
+            .stream()
+            .filter(post -> {
+                User poster = userRep.findByUsernameIgnoreCase(post.getUser());
+                return poster != null
+                    && !blockedIds.contains(poster.getId())
+                    && !nopes.contains(poster.getId());
+            })
+            .collect(Collectors.toList());
+
+        return ResponseEntity.ok(posts);
     }
     // gets all Following Posts
     @GetMapping("/getFollowingPosts")
     public ResponseEntity<?> getFollowingPost(Authentication auth) {
         String userId = (String) auth.getPrincipal();
-        List<String> userIds = new ArrayList<>();
-        List<Relationship> following= relationshipRepository.findAllByFollowerId(userId);
-        for (Relationship r: following) {
-            userIds.add(r.getFollowingId());
-        }
+        List<String> blockedIds = getBlockedIds(userId);
+
+        List<Relationship> following = relationshipRepository.findAllByFollowerId(userId);
 
         List<Post> followingPosts = new ArrayList<>();
-        for(String id: userIds) {
-            List<Post> userPosts = fetchUserPosts(userRep.findById(userId).orElse(null).getUsername());
-            followingPosts.addAll(userPosts);
+        for (Relationship r : following) {
+            if (!blockedIds.contains(r.getFollowingId())) {
+                List<Post> userPosts = fetchUserPosts(userRep.findById(r.getFollowingId()).orElse(null).getUsername());
+                followingPosts.addAll(userPosts);
+            }
         }
         Collections.shuffle(followingPosts);
         return ResponseEntity.ok(followingPosts);
@@ -217,5 +251,12 @@ public class PostController {
         List<Post> result = postRepo.findAllByUserIdIgnoreCase(username);
         Collections.reverse(result);
         return result;
+    }
+
+    private List<String> getBlockedIds(String userId) {
+        return blockedRepository.findAllByUserId(userId)
+                .stream()
+                .map(BlockingRelationship::getBlockedId)
+                .collect(Collectors.toList());
     }
 }

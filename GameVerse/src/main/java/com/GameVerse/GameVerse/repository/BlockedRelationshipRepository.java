@@ -9,8 +9,9 @@ import com.GameVerse.GameVerse.model.BlockingRelationship;
 
 @Repository
 public interface  BlockedRelationshipRepository extends MongoRepository<BlockingRelationship, String> {
-    boolean existByUserIdAndBlockedId(String userId, String blockedId);
+    boolean existsByUserIdAndBlockedId(String userId, String blockedId);
     List<BlockingRelationship> findAllByUserId(String userId);
+    List<BlockingRelationship> findAllByBlockedId(String blockedId);
     BlockingRelationship findByUserIdAndBlockedId(String userId, String blockedId);
     void deleteByUserIdAndBlockedId(String userId, String blockedId);
     void deleteAllByUserId(String userId);

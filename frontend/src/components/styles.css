@@ -613,3 +613,36 @@ nav.sidebar div,
     margin-top: 20px;
     margin-left: 20px;
 }
+
+.dotsprofile {
+    align-self: center;
+    margin-top: 10px;
+    width: 30px;
+    height: 10px;
+    cursor: pointer;
+}
+
+.blankarea {
+    align-content: center;
+    justify-self: center;
+}
+
+.blockbtn {
+    content: "Blocked";
+    margin-top: 10px;
+    padding: 8px 16px;
+    background-color: red;
+    border: 1px solid transparent;
+    border-radius: 999px;
+    cursor: pointer;
+    color: white;
+    width: auto;
+}
+
+.blockbtn:hover span {
+    display: none;
+}
+
+.blockbtn:hover::before {
+    content: "Unblock";
+}

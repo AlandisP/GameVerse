@@ -3,7 +3,7 @@ package com.GameVerse.GameVerse.model;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-@Document(collection ="BlockingRelationship")
+@Document(collection ="blockingRelationships")
 public class BlockingRelationship {
     @Id
     private String id;

@@ -6,6 +6,8 @@ import NavBar from "./NavBar";
 import API_URL from "../config/api";
 import PostObj from './Post'
 import UploadBox from './MediaUpload';
+import dots from "./../images/dots.png";
+import "./Overlay.css";
 
 function ProfilePageTwo() {
     const { username } = useParams();
@@ -14,6 +16,7 @@ function ProfilePageTwo() {
     const loggedInUsername = localStorage.getItem("username");
 
     const [profile, setProfile] = useState(null);
+    const [currUser, setCurrUser] = useState(null);
     const [bio, setBio] = useState("");
     const [loading, setLoading] = useState(true);
     const [editMode, setEditMode] = useState(false);
@@ -21,6 +24,11 @@ function ProfilePageTwo() {
     const [isFollowing, setIsFollowing] = useState(false);
     const [posts, setPosts] = useState([]);
     const [likedposts, setLikedPosts] = useState([]);
+    const [isOpen, setIsOpen] = useState(false);
+    const[coor, setCoor] = useState({top:0, left:0});
+    const [blockIds, setBlockIds] = useState([]);
+    const [userBlockIds, setUserBlockIds] = useState([]);
+    const [mode, setMode] = useState("");
 
 
     //Profile pictures code
@@ -33,12 +41,24 @@ function ProfilePageTwo() {
     const [bannerUrl, setbannerUrl] = useState("");
     const [bannerUrltemp, setbannerUrlt] = useState("");
 
+    const getCurrentLoggedUser = async() => {
+      const res = await axios.get(
+        `${API_URL}/profile/${loggedInUsername}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setCurrUser(res.data);
+    }
+
+    useEffect(() =>{
+      getCurrentLoggedUser()
+    },[token])
+
     useEffect(()=>{
       if(editMode&&pfp){
         setpfpUrlt(pfpUrl);
         setpfpUrl(URL.createObjectURL(pfp));
       }
-      if(editMode&&!pfp&&pfpUrltemp!=""){
+      if(editMode&&!pfp&&pfpUrltemp!==""){
         setpfpUrl(pfpUrltemp);
         URL.revokeObjectURL(pfp);
       }
@@ -48,7 +68,7 @@ function ProfilePageTwo() {
         setbannerUrlt(bannerUrl);
         setbannerUrl(URL.createObjectURL(banner));
       }
-      if(editMode&&!banner&&bannerUrltemp!=""){
+      if(editMode&&!banner&&bannerUrltemp!==""){
         setbannerUrl(bannerUrltemp);
         URL.revokeObjectURL(banner);
       }
@@ -72,6 +92,18 @@ function ProfilePageTwo() {
         const array = postinf["liked"];
         const like = array[username];
         return like;
+    }
+
+    const handleOptionsClick = (e) => {
+      e.stopPropagation();
+        const rect = e.currentTarget.getBoundingClientRect();
+        setIsOpen(!isOpen);
+        setCoor({top: rect.top, left: rect.left-80});
+        if(userBlockIds.includes(profile.id)) {
+          setMode("Unblock");
+        } else {
+          setMode("Block");
+        }
     }
 
     const GetUserPosts = async() => {
@@ -110,6 +142,8 @@ function ProfilePageTwo() {
           setLikedPosts(res.data);
       }
     }
+
+    
 
     const ReadUserPosts = () => {
         const items = posts.map((post, index)=>{
@@ -154,6 +188,17 @@ function ProfilePageTwo() {
               ? { headers: { Authorization: `Bearer ${token}` } }
               : undefined
           );
+          // gets the users blocked Ids(Viewed Profile)
+          const res1 = await axios.get(
+            `${API_URL}/profile/getBlockIds/${username}`,
+            { headers: { Authorization: `Bearer ${token}` } }
+          );
+          setBlockIds(res1.data);
+          const res2 = await axios.get(
+            `${API_URL}/profile/getBlockIds/${loggedInUsername}`,
+            { headers: { Authorization: `Bearer ${token}` } }
+          );
+          setUserBlockIds(res2.data);
         } else {
           // viewing own profile
           res = await axios.get(`${API_URL}/profile`, {
@@ -167,8 +212,6 @@ function ProfilePageTwo() {
         setpfpUrl(res.data.pfp);
         if(res.data.banner!=null)
         setbannerUrl(res.data.banner);
-        
-
         // If viewing someone else's profile and logged in, fetch follow status
         if (username && token) {
           try {
@@ -294,6 +337,25 @@ function ProfilePageTwo() {
     }
   };
 
+  const handleUnblock = async() => {
+    try {
+      const res = await axios.post (
+        `${API_URL}/profile/unblock/${profile.username}`,
+        {}, { headers: { Authorization: `Bearer ${token}` } }
+      );
+    window.location.reload();
+    } catch (error) {
+      console.error("failed to unblock user: ", error.response?.data || error.message);
+    }
+    
+  }
+
+  useEffect(() => {
+      const handleOutsideClick = () => {setIsOpen(false);}
+      document.addEventListener("click", handleOutsideClick);
+      return () => document.removeEventListener("click", handleOutsideClick);
+  }, []);
+
 
 
   const Sidebar = () => <NavBar />;
@@ -356,7 +418,7 @@ function ProfilePageTwo() {
               borderRadius: "0 0 12px 12px",
             }}
           >
-          {bannerUrl!="" ?
+          {bannerUrl!=="" ?
             <img src={bannerUrl} style={{
             width:"100%",
             height:"100%",
@@ -366,7 +428,7 @@ function ProfilePageTwo() {
           </div>
 
           {/* Avatar */}
-          {pfpUrl=="" ? 
+          {pfpUrl==="" ? 
           <div
             style={{
               position: "absolute",
@@ -444,6 +506,10 @@ function ProfilePageTwo() {
                 )
               ) : (
                 <div style={{ display: "flex", gap: "10px" }}>
+                  <img src={dots} alt="dots" className="dotsprofile" onClick={(e) => handleOptionsClick(e)}/>
+                  {isOpen && <PopUpMenu top={coor.top} left={coor.left} setPopUpMenu={setIsOpen} Mode={mode}/>}
+                  {!userBlockIds.includes(profile.id) && !blockIds.includes(currUser.id)?(
+                  <div>
                   <button
                     onClick={isFollowing ? handleUnfollow : handleFollow}
                     style={{
@@ -474,6 +540,8 @@ function ProfilePageTwo() {
                   >
                     DM
                   </button>
+                  </div>
+                  ):userBlockIds.includes(profile.id)?<><button className="blockbtn" onClick={handleUnblock}><span>Blocked</span></button></>:""}
                 </div>
               )}
             </div>
@@ -535,68 +603,119 @@ function ProfilePageTwo() {
             )}
           </div>
         </div>
-
         {/* TABS */}
-        <div
-          style={{
-            borderBottom: "1px solid #444",
-            marginBottom: "15px",
-            display: "flex",
-            justifyContent: "space-around",
-          }}
-        >
-          {["posts", "media", "likes"].map((tab) => (
-            <button
-              key={tab}
-              onClick={() => setActiveTab(tab)}
+        {userBlockIds.includes(profile.id)?
+          <div className="blankarea">
+            <h1>You've blocked @{profile.username}</h1>
+            <p>You will have to unblock this user to view their posts</p>
+          </div>:blockIds.includes(currUser.id)?
+            <div className="blankarea">
+              <h1>You've been blocked</h1>
+              <p>You can't follow or see @{profile.username}'s posts 😔</p>
+              </div>:( 
+            <div> 
+            <div
               style={{
-                flex: 1,
-                padding: "12px",
-                backgroundColor: "transparent",
-                color: activeTab === tab ? "#058BFE" : "#aaaaaa",
-                border: "none",
-                borderBottom:
-                  activeTab === tab ? "3px solid #058BFE" : "none",
-                fontSize: "1rem",
-                cursor: "pointer",
+                borderBottom: "1px solid #444",
+                marginBottom: "15px",
+                display: "flex",
+                justifyContent: "space-around",
               }}
             >
-              {tab.charAt(0).toUpperCase() + tab.slice(1)}
-            </button>
-          ))}
+              {["posts", "media", "likes"].map((tab) => (
+                <button
+                  key={tab}
+                  onClick={() => setActiveTab(tab)}
+                  style={{
+                    flex: 1,
+                    padding: "12px",
+                    backgroundColor: "transparent",
+                    color: activeTab === tab ? "#058BFE" : "#aaaaaa",
+                    border: "none",
+                    borderBottom:
+                      activeTab === tab ? "3px solid #058BFE" : "none",
+                    fontSize: "1rem",
+                    cursor: "pointer",
+                  }}
+                >
+                  {tab.charAt(0).toUpperCase() + tab.slice(1)}
+                </button>
+              ))}
+            </div>
+        
+
+          {/* TAB CONTENT */}
+          {activeTab === "posts" && (
+            <>
+            {
+              posts.length!==0?(
+                  <ReadUserPosts/>
+              ):<p className="none-yet"> No posts yet</p>
+            }
+            </>
+          )}
+
+          {activeTab === "media" && (
+            <p style={{ color: "#888", textAlign: "center", marginTop: "20px" }}>
+              No media uploaded yet.
+            </p>
+          )}
+
+          {activeTab === "likes" && (
+            <>
+            {
+              likedposts.length!==0?(
+                <ReadUserLikes/>
+              ):<p className="none-yet"> No likes</p>
+            }
+            </>
+          )}
         </div>
-
-        {/* TAB CONTENT */}
-        {activeTab === "posts" && (
-          <>
-          {
-            posts.length!=0?(
-                <ReadUserPosts/>
-            ):<p className="none-yet"> No posts yet</p>
-          }
-          </>
-        )}
-
-        {activeTab === "media" && (
-          <p style={{ color: "#888", textAlign: "center", marginTop: "20px" }}>
-            No media uploaded yet.
-          </p>
-        )}
-
-        {activeTab === "likes" && (
-          <>
-          {
-            likedposts.length!=0?(
-              <ReadUserLikes/>
-            ):<p className="none-yet"> No likes</p>
-          }
-          </>
         )}
       </div>
-      {isUploading==1 ? <UploadBox clearvar={enableUpload} fileinf={{file:pfp,upload:setpfp}}/> : ''}
-      {isUploading==2 ? <UploadBox clearvar={enableUpload} fileinf={{file:banner,upload:setbanner}}/> : ''}
+      {isUploading===1 ? <UploadBox clearvar={enableUpload} fileinf={{file:pfp,upload:setpfp}}/> : ''}
+      {isUploading===2 ? <UploadBox clearvar={enableUpload} fileinf={{file:banner,upload:setbanner}}/> : ''}
     </div>
   );
 }
+
+  function PopUpMenu({ top, left, setPopUpMenu, Mode}) {
+    const token = localStorage.getItem("token");
+    const { username } = useParams();
+
+    const blockUser = async() => {
+      try {
+        const res = await axios.post (
+          `${API_URL}/profile/block/${username}`,
+          {}, { headers: { Authorization: `Bearer ${token}` } }
+        );
+        window.location.reload();
+      } catch (error) {
+        console.error("failed to Block user: ", error.response?.data || error.message);
+      }
+    }
+
+    const unblockUser = async() => {
+      const res = await axios.post(
+        `${API_URL}/profile/unblock/${username}`,
+        {}, { headers: { Authorization: `Bearer ${token}` } }
+      );
+      window.location.reload();
+    }
+
+    return (
+        <div className="popmenu-container" style={{ top, left, position: "fixed" }}>
+            <ul className="popmenu">
+                {Mode === "Block"?(
+                    <>
+                      <li className="kick" onClick={blockUser}>Block</li>
+                    </>
+                ):<li className="promote" onClick={unblockUser}>Unblock</li>
+                }
+                
+            </ul>
+        </div>
+    );
+  }
 
 export default ProfilePageTwo;

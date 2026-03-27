@@ -16,11 +16,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
-import com.GameVerse.GameVerse.security.S3Service;
 
 import com.GameVerse.GameVerse.model.User;
 import com.GameVerse.GameVerse.repository.PostRepository;
 import com.GameVerse.GameVerse.repository.UserRepository;
+import com.GameVerse.GameVerse.security.S3Service;
 import com.GameVerse.GameVerse.services.BlockedService;
 import com.GameVerse.GameVerse.services.NotificationService;
 import com.GameVerse.GameVerse.services.RelationshipServices;
@@ -239,12 +239,21 @@ public class UserProfileController {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
-
+    // Get the strings
     @GetMapping("/getBlockList")
     public ResponseEntity<?> getBlockList(Authentication auth) {
         String userId = (String) auth.getPrincipal();
         return ResponseEntity.ok(blockedService.getBlockList(userId));
     }
+
+    @GetMapping("/getBlockIds/{username}")
+    public ResponseEntity<?> getBlockListIds(Authentication auth, @PathVariable String username) {
+        String userId = (String) auth.getPrincipal();
+        User user = repository.findByUsernameIgnoreCase(username);
+        return ResponseEntity.ok(blockedService.getBlockListIds(user.getId()));
+    }
+
+
 
 
 
