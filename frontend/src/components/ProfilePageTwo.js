@@ -120,6 +120,7 @@ function ProfilePageTwo() {
                     { headers: { Authorization: `Bearer ${token}` } }
                 );
                 setPosts(res.data);
+                console.log(res.data);
             }
         } catch (error) {
             console.error("failed to get user's posts:", error.response?.data || error.message)
@@ -154,6 +155,18 @@ function ProfilePageTwo() {
                 {items}
             </div>
         );
+    }
+    const ReadUserMedia = () => {
+      const items = posts.map((post,index) => {
+        if(post.media !== null) {
+          return <PostObj key={index} User={post["user"]} Content={post["text"]} Likes={post["likes"]} Liked={parselike(post)} id={post["id"]} commcount={post["comments"].length} books={false} CreatedAt={post["createdAt"]} CommunityName={post["communityName"]} media={post["media"]}/>
+        }
+      });
+      return(
+        <div className="com-posts">
+          {items}
+        </div>
+      )
     }
 
     const ReadUserLikes = () => {
@@ -656,9 +669,11 @@ function ProfilePageTwo() {
           )}
 
           {activeTab === "media" && (
-            <p style={{ color: "#888", textAlign: "center", marginTop: "20px" }}>
-              No media uploaded yet.
-            </p>
+            <>
+            {
+              <ReadUserMedia/>
+            }
+            </>
           )}
 
           {activeTab === "likes" && (
