@@ -88,6 +88,7 @@ public class PostController {
         String username = userRep.findById(auth.getPrincipal().toString()).get().getUsername();
         Post newPost = new Post(content,username, null, null);
         newPost.setTag(userRep.findById(auth.getPrincipal().toString()).get().getPlatform());
+        newPost.setmediaType(media.getContentType());
         if(media!=null){
             String medianame = s3serv.uploadFile(media, username);
             newPost.setmedia(medianame);

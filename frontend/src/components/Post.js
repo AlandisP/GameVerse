@@ -11,7 +11,8 @@ import './PostStyle.css'
 import CommentSection from './Comments'
 import { shortTimeAgo } from '../utils/shortTimeAgo'
 import API_URL from '../config/api'
-function PostObj ({User, Content, Likes, Liked, id, books, commcount, CreatedAt, CommunityName, media}){
+const urlprefab = "https://gameverse-media-026955879175-us-east-2-an.s3.us-east-2.amazonaws.com/";
+function PostObj ({User, Content, Likes, Liked, id, books, commcount, CreatedAt, CommunityName, media, type}){
         const postid = id;
         const [didLike, setdidLike]= useState(Liked);
         const [didBook, setBook]= useState(false);
@@ -20,15 +21,12 @@ function PostObj ({User, Content, Likes, Liked, id, books, commcount, CreatedAt,
         const [viewComments, setView]= useState(false);
         const [posterPfp, setposterPfp] = useState("");
         const token  = localStorage.getItem('token');
-        const urlprefab = "https://gameverse-media-026955879175-us-east-2-an.s3.us-east-2.amazonaws.com/";
         const [imgsrc, setimgsrc] = useState(urlprefab+User+"/Profile/ProfilePic");
         const navigate = useNavigate();
         useEffect(()=>{
+            console.log(type);
             setBook(books);
             setComments(commcount);
-            // axios.get(`${API_URL}/profile/getmedia/${User}`,{ headers: { Authorization: `Bearer ${token}` } }).then((e)=>{
-            //     console.log(e.data);
-            // });
         },[]);
         const likeinteract = async ()=>{
             await axios.post(
