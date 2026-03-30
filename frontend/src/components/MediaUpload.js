@@ -10,8 +10,14 @@ function UploadBox({clearvar, fileinf}){
     const [filetype, settype] = useState("");
     const [errorf, seterror] = useState("");
     useEffect(()=>{
-        if(fileinf){
+        if(fileinf.file){
             setfile(fileinf.file);
+            if(/video/g.test(fileinf.file.type)){
+                settype("video");
+            }
+            else if(/image/g.test(fileinf.file.type)){
+                settype("image");
+            }
         }
     },[]);
     useEffect(()=>{
@@ -32,16 +38,15 @@ function UploadBox({clearvar, fileinf}){
     },[file]);
     const onupload = (e) => {
         const upload = e.target.files;
-        if(/video/g.test(e.target.files[0].type)){
+        console.log(/video/g.test(upload[0].type));
+        if(/video/g.test(upload[0].type)){
             settype("video");
         }
-        else if(/image/g.test(e.target.files[0].type)){
+        else if(/image/g.test(upload[0].type)){
             settype("image");
         }
-        else{
+        if(/video/g.test(upload[0].type)==/image/g.test(upload[0].type)){
             seterror("Invalid Media Upload");
-        }
-        if(filetype==""){
             return;
         }
         if(upload && upload.length > 0){
@@ -58,10 +63,8 @@ function UploadBox({clearvar, fileinf}){
         else if(/image/g.test(upload[0].type)){
             settype("image");
         }
-        else{
+        if(/video/g.test(upload[0].type)==/image/g.test(upload[0].type)){
             seterror("Invalid Media Upload");
-        }
-        if(filetype==""){
             return;
         }
         if(upload && upload.length > 0){

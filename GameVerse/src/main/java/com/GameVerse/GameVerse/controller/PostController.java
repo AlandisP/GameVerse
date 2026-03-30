@@ -90,7 +90,9 @@ public class PostController {
         newPost.setTag(userRep.findById(auth.getPrincipal().toString()).get().getPlatform());
         newPost.setmediaType(media.getContentType());
         if(media!=null){
+            System.out.println(media.getOriginalFilename());
             String medianame = s3serv.uploadFile(media, username);
+            System.out.println("upload successful");
             newPost.setmedia(medianame);
         }
         // if(media!=null){

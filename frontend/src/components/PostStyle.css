@@ -145,6 +145,7 @@
 
 .content-p{
     margin-top: 15px;
+    margin-bottom: 10px;
 }
 .Post-Media{
     max-height: 200px;
@@ -188,4 +189,15 @@
 
 .Others{
     border-radius: 50%;
+}
+
+h4.at{
+    margin: 0;
+    margin-left: 3px;
+    margin-right: 3px;
+}
+
+h4.at:hover{
+    text-decoration: underline;
+    text-underline-offset: 5px;
 }

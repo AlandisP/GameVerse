@@ -161,6 +161,8 @@ public class Post {
     }
     
     public String getmediaType(){
+        if(mediaType == null)
+            mediaType = "image";
         return mediaType;
     }
     public void setmediaType(String type){

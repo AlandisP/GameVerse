@@ -24,10 +24,23 @@ function PostObj ({User, Content, Likes, Liked, id, books, commcount, CreatedAt,
         const [imgsrc, setimgsrc] = useState(urlprefab+User+"/Profile/ProfilePic");
         const navigate = useNavigate();
         useEffect(()=>{
-            console.log(type);
             setBook(books);
             setComments(commcount);
         },[]);
+
+        const ParsedText = ({text})=>{
+            const mention = /(@[a-zA-Z0-9]+)/g;
+            const segments = text.split(mention);
+            console.log(segments);
+            return(<p className='content-p'>
+                {segments.map((seg, index)=>{
+                    if(seg.match(mention)){
+                    return(<h4 key={index} className='at' onClick={()=>{navigate(`/profile/${seg.substring(1)}`)}}>{seg}</h4>);
+                    }
+                    return <React.Fragment key={index}>{seg}</React.Fragment>
+                })}
+            </p>);
+        }
         const likeinteract = async ()=>{
             await axios.post(
                 `${API_URL}/post/likepost`,{id:id},
@@ -68,8 +81,10 @@ function PostObj ({User, Content, Likes, Liked, id, books, commcount, CreatedAt,
                         </div>
                         <p>{CreatedAt?shortTimeAgo(CreatedAt):""}</p>
                     </div>
-                    <p className='content-p'>{Content}</p>
-                    {media!=null ? <img src={media} className='Post-Media'/> : ''}
+                    <ParsedText text={Content}/>
+                    {/* <p className='content-p'>{Content}</p> */}
+                    {media!=null && /image/g.test(type) ? <img src={media} className='Post-Media'/> : ''}
+                    {media!=null && /video/g.test(type) ? <video className='Post-Media' controls><source src={media}/></video> : ''}
                     <div className='Media-Bar'>
                         <img src={didLike ? HeartFull : Heart} onClick={likeinteract}/>
                         <p>{falseLikes}</p>
