@@ -164,7 +164,11 @@ function ProfilePageTwo() {
       });
       return(
         <div className="com-posts">
-          {items}
+          {items.length!==0?(
+            <>
+              {items}
+            </>
+          ):<p className="none-yet">No Media Uploaded</p>}
         </div>
       )
     }
@@ -635,7 +639,7 @@ function ProfilePageTwo() {
                 justifyContent: "space-around",
               }}
             >
-              {["posts", "media", "likes"].map((tab) => (
+              {["posts", "media", "likes","achievements"].map((tab) => (
                 <button
                   key={tab}
                   onClick={() => setActiveTab(tab)}
@@ -683,6 +687,14 @@ function ProfilePageTwo() {
                 <ReadUserLikes/>
               ):<p className="none-yet"> No likes</p>
             }
+            </>
+          )}
+          {activeTab==="achievements" &&(
+            <>
+            <div className="com-posts">
+              <p className="none-yet">You must sign in with steam to show your achievements. Please click the link to sign into steam</p>
+
+            </div>
             </>
           )}
         </div>
