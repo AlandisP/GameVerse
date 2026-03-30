@@ -621,7 +621,7 @@ function ProfilePageTwo() {
           <div className="blankarea">
             <h1>You've blocked @{profile.username}</h1>
             <p>You will have to unblock this user to view their posts</p>
-          </div>:blockIds.includes(currUser.id)?
+          </div>:blockIds.includes(currUser.id)&&currUser.id!=null?
             <div className="blankarea">
               <h1>You've been blocked</h1>
               <p>You can't follow or see @{profile.username}'s posts 😔</p>
