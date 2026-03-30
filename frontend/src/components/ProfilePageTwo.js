@@ -148,7 +148,7 @@ function ProfilePageTwo() {
 
     const ReadUserPosts = () => {
         const items = posts.map((post, index)=>{
-             return <PostObj key={index} User={post["user"]} Content={post["text"]} Likes={post["likes"]} Liked={parselike(post)} id={post["id"]} commcount={post["comments"].length} books={false} CreatedAt={post["createdAt"]} CommunityName={post["communityName"]} media={post["media"]}/>
+             return <PostObj key={index} User={post["user"]} Content={post["text"]} Likes={post["likes"]} Liked={parselike(post)} id={post["id"]} commcount={post["comments"].length} books={false} CreatedAt={post["createdAt"]} CommunityName={post["communityName"]} media={post["media"]} type={post["mediaType"]}/>
         });
         return(
             <div className="com-posts">
@@ -159,7 +159,7 @@ function ProfilePageTwo() {
     const ReadUserMedia = () => {
       const items = posts.map((post,index) => {
         if(post.media !== null) {
-          return <PostObj key={index} User={post["user"]} Content={post["text"]} Likes={post["likes"]} Liked={parselike(post)} id={post["id"]} commcount={post["comments"].length} books={false} CreatedAt={post["createdAt"]} CommunityName={post["communityName"]} media={post["media"]}/>
+          return <PostObj key={index} User={post["user"]} Content={post["text"]} Likes={post["likes"]} Liked={parselike(post)} id={post["id"]} commcount={post["comments"].length} books={false} CreatedAt={post["createdAt"]} CommunityName={post["communityName"]} media={post["media"]} type={post["mediaType"]}/>
         }
       });
       return(

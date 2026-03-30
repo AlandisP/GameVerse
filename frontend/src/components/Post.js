@@ -11,7 +11,8 @@ import './PostStyle.css'
 import CommentSection from './Comments'
 import { shortTimeAgo } from '../utils/shortTimeAgo'
 import API_URL from '../config/api'
-function PostObj ({User, Content, Likes, Liked, id, books, commcount, CreatedAt, CommunityName, media}){
+const urlprefab = "https://gameverse-media-026955879175-us-east-2-an.s3.us-east-2.amazonaws.com/";
+function PostObj ({User, Content, Likes, Liked, id, books, commcount, CreatedAt, CommunityName, media, type}){
         const postid = id;
         const [didLike, setdidLike]= useState(Liked);
         const [didBook, setBook]= useState(false);
@@ -20,16 +21,26 @@ function PostObj ({User, Content, Likes, Liked, id, books, commcount, CreatedAt,
         const [viewComments, setView]= useState(false);
         const [posterPfp, setposterPfp] = useState("");
         const token  = localStorage.getItem('token');
-        const urlprefab = "https://gameverse-media-026955879175-us-east-2-an.s3.us-east-2.amazonaws.com/";
         const [imgsrc, setimgsrc] = useState(urlprefab+User+"/Profile/ProfilePic");
         const navigate = useNavigate();
         useEffect(()=>{
             setBook(books);
             setComments(commcount);
-            // axios.get(`${API_URL}/profile/getmedia/${User}`,{ headers: { Authorization: `Bearer ${token}` } }).then((e)=>{
-            //     console.log(e.data);
-            // });
         },[]);
+
+        const ParsedText = ({text})=>{
+            const mention = /(@[a-zA-Z0-9]+)/g;
+            const segments = text.split(mention);
+            console.log(segments);
+            return(<p className='content-p'>
+                {segments.map((seg, index)=>{
+                    if(seg.match(mention)){
+                    return(<h4 key={index} className='at' onClick={()=>{navigate(`/profile/${seg.substring(1)}`)}}>{seg}</h4>);
+                    }
+                    return <React.Fragment key={index}>{seg}</React.Fragment>
+                })}
+            </p>);
+        }
         const likeinteract = async ()=>{
             await axios.post(
                 `${API_URL}/post/likepost`,{id:id},
@@ -70,8 +81,10 @@ function PostObj ({User, Content, Likes, Liked, id, books, commcount, CreatedAt,
                         </div>
                         <p>{CreatedAt?shortTimeAgo(CreatedAt):""}</p>
                     </div>
-                    <p className='content-p'>{Content}</p>
-                    {media!=null ? <img src={media} className='Post-Media'/> : ''}
+                    <ParsedText text={Content}/>
+                    {/* <p className='content-p'>{Content}</p> */}
+                    {media!=null && /image/g.test(type) ? <img src={media} className='Post-Media'/> : ''}
+                    {media!=null && /video/g.test(type) ? <video className='Post-Media' controls><source src={media}/></video> : ''}
                     <div className='Media-Bar'>
                         <img src={didLike ? HeartFull : Heart} onClick={likeinteract}/>
                         <p>{falseLikes}</p>

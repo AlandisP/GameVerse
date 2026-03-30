@@ -24,6 +24,7 @@ function HomePage() {
     const [canref, refresh] = useState(0);
     const [uploadbox, setupload] = useState(false);
     const [uploadedFile, uploadFile] = useState(null);
+    // const [uploadtype, setuploadtype] = useState("");
     const clipico = useRef(null);
     const [imgsrc, setimgsrc] = useState(urlprefab+username+"/Profile/ProfilePic");
 
@@ -53,12 +54,13 @@ function HomePage() {
             formdat.append('media',uploadedFile);
             const pid = await axios.post(
                 `${API_URL}/post/makepost`,formdat,
-                { headers: { Authorization: `Bearer ${token}` } }
+                { headers: { Authorization: `Bearer ${token}` },timeout:0 }
             );
             setposts(posts => {
                 const newArray = [...posts]; 
                 const mediaurl = uploadedFile!=null ? URL.createObjectURL(uploadedFile) : null;
-                newArray.unshift({user:username,text:postbod,likes:0,liked:{},id:pid.data,comments:[],media:mediaurl}); 
+                const mediatypefile = uploadedFile!=null ? uploadedFile.type : "";
+                newArray.unshift({user:username,text:postbod,likes:0,liked:{},id:pid.data,comments:[],media:mediaurl,mediaType:mediatypefile}); 
                 return newArray; 
             });
             uploadFile(null);
@@ -89,14 +91,22 @@ function HomePage() {
         const items = posts.map((post,ind)=>{
             //console.log(post);
                 if(bookarray.includes(post["id"])){
-                    return <PostObj key={ind} User={post["user"]} Content={post["text"]} Likes={post["likes"]} Liked={parselike(post)} id={post["id"]} commcount={post["comments"].length} books={true} CreatedAt={post["createdAt"]} CommunityName={post["communityName"]} media={post["media"]}/>
+                    return <PostObj key={ind} User={post["user"]} Content={post["text"]} Likes={post["likes"]} Liked={parselike(post)} id={post["id"]} commcount={post["comments"].length} books={true} CreatedAt={post["createdAt"]} CommunityName={post["communityName"]} media={post["media"]} type={post["mediaType"]}/>
                 }
-                return <PostObj key={ind} User={post["user"]} Content={post["text"]} Likes={post["likes"]} Liked={parselike(post)} id={post["id"]} commcount={post["comments"].length} books={false} CreatedAt={post["createdAt"]} CommunityName={post["communityName"]} media={post["media"]}/>
+                return <PostObj key={ind} User={post["user"]} Content={post["text"]} Likes={post["likes"]} Liked={parselike(post)} id={post["id"]} commcount={post["comments"].length} books={false} CreatedAt={post["createdAt"]} CommunityName={post["communityName"]} media={post["media"]} type={post["mediaType"]}/>
         });
         return(
             <div>{items}</div>
         )
     }
+    const bookarray = Array.from(bookmarks);
+    const renderposts = posts.map((post,ind)=>{
+        //console.log(post);
+        if(bookarray.includes(post["id"])){
+                return <PostObj key={ind} User={post["user"]} Content={post["text"]} Likes={post["likes"]} Liked={parselike(post)} id={post["id"]} commcount={post["comments"].length} books={true} CreatedAt={post["createdAt"]} CommunityName={post["communityName"]} media={post["media"]} type={post["mediaType"]}/>
+            }
+            return <PostObj key={ind} User={post["user"]} Content={post["text"]} Likes={post["likes"]} Liked={parselike(post)} id={post["id"]} commcount={post["comments"].length} books={false} CreatedAt={post["createdAt"]} CommunityName={post["communityName"]} media={post["media"]} type={post["mediaType"]}/>
+    });
     useEffect(()=>{
             getposts();
     },[]);
@@ -137,7 +147,8 @@ function HomePage() {
                         <button className='Post' onClick={makepost}>Post</button>
                     </div>
                     <div className='Content'>
-                        <Readposts/>
+                        {/* <Readposts/> */}
+                        <div>{renderposts}</div>
                     </div>
                 </div>
             </div>

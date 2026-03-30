@@ -41,7 +41,7 @@ public class Post {
     private String imageUrl;
     private Instant createdAt;
     private String medialink;
-    private String pfpvar;
+    private String mediaType;
 
     public Post(String text, String userId, String communityId, String communityName){
         this.text = text;
@@ -160,8 +160,12 @@ public class Post {
         return medialink;
     }
     
-    public String getpfpvar(){
-        //return 'userRep.findByUsernameIgnoreCase("GDAWG").getpfp()';
-        return "";
+    public String getmediaType(){
+        if(mediaType == null)
+            mediaType = "image";
+        return mediaType;
+    }
+    public void setmediaType(String type){
+        mediaType = type;
     }
 }

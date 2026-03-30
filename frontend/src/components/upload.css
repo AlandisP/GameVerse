@@ -74,6 +74,12 @@
     width: auto;
 }
 
+.FileInf video{
+    max-width: 200px;
+    max-height: 150px;
+    width: auto;
+}
+
 .FileInf div{
     margin-top: 40px;
     margin-bottom: 40px;
@@ -100,4 +106,10 @@
 
 .FileInf .upl{
     background-color: #65c765;
+}
+
+.Error-Msg {
+    color:#FF0000;
+    margin-top: 50px;
+    font-size: 18px;
 }

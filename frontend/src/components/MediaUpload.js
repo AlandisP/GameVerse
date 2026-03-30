@@ -7,9 +7,17 @@ import upload from '../images/Upload.png'
 function UploadBox({clearvar, fileinf}){
     const [file, setfile] = useState(null);
     const [fileurl, setfurl] = useState(null);
+    const [filetype, settype] = useState("");
+    const [errorf, seterror] = useState("");
     useEffect(()=>{
-        if(fileinf){
+        if(fileinf.file){
             setfile(fileinf.file);
+            if(/video/g.test(fileinf.file.type)){
+                settype("video");
+            }
+            else if(/image/g.test(fileinf.file.type)){
+                settype("image");
+            }
         }
     },[]);
     useEffect(()=>{
@@ -30,13 +38,35 @@ function UploadBox({clearvar, fileinf}){
     },[file]);
     const onupload = (e) => {
         const upload = e.target.files;
+        console.log(/video/g.test(upload[0].type));
+        if(/video/g.test(upload[0].type)){
+            settype("video");
+        }
+        else if(/image/g.test(upload[0].type)){
+            settype("image");
+        }
+        if(/video/g.test(upload[0].type)==/image/g.test(upload[0].type)){
+            seterror("Invalid Media Upload");
+            return;
+        }
         if(upload && upload.length > 0){
             setfile(upload[0]);
+            seterror("");
         }
     }
     const ondrag = (e) => {
         e.preventDefault();
         const upload = e.dataTransfer.files;
+        if(/video/g.test(upload[0].type)){
+            settype("video");
+        }
+        else if(/image/g.test(upload[0].type)){
+            settype("image");
+        }
+        if(/video/g.test(upload[0].type)==/image/g.test(upload[0].type)){
+            seterror("Invalid Media Upload");
+            return;
+        }
         if(upload && upload.length > 0){
             setfile(upload[0]);
         }
@@ -50,7 +80,7 @@ function UploadBox({clearvar, fileinf}){
     }
     const uploadfile = ()=>{
         if(fileinf)
-        fileinf.upload(file)
+        fileinf.upload(file);
         close();
     }
     const close =()=>{
@@ -64,7 +94,9 @@ function UploadBox({clearvar, fileinf}){
         <div className='FileInf'>
             <h3>{file.name}</h3>
             <div>
-                <img src={fileurl}/>
+                {filetype=="video"?<video><source src={fileurl}/></video>:""}
+                {filetype=="image"?<img src={fileurl}/>:""}
+                
             </div>
             <button className='clr' onClick={clearfile}>Clear</button>
             <button className='upl' onClick={uploadfile}>Upload</button>
@@ -85,6 +117,7 @@ function UploadBox({clearvar, fileinf}){
                     </div>
                 </label>
                 }
+                {errorf!="" ? <p className='Error-Msg'>{errorf}</p>:""}
             </div>
         </div>
     )
