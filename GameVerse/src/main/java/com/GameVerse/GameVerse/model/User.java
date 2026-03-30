@@ -19,6 +19,7 @@ public class User {
     private String bio;
     private String platform;
     private Role role;
+    private String steamId;
     
     private String pfp;
     private String banner;
@@ -42,6 +43,7 @@ public class User {
         this.followingCount = 0;
         this.blockedCount = 0;
         bookMarks = new ArrayList<>();
+        this.steamId=null;
     }
 
     // ---- Getters ----
@@ -154,5 +156,13 @@ public class User {
     }
     public String getbanner(){
         return banner;
+    }
+
+    public String getSteamId(){
+        return steamId;
+    }
+
+    public void setSteamId(String steamId) {
+        this.steamId = steamId;
     }
 }
