@@ -28,7 +28,6 @@ function ExplorePage() {
   const [searchError, setSearchError] = useState(null);
 
   const searchDebounceRef = useRef(null);
-  const feedBoxRef = useRef(null);
 
   const getTimestamp = (p) => {
     const t = p?.createdAt ?? p?.timestamp ?? p?.date;
@@ -246,44 +245,6 @@ function ExplorePage() {
 
   const hasQuery = searchQuery.trim().length > 0;
 
-  useEffect(() => {
-    const root = feedBoxRef.current;
-    if (!root) return;
-
-    const applyFixes = () => {
-      root.querySelectorAll(".Postcontent").forEach((el) => {
-        el.style.marginLeft = "0px";
-        el.style.marginRight = "auto";
-        el.style.width = "100%";
-        el.style.maxWidth = "725px";
-        el.style.position = "static";
-        el.style.left = "auto";
-        el.style.right = "auto";
-        el.style.transform = "none";
-      });
-
-      root.querySelectorAll(".inner").forEach((el) => {
-        el.style.width = "100%";
-        el.style.maxWidth = "650px";
-        el.style.marginLeft = "0px";
-        el.style.marginRight = "0px";
-      });
-    };
-
-    applyFixes();
-
-    const observer = new MutationObserver(applyFixes);
-    observer.observe(root, { childList: true, subtree: true });
-
-    return () => observer.disconnect();
-  }, [
-    hasQuery,
-    displayPosts.length,
-    postResults.length,
-    loading,
-    searchLoading,
-  ]);
-
   return (
     <div className="page-container explore-page">
       <NavBar />
@@ -355,7 +316,7 @@ function ExplorePage() {
               </div>
             </div>
 
-            <div className="explore-feed-box" ref={feedBoxRef}>
+            <div className="explore-feed-box">
               {hasQuery ? (
                 <div className="search-results-area">
                   <div className="results-header">
