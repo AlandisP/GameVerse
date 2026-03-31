@@ -14,7 +14,7 @@ import dots from "./../images/dots.png";
 import { shortTimeAgo } from '../utils/shortTimeAgo'
 import API_URL from '../config/api'
 const urlprefab = "https://gameverse-media-026955879175-us-east-2-an.s3.us-east-2.amazonaws.com/";
-function PostObj ({User, Content, Likes, Liked, id, books, commcount, CreatedAt, CommunityName, media, type}){
+function PostObj ({User, Content, Likes, Liked, id, books, commcount, CreatedAt, CommunityName, media, type, popup}){
         const postid = id;
         const username = localStorage.getItem('username');
         const [didLike, setdidLike]= useState(Liked);
@@ -36,7 +36,7 @@ function PostObj ({User, Content, Likes, Liked, id, books, commcount, CreatedAt,
         const ParsedText = ({text})=>{
             const mention = /(@[a-zA-Z0-9]+)/g;
             const segments = text.split(mention);
-            console.log(segments);
+            //console.log(segments);
             return(<p className={`written-content` + `${CommunityName?"":" shiftup"}`}>
                 {segments.map((seg, index)=>{
                     if(seg.match(mention)){
@@ -57,7 +57,7 @@ function PostObj ({User, Content, Likes, Liked, id, books, commcount, CreatedAt,
                 setfalseLikes(falseLikes+1);
             }
             setdidLike(!didLike);
-            console.log(Liked);
+            //console.log(Liked);
         }
         const bookinteract = async ()=>{
             await axios.post(
@@ -68,7 +68,23 @@ function PostObj ({User, Content, Likes, Liked, id, books, commcount, CreatedAt,
         }
         const viewComs = ()=>{
             setView(!viewComments);
+            if(popup)
+                popup.func("");
         }
+        useEffect(()=>{
+            if(!pop)
+                return;
+            const clickevent = (e)=>{
+                const target = e.target;
+                if(!target.closest(".Popup")){
+                    setpop(false);
+                }
+            }
+            document.addEventListener("click", clickevent,true);
+            return()=>{
+                document.removeEventListener("click", clickevent);
+            }
+        },[pop]);
         const PopUp = ({item})=>{
             return(
                 <div className='Popup' style={{left:`${item.current.offsetLeft-70}px`,top:`${item.current.offsetTop+20}px`}}>
@@ -90,7 +106,7 @@ function PostObj ({User, Content, Likes, Liked, id, books, commcount, CreatedAt,
                         <h3 onClick={()=>{navigate(`/profile/${User}`)}}>@{User}</h3>
                         <p>•</p>
                         <p>{CreatedAt?shortTimeAgo(CreatedAt):""}</p>
-                        <img className='popup' src={dots} ref={dotsbar} onClick={()=>{setpop(!pop)}}/>
+                        <img className='popup' src={dots} ref={dotsbar} onClick={()=>{setpop(true)}}/>
                         {pop?<PopUp item={dotsbar}/>:""}
                     </div>
                     {CommunityName?(
