@@ -3,6 +3,10 @@
     display: flex;
     flex-direction: row;
     align-items: start;
+    flex-shrink: 0;
+}
+.Info{
+    width: 100%;
 }
 .PFP{
     width: 40px;
@@ -214,4 +218,33 @@ h4.at:hover{
 .Message-Bar img{
     width:20px;
     height: 20px;
+}
+
+img.popup{
+    width:20px;
+    margin-top:2px;
+    margin-left: auto;
+    margin-right: 20px;
+    padding:10px;
+}
+
+.Popup{
+    position:absolute;
+    display: flex;
+    flex-direction: column;
+    background-color: rgba(0, 0, 0, 0.55);
+    border-radius: 10px;
+    padding: 5px;
+    opacity: 0;
+    animation: fadeIn 0.5s ease-in forwards;
+}
+.Popup button{
+    background-color: whitesmoke;
+    border-radius: 10px;
+    width:90px;
+    height:30px
+}
+
+.shiftup{
+    margin-top: -10px;
 }

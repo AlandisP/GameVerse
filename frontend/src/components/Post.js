@@ -10,11 +10,13 @@ import axios from 'axios';
 // import './PostStyle.css'
 import './NewPostStyle.css'
 import CommentSection from './Comments'
+import dots from "./../images/dots.png";
 import { shortTimeAgo } from '../utils/shortTimeAgo'
 import API_URL from '../config/api'
 const urlprefab = "https://gameverse-media-026955879175-us-east-2-an.s3.us-east-2.amazonaws.com/";
 function PostObj ({User, Content, Likes, Liked, id, books, commcount, CreatedAt, CommunityName, media, type}){
         const postid = id;
+        const username = localStorage.getItem('username');
         const [didLike, setdidLike]= useState(Liked);
         const [didBook, setBook]= useState(false);
         const [falseLikes, setfalseLikes]= useState(Likes);
@@ -23,6 +25,8 @@ function PostObj ({User, Content, Likes, Liked, id, books, commcount, CreatedAt,
         const [posterPfp, setposterPfp] = useState("");
         const token  = localStorage.getItem('token');
         const [imgsrc, setimgsrc] = useState(urlprefab+User+"/Profile/ProfilePic");
+        const [pop, setpop] = useState(false);
+        const dotsbar = useRef();
         const navigate = useNavigate();
         useEffect(()=>{
             setBook(books);
@@ -33,7 +37,7 @@ function PostObj ({User, Content, Likes, Liked, id, books, commcount, CreatedAt,
             const mention = /(@[a-zA-Z0-9]+)/g;
             const segments = text.split(mention);
             console.log(segments);
-            return(<p className='written-content'>
+            return(<p className={`written-content` + `${CommunityName?"":" shiftup"}`}>
                 {segments.map((seg, index)=>{
                     if(seg.match(mention)){
                     return(<h4 key={index} className='at' onClick={()=>{navigate(`/profile/${seg.substring(1)}`)}}>{seg}</h4>);
@@ -65,6 +69,17 @@ function PostObj ({User, Content, Likes, Liked, id, books, commcount, CreatedAt,
         const viewComs = ()=>{
             setView(!viewComments);
         }
+        const PopUp = ({item})=>{
+            return(
+                <div className='Popup' style={{left:`${item.current.offsetLeft-70}px`,top:`${item.current.offsetTop+20}px`}}>
+                    <button onClick={bookinteract}>{didBook?"Bookmarked":"Bookmark"}</button>
+                    {username!=User?
+                    <button>Block</button> :
+                    <button>Delete</button>
+                    }   
+                </div>
+            );
+        }
         return(
             <div>
             <div className='New-Post'>
@@ -75,6 +90,8 @@ function PostObj ({User, Content, Likes, Liked, id, books, commcount, CreatedAt,
                         <h3 onClick={()=>{navigate(`/profile/${User}`)}}>@{User}</h3>
                         <p>•</p>
                         <p>{CreatedAt?shortTimeAgo(CreatedAt):""}</p>
+                        <img className='popup' src={dots} ref={dotsbar} onClick={()=>{setpop(!pop)}}/>
+                        {pop?<PopUp item={dotsbar}/>:""}
                     </div>
                     {CommunityName?(
                         <p className='Community-Tag' onClick={()=>{navigate(`/communities/${CommunityName}`)}}>in {CommunityName}</p>
