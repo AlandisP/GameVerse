@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect} from 'react';
 import axios from 'axios';
-import './NewPostStyle.css'
+import './PostStyle.css'
 import Pfp from '../images/Profile.png'
 import Add from '../images/AddButton.png'
 import msg from '../images/Message.png'
@@ -45,7 +45,7 @@ function Messagebar({poid,func,commmnmum, size}){
 }
 function CommentSection({pid,func}){
     const token  = localStorage.getItem('token');
-    const [msgenabled, setmsg] = useState(true);
+    const [msgenabled, setmsg] = useState(false);
     const [commentlist, setcoms] = useState([]);
     const [updatecomments, setupdate] = useState(false);
     const Comms = ()=>{
@@ -72,10 +72,11 @@ function CommentSection({pid,func}){
     },[0]);
     return(
         <div className='div-bar'>
-            <div className='Comment-Sec'>
+            <div className='Comment-Section'>
                 <div className='com-bar'>
                     <h4>Comments</h4>
                     {/* <img src={Add}/> */}
+                    <button onClick={()=>{setmsg(true);getcomms();}}><p>Add</p></button>
                 </div>
                 {msgenabled ? <Messagebar poid={pid} func={getcomms} commmnmum={func} size={commentlist.length}/> : '' }
                 <Comms/>
