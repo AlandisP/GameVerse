@@ -320,3 +320,16 @@ p {
     font-weight: bold;
 
 }
+
+.Profile-Media-Edit button{
+    padding:5px;
+    padding-left: 10px;
+    padding-right: 10px;
+    background-color: rgb(5, 139, 254);
+    border-radius: 15px;
+    border-style: none;
+    margin-right: 5px;
+    margin-bottom: 10px;
+    margin-top: 5px;
+    color:white;
+}
