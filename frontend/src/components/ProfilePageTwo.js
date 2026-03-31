@@ -8,6 +8,7 @@ import PostObj from './Post'
 import UploadBox from './MediaUpload';
 import dots from "./../images/dots.png";
 import "./Overlay.css";
+import SignIn from "./../images/sits_01.png";
 
 function ProfilePageTwo() {
     const { username } = useParams();
@@ -47,6 +48,7 @@ function ProfilePageTwo() {
         { headers: { Authorization: `Bearer ${token}` } }
       );
       setCurrUser(res.data);
+      console.log(res.data);
     }
 
     useEffect(() =>{
@@ -120,7 +122,6 @@ function ProfilePageTwo() {
                     { headers: { Authorization: `Bearer ${token}` } }
                 );
                 setPosts(res.data);
-                console.log(res.data);
             }
         } catch (error) {
             console.error("failed to get user's posts:", error.response?.data || error.message)
@@ -134,7 +135,6 @@ function ProfilePageTwo() {
             { headers: { Authorization: `Bearer ${token}` } }
           );
           setLikedPosts(res.data);
-          console.log(res.data);
       } else {
           const res = await axios.get (
             `${API_URL}/post/liked/${loggedInUsername}`,
@@ -181,7 +181,7 @@ function ProfilePageTwo() {
           liked = true
         }
         const items = likedposts.map((post, index)=>{
-             return <PostObj key={index} User={post["user"]} Content={post["text"]} Likes={post["likes"]} Liked={liked} id={post["id"]} commcount={post["comments"].length} books={false} CreatedAt={post["createdAt"]} CommunityName={post["communityName"]} media={post["media"]}/>
+             return <PostObj key={index} User={post["user"]} Content={post["text"]} Likes={post["likes"]} Liked={liked} id={post["id"]} commcount={post["comments"].length} books={false} CreatedAt={post["createdAt"]} CommunityName={post["communityName"]} media={post["media"]} type={post["mediaType"]}/>
         });
         return(
             <div className="com-posts">
@@ -229,6 +229,7 @@ function ProfilePageTwo() {
         setpfpUrl(res.data.pfp);
         if(res.data.banner!=null)
         setbannerUrl(res.data.banner);
+      console.log(res.data);
         // If viewing someone else's profile and logged in, fetch follow status
         if (username && token) {
           try {
@@ -525,7 +526,7 @@ function ProfilePageTwo() {
                 <div style={{ display: "flex", gap: "10px" }}>
                   <img src={dots} alt="dots" className="dotsprofile" onClick={(e) => handleOptionsClick(e)}/>
                   {isOpen && <PopUpMenu top={coor.top} left={coor.left} setPopUpMenu={setIsOpen} Mode={mode}/>}
-                  {!userBlockIds.includes(profile.id) && !blockIds.includes(currUser.id)?(
+                  {!userBlockIds.includes(profile.id) && !blockIds.includes(currUser?.id)?(
                   <div>
                   <button
                     onClick={isFollowing ? handleUnfollow : handleFollow}
@@ -625,7 +626,7 @@ function ProfilePageTwo() {
           <div className="blankarea">
             <h1>You've blocked @{profile.username}</h1>
             <p>You will have to unblock this user to view their posts</p>
-          </div>:blockIds.includes(currUser.id)&&currUser.id!=null?
+          </div>:blockIds.includes(currUser?.id)?
             <div className="blankarea">
               <h1>You've been blocked</h1>
               <p>You can't follow or see @{profile.username}'s posts 😔</p>
@@ -692,7 +693,13 @@ function ProfilePageTwo() {
           {activeTab==="achievements" &&(
             <>
             <div className="com-posts">
-              <p className="none-yet">You must sign in with steam to show your achievements. Please click the link to sign into steam</p>
+              {profile.steamId===null&&currUser.id===profile.id?(
+                <>
+                <p className="none-yet">You must sign in with steam to show your achievements. Please click the link to sign into steam</p>
+                <a href={`http://localhost:8080/auth/steam?token=${token}`}>
+                  <img src={SignIn} alt="steamlogin"/>
+                </a> </>):<p>test txt</p>
+              }
 
             </div>
             </>
