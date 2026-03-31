@@ -7,8 +7,7 @@ import commentico from '../images/Comments.png'
 import React, { useState, useRef, useEffect} from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
-// import './PostStyle.css'
-import './NewPostStyle.css'
+import './PostStyle.css'
 import CommentSection from './Comments'
 import { shortTimeAgo } from '../utils/shortTimeAgo'
 import API_URL from '../config/api'
@@ -33,7 +32,7 @@ function PostObj ({User, Content, Likes, Liked, id, books, commcount, CreatedAt,
             const mention = /(@[a-zA-Z0-9]+)/g;
             const segments = text.split(mention);
             console.log(segments);
-            return(<p className='written-content'>
+            return(<p className='content-p'>
                 {segments.map((seg, index)=>{
                     if(seg.match(mention)){
                     return(<h4 key={index} className='at' onClick={()=>{navigate(`/profile/${seg.substring(1)}`)}}>{seg}</h4>);
@@ -67,32 +66,35 @@ function PostObj ({User, Content, Likes, Liked, id, books, commcount, CreatedAt,
         }
         return(
             <div>
-            <div className='New-Post'>
-            <div className='top-bar'>
-                <img className='PFP' src={imgsrc} onError={()=>{setimgsrc(Pfp)}}/>
-                <div className='Info'>
-                    <div className='top-bar'>
-                        <h3 onClick={()=>{navigate(`/profile/${User}`)}}>@{User}</h3>
-                        <p>•</p>
+            <div className='Postcontent'>
+                <img className='Others' src={imgsrc} onError={()=>{setimgsrc(Pfp)}}/>
+                <div className='inner'>
+                    {/* <h3>@{User}</h3> */}
+                    <div className='top-port'>
+                        <div className='info-row'>
+                            <h3 onClick={()=>{navigate(`/profile/${User}`)}}>@{User}</h3>
+                            {
+                                CommunityName?(
+                                    <p className='comname' onClick={()=>{navigate(`/communities/${CommunityName}`)}}>in {CommunityName}</p>
+                                ):""
+                            }
+                        </div>
                         <p>{CreatedAt?shortTimeAgo(CreatedAt):""}</p>
                     </div>
-                    {CommunityName?(
-                        <p className='Community-Tag' onClick={()=>{navigate(`/communities/${CommunityName}`)}}>in {CommunityName}</p>
-                    ):""}
+                    <ParsedText text={Content}/>
+                    {/* <p className='content-p'>{Content}</p> */}
+                    {media!=null && /image/g.test(type) ? <img src={media} className='Post-Media'/> : ''}
+                    {media!=null && /video/g.test(type) ? <video className='Post-Media' controls><source src={media}/></video> : ''}
+                    <div className='Media-Bar'>
+                        <img src={didLike ? HeartFull : Heart} onClick={likeinteract}/>
+                        <p>{falseLikes}</p>
+                        <img src={commentico} onClick={viewComs}/>
+                        <p>{comments}</p>
+                        <img className='Bookmark' src={didBook ? BookmarkFull : Bookmark} onClick={bookinteract}/>
+                    </div>
+                    {viewComments ? <CommentSection pid={postid} func={setComments}/> : ''}
                 </div>
-            </div>
-            <ParsedText className='written-content' text={Content}/>
-            <div className='media'>
-                {media!=null && /image/g.test(type) ? <img src={media} className='Post-Media'/> : ''}
-                {media!=null && /video/g.test(type) ? <video className='Post-Media' controls><source src={media}/></video> : ''}
-            </div>
-            <div className='interaction-bar'>
-                <img src={didLike ? HeartFull : Heart} onClick={likeinteract}/>
-                <p>{falseLikes}</p>
-                <img src={commentico} onClick={viewComs}/>
-                <p>{comments}</p>
-            </div>
-            {viewComments ? <CommentSection pid={postid} func={setComments}/> : ''}
+                
             </div>
             </div>
         )

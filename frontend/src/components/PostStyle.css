@@ -10,20 +10,17 @@
     
 }
 
-.comment{
+/* .comment{
     display:flex;
     flex-direction: row;
     align-items: center;
-    /* background-color: rgba(255, 255, 255, 0.25) !important; */
-    /* background-color: rgba(0, 0, 0, 0.15) !important;
-    border-color: black;
-    border-style: solid; */
+    
     width:500px;
-    /* border-radius: 20px; */
+    
     padding: 5px;
     padding-left: 15px;
     margin-bottom: 10px;
-}
+} */
 
 .comment p{
     font-size: 15px;
@@ -51,13 +48,13 @@
     background-color: rgba(0,0,0,0) !important;
 }
 
-.div-bar{
+/* .div-bar{
     border: 0px;
     border-top: 2px;
     border-style: solid;
     margin-top:15px;
     border-color: black;
-}
+} */
 
 .com-bar{
     display: flex;
