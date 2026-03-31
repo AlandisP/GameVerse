@@ -5,6 +5,7 @@ import axios from 'axios';
 import './Home.css';
 import Pfp from '../images/Profile.png';
 import imgicon from '../images/uploadimg.png';
+import UploadBox from './MediaUpload';
 
 function NavBar() {
     const [activeTab, setActiveTab] = useState('');
@@ -159,6 +160,8 @@ function MakePostOverlay({isClosed, setIsClosed, GetPosts}) {
     const token = localStorage.getItem('token');
     const [userCommunities, setUserCommunities] = useState([]);
     const [selectedValue, setSelectedValue] = useState("");
+    const [file, setfile] = useState(null);
+    const [isopen, setopen] = useState(false);
 
     const getAllUserCommunities = async() => {
         try {
@@ -179,12 +182,27 @@ function MakePostOverlay({isClosed, setIsClosed, GetPosts}) {
                     `${API_URL}/post/makecommunitypost`, {body: text, id:selectedValue},
                     { headers: { Authorization: `Bearer ${token}` } }
                 );
+                //Below is code for the media usage in upload, tweak community posting as neccessary
+                // const formdat = new FormData();
+                // formdat.append('body',text);
+                // formdat.append('media',file);
+                // const res = await axios.post(
+                //     `${API_URL}/post/makepost`,formdat,
+                //     { headers: { Authorization: `Bearer ${token}` },timeout:0 }
+                // );
                 GetPosts();
                 setIsClosed(true);
             } else if(text!=""&&selectedValue===""){
+                // const res = await axios.post(
+                //     `${API_URL}/post/makepost`, {body: text},
+                //     { headers: { Authorization: `Bearer ${token}` } }
+                // );
+                const formdat = new FormData();
+                formdat.append('body',text);
+                formdat.append('media',file);
                 const res = await axios.post(
-                    `${API_URL}/post/makepost`, {body: text},
-                    { headers: { Authorization: `Bearer ${token}` } }
+                    `${API_URL}/post/makepost`,formdat,
+                    { headers: { Authorization: `Bearer ${token}` },timeout:0 }
                 );
                 GetPosts();
                 setIsClosed(true);
@@ -224,10 +242,10 @@ function MakePostOverlay({isClosed, setIsClosed, GetPosts}) {
                         <div className='column-box'>
                             <textarea  className= 'postarea' placeholder='What are you thinking?' maxLength="280" onChange={(e) => setText(e.target.value)}/>
                             <div className='image-upload'>
-                                <label for='file-input' >
+                                <label for='file-input' onClick={()=>{setopen(true)}} >
                                     <img src={imgicon} alt='upload' className='upimg'/>
                                 </label>
-                                <input id='file-input' type="file" />
+                                {/* <input id='file-input' type="file" /> */}
                             </div>
                         </div>
                         <p className='text-count'>{text.length}/280</p>
@@ -236,7 +254,7 @@ function MakePostOverlay({isClosed, setIsClosed, GetPosts}) {
                     </div>
                     
                 </div>
-
+            {isopen ? <UploadBox clearvar={setopen} fileinf={{file:file,upload:setfile}}/> : ''}
             </div>
         ):""}
             
