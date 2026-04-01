@@ -10,7 +10,7 @@
 }
 .banner {
     height: 150px;
-    width: 100vw;
+    width: 100%;
     background-color: #3f4b5b;
     border-radius: 0 0 12px 12px;
     
@@ -380,4 +380,8 @@
     flex-direction: column;
     gap: 10px;
     justify-self: center;
+}
+
+.Profile-Media-Edit{
+    margin-bottom: 20px;
 }

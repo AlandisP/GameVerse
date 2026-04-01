@@ -157,13 +157,7 @@ function HomePage() {
                     {/* <h3 style={{ color: "white", textAlign: "center" }}>
                         Welcome {username}, you are logged in!
                     </h3> */}
-                    <div className='Post-Bar'>
-                        <img className='PFP' src={imgsrc} onError={()=>{setimgsrc(Pfp)}}/>
-                        <textarea rows='1' cols='50' maxLength={maxlen} ref={text} onChange={autoresize} placeholder='What are you thinking?'></textarea>
-                        <img src={clip} className={`clip ${uploadedFile ? "hasfile" : ''}`} ref={clipico} onClick={()=>{setupload(true)}}/>
-                        <button className='Post' onClick={makepost}>Post</button>
-                    </div>
-                    <div className='tabs'>
+                     <div className='tabs'>
                         {["General", "Following"].map((tab) => (
                             <button
                                 key={tab}
@@ -174,13 +168,22 @@ function HomePage() {
                             </button>
                         ))}
                     </div>
-                    <select  className="filter-drop" name='Platform' required value={platform} onChange={HandleChange}>
-                        <option value="">All</option>
-                        <option value='PS'>Playstation</option>
-                        <option value='PC'>PC</option>
-                        <option value='XB'>Xbox</option>
-                        <option value='NI'>Nintendo</option>
-                    </select>
+                    <div className='Post-Bar'>
+                        <img className='PFP' src={imgsrc} onError={()=>{setimgsrc(Pfp)}}/>
+                        <textarea rows='1' cols='50' maxLength={maxlen} ref={text} onChange={autoresize} placeholder='What are you thinking?'></textarea>
+                        <img src={clip} className={`clip ${uploadedFile ? "hasfile" : ''}`} ref={clipico} onClick={()=>{setupload(true)}}/>
+                        <button className='Post' onClick={makepost}>Post</button>
+                    </div>
+                    <div className='Displaying'>
+                        <h3>Currently Showing</h3>
+                        <select  className="filter-drop" name='Platform' required value={platform} onChange={HandleChange}>
+                            <option value="">All</option>
+                            <option value='PS'>Playstation</option>
+                            <option value='PC'>PC</option>
+                            <option value='XB'>Xbox</option>
+                            <option value='NI'>Nintendo</option>
+                        </select>
+                    </div>
                     {
                         activeTab==='General'?(
                             <div className='Content'>

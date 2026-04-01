@@ -5,6 +5,7 @@ import NavBar from "../NavBar";
 import API_URL from '../../config/api';
 import "./CommunityStyles.css";
 import "../Overlay.css";
+import UploadBox from '../MediaUpload';
 import members from "../../images/members.png";
 import dots from "../../images/dots.png";
 import settings from "../../images/settings.png";
@@ -35,6 +36,53 @@ function CommunityPage() {
     const [isClosed2, setIsClosed2] = useState(true);
     const [isClosed3, setIsClosed3] = useState(true);
     const [posts, setPosts] = useState([]);
+
+
+       //Profile pictures code
+    //#####################
+    const [isUploading, enableUpload] = useState(0);
+    const [pfp, setpfp] = useState(null);
+    const [banner, setbanner] = useState(null);
+    const [pfpUrl, setpfpUrl] = useState("");
+    const [pfpUrltemp, setpfpUrlt] = useState("");
+    const [bannerUrl, setbannerUrl] = useState("");
+    const [bannerUrltemp, setbannerUrlt] = useState("");
+
+    useEffect(()=>{
+      if(editing&&pfp){
+        setpfpUrlt(pfpUrl);
+        setpfpUrl(URL.createObjectURL(pfp));
+      }
+      if(editing&&!pfp&&pfpUrltemp!==""){
+        setpfpUrl(pfpUrltemp);
+        URL.revokeObjectURL(pfp);
+      }
+    },pfp);
+    useEffect(()=>{
+      if(editing&&banner){
+        setbannerUrlt(bannerUrl);
+        setbannerUrl(URL.createObjectURL(banner));
+      }
+      if(editing&&!banner&&bannerUrltemp!==""){
+        setbannerUrl(bannerUrltemp);
+        URL.revokeObjectURL(banner);
+      }
+    },banner);
+    const cancelEdit = ()=>{
+      if(pfp){
+        setpfpUrl(pfpUrltemp);
+        URL.revokeObjectURL(pfp);
+        setpfp(null);
+      }
+      if(banner){
+        setbannerUrl(bannerUrltemp);
+        URL.revokeObjectURL(banner);
+        setbanner(null);
+      }
+      setEditing(false);
+    }
+    //#####################
+
 
     const toggleEditing = () => {
         setEditing(!editing);
@@ -227,8 +275,25 @@ function CommunityPage() {
                 }
                 <div className="main-content" style={{ color: "white" }}>
                     <div className="header-com">
-                        <div className="banner"></div>
-                        <div className="comavatar"></div>
+                        <div className="banner">
+                            {bannerUrl!=="" ?
+                            <img src={bannerUrl} style={{
+                            width:"100%",
+                            height:"100%",
+                            objectFit: "fill"
+                            }}/>
+                            : "" }
+                        </div>
+                        <div className="comavatar">
+                            {pfpUrl?
+                            <img src={pfpUrl} style={{
+                            width:"100%",
+                            height:"100%",
+                            objectFit: "fill",
+                            borderRadius:"1.5rem"
+                            }}/>
+                        :""}
+                        </div>
                         <div className="comdetails">
                             <div className="header-top">
                                 <h2>{communityName}</h2>
@@ -242,8 +307,9 @@ function CommunityPage() {
                                 <img src={members} alt="members" className="memberimg"/>
                                 <p>{currCommunity.memberCount} Members</p>
                                 {
+                                    //dev testing isOwner
                                     isOwner?(
-                                        <button className="join-com" onClick={toggleEditing}>Edit Description</button>
+                                        <button className="join-com" onClick={toggleEditing}>Edit Media</button>
                                     ): isMember || mods?.some(mod => mod.id === userId)?(
                                         <button className="leave-com" onClick={handleLeaveClick}>Leave</button>
                                     ):<button className="join-com" onClick={handleJoinClick}>Join</button>
@@ -252,6 +318,12 @@ function CommunityPage() {
                             {
                                 editing?(
                                     <div>
+                                        <div className="Profile-Media-Edit">
+                                            <button onClick={()=>{enableUpload(1)}}>Edit Community Picture</button>
+                                            <button onClick={()=>{enableUpload(2)}}>Edit Banner</button>
+                                            {isUploading===1 ? <UploadBox clearvar={enableUpload} fileinf={{file:pfp,upload:setpfp}}/> : ''}
+                                            {isUploading===2 ? <UploadBox clearvar={enableUpload} fileinf={{file:banner,upload:setbanner}}/> : ''}
+                                        </div>
                                         <textarea className="editcomdesc" onChange={(e) => setBio(e.target.value)} value={bio}/>
                                         <div className="editingbtns">
                                             <button className="save" onClick={handleSaveDescription}>Save</button>
