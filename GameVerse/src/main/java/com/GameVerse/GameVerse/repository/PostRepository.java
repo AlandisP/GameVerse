@@ -17,4 +17,5 @@ public interface PostRepository extends MongoRepository<Post, String>{
     List<Post> findAllByUserIdIgnoreCase(String username);
     @Query(value = "{'liked.username' : ?0}")
     List<Post> findAllByLikedUsername(String username);
+    void deleteAllByUserId(String username);
 }
