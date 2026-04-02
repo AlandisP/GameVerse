@@ -114,9 +114,9 @@ public class PostController {
     // }
 
     @PostMapping("/makecommunitypost")
-    public ResponseEntity<?> makecommunitypost(@RequestBody PostCommunityContent content, Authentication auth) {
+    public ResponseEntity<?> makecommunitypost(@RequestParam("body") String content, @RequestParam("id") String communityid, @RequestParam(value = "media", required = false) MultipartFile media, Authentication auth) {
         String username = userRep.findById(auth.getPrincipal().toString()).get().getUsername();
-        communityService.communityPost(content.id, username, content.body);
+        communityService.communityPost(communityid, username, content, media);
         return ResponseEntity.ok().body("new Post successfully created");
     }
     @GetMapping("/getposts")

@@ -181,18 +181,19 @@ function MakePostOverlay({isClosed, setIsClosed, GetPosts}) {
     const makePost = async() => {
         try {
             if(text!="" && selectedValue!=""){
-                const res = await axios.post (
-                    `${API_URL}/post/makecommunitypost`, {body: text, id:selectedValue},
-                    { headers: { Authorization: `Bearer ${token}` } }
-                );
-                //Below is code for the media usage in upload, tweak community posting as neccessary
-                // const formdat = new FormData();
-                // formdat.append('body',text);
-                // formdat.append('media',file);
-                // const res = await axios.post(
-                //     `${API_URL}/post/makepost`,formdat,
-                //     { headers: { Authorization: `Bearer ${token}` },timeout:0 }
+                // const res = await axios.post (
+                //     `${API_URL}/post/makecommunitypost`, {body: text, id:selectedValue},
+                //     { headers: { Authorization: `Bearer ${token}` } }
                 // );
+                //Below is code for the media usage in upload, tweak community posting as neccessary
+                const formdat = new FormData();
+                formdat.append('body',text);
+                formdat.append('media',file);
+                formdat.append('communityid', selectedValue)
+                const res = await axios.post(
+                    `${API_URL}/post/makepost`,formdat,
+                    { headers: { Authorization: `Bearer ${token}` },timeout:0 }
+                );
                 GetPosts();
                 setIsClosed(true);
             } else if(text!=""&&selectedValue===""){

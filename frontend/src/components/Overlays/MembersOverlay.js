@@ -4,7 +4,8 @@ import "../Overlay.css";
 import API_URL from '../../config/api';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-
+import Pfp from '../../images/Profile.png'
+const urlprefab = "https://gameverse-media-026955879175-us-east-2-an.s3.us-east-2.amazonaws.com/";
 function MembersOverlay({isOpen, onClose, members, CreatorId, partyName, refresh, refreshCurrent}) {
     const token  = localStorage.getItem('token');
     const [users, setUsers] = useState(() => Array.isArray(members) ? members : []);
@@ -34,8 +35,12 @@ function MembersOverlay({isOpen, onClose, members, CreatorId, partyName, refresh
         const id = members[ind];
         const isOwner = (id===CreatorId);
         const currUser = (userId===CreatorId);
+        var imgsrc = urlprefab+user+"/Profile/ProfilePic";
         return(
             <div className='users-container'>
+                <div className='pfp-mems'>
+                    <img src={imgsrc} alt='pfp' onError={(e) => e.target.src = Pfp}/>
+                </div>
                 <p className={isOwner?('owner'):'usernames'} key={ind} onClick={()=>{navigate(`/profile/${user}`)}}>
                     @{user}
                 </p>
@@ -65,7 +70,7 @@ function MembersOverlay({isOpen, onClose, members, CreatorId, partyName, refresh
     return(
         <>
         {isOpen? (
-            <div className='overlay'>
+            <div className='overlay2'>
                 <div className='member-overlay'>
                     <div className='top-portion'>
                         <h1 className='header'>Members</h1>
