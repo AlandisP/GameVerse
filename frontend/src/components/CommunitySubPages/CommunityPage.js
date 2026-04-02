@@ -321,7 +321,7 @@ function CommunityPage() {
                                 {
                                     //dev testing isOwner
                                     isOwner?(
-                                        <button className="join-com" onClick={toggleEditing}>Edit Media</button>
+                                        <button className="join-com" onClick={toggleEditing}>Edit Community</button>
                                     ): isMember || mods?.some(mod => mod.id === userId)?(
                                         <button className="leave-com" onClick={handleLeaveClick}>Leave</button>
                                     ):<button className="join-com" onClick={handleJoinClick}>Join</button>

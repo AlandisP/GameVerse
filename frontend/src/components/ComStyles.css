@@ -143,8 +143,10 @@
 } */
 
 .imgbox {
-    width: 256px;
-    height: 95px;
+    width: auto;
+    min-width: 100px;
+    height: 100px;
+    min-height: 95px;
     overflow: hidden;
     margin-bottom: 1rem;
     background-color: grey;
@@ -154,8 +156,7 @@
 .imgbox img {
     width: 100%;
     height: 100%;
-    object-fit: cover;
-    border-radius: 10px;
+    object-fit: fill;
 }
 
 .topbox-txt{
@@ -252,6 +253,13 @@
     padding: .35rem;
     height: auto;
     margin: none;
+}
+
+.small-holder{
+    width: 100%;
+    height: 100%;
+    object-fit: fill;
+    border-radius: 8px;
 }
 
 .minicombox:hover {
