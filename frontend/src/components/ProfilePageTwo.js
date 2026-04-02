@@ -291,7 +291,7 @@ function ProfilePageTwo() {
       );
       setProfile({ ...profile, bio });
       if(pfp!=null||banner!=null){
-        console.log(pfp);
+        //console.log(pfp);
         const formdat = new FormData();
         formdat.append('pfp',pfp);
         formdat.append('banner',banner);
@@ -299,7 +299,7 @@ function ProfilePageTwo() {
             `${API_URL}/profile/setmedia`,formdat,
             { headers: { Authorization: `Bearer ${token}` } }
         );
-        console.log("media updated");
+        //console.log("media updated");
       }
       setEditMode(false);
     } catch (err) {

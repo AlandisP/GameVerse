@@ -16,6 +16,8 @@ public class Community {
     private String description;
     private int memberCount;
     private int postCount;
+    private String pfp;
+    private String banner;
 
     private CommunityCategory category;
 
@@ -87,6 +89,19 @@ public class Community {
 
     public void setPostCount(int postCount) {
         this.postCount = postCount;
+    }
+
+    public void setpfp(String url){
+        pfp = url;
+    }
+    public String getpfp(){
+        return pfp;
+    }
+    public void setbanner(String url){
+        banner = url;
+    }
+    public String getbanner(){
+        return banner;
     }
     
 }

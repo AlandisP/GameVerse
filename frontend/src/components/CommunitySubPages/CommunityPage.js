@@ -184,6 +184,10 @@ function CommunityPage() {
                 setCurrCommunity(res.data);
                 setLoading(false);
                 setBio(res.data.description);
+                if(res.data.pfp!=null)
+                setpfpUrl(res.data.pfp);
+                if(res.data.banner!=null)
+                setbannerUrl(res.data.banner);
             } catch(error) {
                 console.error("failed to get community:", error.response?.data || error.message)
             }
@@ -233,6 +237,14 @@ function CommunityPage() {
             const res = await axios.put(
                 `${API_URL}/communities/${communityName}/editDescription`,
                 {description: bio}, { headers: { Authorization: `Bearer ${token}` } }
+            );
+            const formdat = new FormData();
+            formdat.append('name', communityName);
+            formdat.append('pfp',pfp);
+            formdat.append('banner',banner);
+            await axios.post(
+                `${API_URL}/communities/setmedia`,formdat,
+                { headers: { Authorization: `Bearer ${token}` } }
             );
             setCurrCommunity(prev => ({
                 ...prev,
@@ -327,7 +339,7 @@ function CommunityPage() {
                                         <textarea className="editcomdesc" onChange={(e) => setBio(e.target.value)} value={bio}/>
                                         <div className="editingbtns">
                                             <button className="save" onClick={handleSaveDescription}>Save</button>
-                                            <button className="cancel" onClick={toggleEditing}>Cancel</button>
+                                            <button className="cancel" onClick={cancelEdit}>Cancel</button>
                                         </div>
                                     </div>
                                 ): ""
