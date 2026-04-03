@@ -28,6 +28,7 @@ function PostObj ({User, Content, Likes, Liked, id, books, commcount, CreatedAt,
         const [pop, setpop] = useState(false);
         const dotsbar = useRef();
         const navigate = useNavigate();
+        const [deleted,deleter] = useState(false);
         useEffect(()=>{
             setBook(books);
             setComments(commcount);
@@ -71,6 +72,15 @@ function PostObj ({User, Content, Likes, Liked, id, books, commcount, CreatedAt,
             if(popup)
                 popup.func("");
         }
+
+        const deletePost = async()=>{
+            console.log(media);
+            await axios.post(
+                `${API_URL}/post/deletepost`,{id},
+                { headers: { Authorization: `Bearer ${token}` } }
+            );
+            deleter(true);
+        }
         useEffect(()=>{
             if(!pop)
                 return;
@@ -91,13 +101,14 @@ function PostObj ({User, Content, Likes, Liked, id, books, commcount, CreatedAt,
                     <button onClick={bookinteract}>{didBook?"Bookmarked":"Bookmark"}</button>
                     {username!=User?
                     <button>Block</button> :
-                    <button>Delete</button>
+                    <button onClick={deletePost}>Delete</button>
                     }   
                 </div>
             );
         }
         return(
             <div>
+            {!deleted?
             <div className='New-Post'>
             <div className='top-bar'>
                 <img className='PFP' src={imgsrc} onError={()=>{setimgsrc(Pfp)}}/>
@@ -127,6 +138,7 @@ function PostObj ({User, Content, Likes, Liked, id, books, commcount, CreatedAt,
             </div>
             {viewComments ? <CommentSection pid={postid} func={setComments}/> : ''}
             </div>
+            :""}
             </div>
         )
     }
