@@ -31,6 +31,7 @@ function ProfilePageTwo() {
     const [blockIds, setBlockIds] = useState([]);
     const [userBlockIds, setUserBlockIds] = useState([]);
     const [mode, setMode] = useState("");
+    const [isOverlayOpen, setIsOverlayOpen] = useState([]);
 
 
     //Profile pictures code
@@ -158,8 +159,8 @@ function ProfilePageTwo() {
         );
     }
     const ReadUserMedia = () => {
-      const items = posts.map((post,index) => {
-        if(post.media !== null) {
+      const items = posts.filter(post => post.media).map((post,index) => {
+        if(post.media) {
           return <PostObj key={index} User={post["user"]} Content={post["text"]} Likes={post["likes"]} Liked={parselike(post)} id={post["id"]} commcount={post["comments"].length} books={false} CreatedAt={post["createdAt"]} CommunityName={post["communityName"]} media={post["media"]} type={post["mediaType"]}/>
         }
       });
@@ -169,7 +170,7 @@ function ProfilePageTwo() {
             <>
               {items}
             </>
-          ):<p className="none-yet">No Media Uploaded</p>}
+          ):<p className="none-yet">No Media Uploaded yet</p>}
         </div>
       )
     }

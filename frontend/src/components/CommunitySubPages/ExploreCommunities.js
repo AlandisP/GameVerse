@@ -42,7 +42,7 @@ function ExploreCommunities({isOpen, onClose, communities, Refresh}) {
 
     const ReadCommunities = () => {
         const items = (category ? filtered.filter(c => c.communityCategory === category) : filtered).map((community, ind) => (
-            <CommunityBlock key={ind} Name={community.name} Description={community.description} Category={community.communityCategory} Members={community.memberCount} OwnerId={community.ownerId} id={community.id}/>
+            <CommunityBlock key={ind} Name={community.name} Description={community.description} Category={community.communityCategory} Members={community.memberCount} OwnerId={community.ownerId} id={community.id} PFP={community.pfp}/>
         ));
         return(
             <div>{items}</div>
@@ -101,11 +101,8 @@ function ExploreCommunities({isOpen, onClose, communities, Refresh}) {
                         <h1 className='headertxt'>Communities</h1>
                         <div className='allContainer'>
                             <ReadCommunities/>
-
                         </div>
-
                     </div>
-                    
                 </div>
             ):""}
         </>

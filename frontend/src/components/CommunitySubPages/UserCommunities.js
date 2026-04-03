@@ -14,7 +14,7 @@ function UserCommunities({isOpen, onClose, communities, Refresh}) {
 
     const ReadCommunities = () => {
         const items = communities.map((community, ind) => (
-            <CommunityDisplay key={ind} Name={community.name} Members={community.memberCount} id={community.id} Refresh={Refresh}/>
+            <CommunityDisplay key={ind} Name={community.name} Members={community.memberCount} id={community.id} Refresh={Refresh} Banner={community.banner} PFP={community.pfp}/>
         ));
         return(
             <div className='mycomholder'>{items}</div>
@@ -41,7 +41,7 @@ function UserCommunities({isOpen, onClose, communities, Refresh}) {
     );
 }
 
-function CommunityDisplay({Name, Members, Refresh}) {
+function CommunityDisplay({Name, Members, Refresh, PFP, Banner}) {
     const navigate  = useNavigate();
     const userId = localStorage.getItem("userId");
     const token  = localStorage.getItem('token');
@@ -61,8 +61,12 @@ function CommunityDisplay({Name, Members, Refresh}) {
 
     return(
         <div className='mycomblock'>
-            <div className='emptybox'></div>
-            <div className='emptybox2'></div>
+            <div className='emptybox'>
+                <img src={Banner} alt='combanner'/>
+            </div>
+            <div className='emptybox2'>
+                <img src={PFP} alt='combanner'/>
+            </div>
             <h2 className='mytitle'>{Name}</h2>
             <p>{Members} Members</p>
             <div className='btnrow'>

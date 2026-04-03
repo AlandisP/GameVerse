@@ -15,6 +15,7 @@ h2 {
     display: flex;
     align-self: center;
     width: 60vw;
+    padding: 10px;
 }
 
 .search-img {
@@ -43,11 +44,11 @@ input::placeholder {
     margin-right: 20px;
     border-radius: 40px;
     height: 2.8rem;
-    background-color: grey;
+    background-color: rgb(44, 42, 42);
 }
 
 .createButton:hover {
-    background-color: darkgrey;
+    background-color: rgba(44, 42, 42, 0.685);
 }
 
 .create-button {

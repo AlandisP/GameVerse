@@ -161,7 +161,9 @@ function CommunitiesPage() {
                     <div className='minicoms'>
                         {userCommunities.map((community) => (
                             <div className='minicombox' key={community.id} onClick={() => navigate(`/communities/${community.name}`)}>
-                                <div className='placeholderbox'></div>
+                                <div className='placeholderbox'>
+                                    <img src={community.pfp}  alt='comimg'className='small-holder'/>
+                                </div>
                                 <div className='minicol'>
                                     <h3>{community.name}</h3>
                                     <p>{community.memberCount} members</p>
@@ -223,11 +225,7 @@ function FeaturedBlock({Name, Description, MemberCount}) {
         <div className='fcommunity' onClick={() => navigate(`/communities/${Name}`)}>
             <div className='imgbox'>
                 {imgsrc!=="" ?
-                <img src={imgsrc} style={{
-                width:"100%",
-                height:"100%",
-                objectFit: "fill"
-                }} onError={()=>{setimgsrc("")}}/>
+                <img src={imgsrc} onError={()=>{setimgsrc("")}}/>
                 : "" }
             </div>
             <div className='topbox-txt'>

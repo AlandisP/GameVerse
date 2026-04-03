@@ -1,7 +1,9 @@
 package com.GameVerse.GameVerse.services;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.GameVerse.GameVerse.model.Community;
 import com.GameVerse.GameVerse.model.CommunityCategory;
@@ -12,6 +14,7 @@ import com.GameVerse.GameVerse.repository.CommunityMembershipRepository;
 import com.GameVerse.GameVerse.repository.CommunityRepository;
 import com.GameVerse.GameVerse.repository.PostRepository;
 import com.GameVerse.GameVerse.repository.UserRepository;
+import com.GameVerse.GameVerse.security.S3Service;
 
 import java.util.*;
 
@@ -31,6 +34,9 @@ public class CommunityService {
 
     @Autowired
     private CommunityMembershipRepository cr;
+
+    @Autowired
+    private S3Service s3serv;
 
     public void createCommunity(String ownerId, String name, String description, CommunityCategory category) {
         User user = userRepository.findById(ownerId).orElse(null);
@@ -98,15 +104,27 @@ public class CommunityService {
         communityRepository.save(com);
     }
 
-    public void communityPost(String communityId, String username, String text) {
-        Community com = communityRepository.findById(communityId).orElse(null);
-        User user = userRepository.findByUsernameIgnoreCase(username);
-        if(com == null || user == null) {
-            throw new RuntimeException("Community or User doesn't exist");
+    public void communityPost(String communityId, String username, String text, MultipartFile media) {
+        try{
+            Community com = communityRepository.findById(communityId).orElse(null);
+            User user = userRepository.findByUsernameIgnoreCase(username);
+            if(com == null || user == null) {
+                throw new RuntimeException("Community or User doesn't exist");
+            }
+            Post post = new Post(text, username, communityId, com.getName());
+            post.setTag(user.getPlatform());
+            if(media!=null){
+                post.setmediaType(media.getContentType());
+                System.out.println(media.getOriginalFilename());
+                String medianame = s3serv.uploadFile(media, username);
+                System.out.println("upload successful");
+                post.setmedia(medianame);
+            }
+            postRepository.save(post);
+        }catch (Exception e) {
+            e.printStackTrace();
+            throw new RuntimeException("000");
         }
-        Post post = new Post(text, username, communityId, com.getName());
-        post.setTag(user.getPlatform());
-        postRepository.save(post);
     }
 
     // deletes a community

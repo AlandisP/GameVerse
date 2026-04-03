@@ -108,7 +108,7 @@ function CommunityPage() {
 
     const ReadCommunityPost = () => {
         const items = posts.map((post, index)=>{
-             return <PostObj key={index} User={post["user"]} Content={post["text"]} Likes={post["likes"]} Liked={parselike(post)} id={post["id"]} commcount={post["comments"].length} books={false} CreatedAt={post["createdAt"]} CommunityName={post["communityName"]}/>
+             return <PostObj key={index} User={post["user"]} Content={post["text"]} Likes={post["likes"]} Liked={parselike(post)} id={post["id"]} commcount={post["comments"].length} books={false} CreatedAt={post["createdAt"]} CommunityName={post["communityName"]} media={post["media"]} type={post["mediaType"]}/>
         });
         return(
             <div className="com-posts">
@@ -118,11 +118,20 @@ function CommunityPage() {
     }
 
     const ReadCommunityMedia = () => {
-        return(
-            <div>
-                <h1>Post Media Will go here</h1>
-            </div>
-        );
+        const items = posts.filter(post => post.media).map((post,index) => {
+            if(post.media) {
+                return <PostObj key={index} User={post["user"]} Content={post["text"]} Likes={post["likes"]} Liked={parselike(post)} id={post["id"]} commcount={post["comments"].length} books={false} CreatedAt={post["createdAt"]} CommunityName={post["communityName"]} media={post["media"]} type={post["mediaType"]}/>
+            }
+        }, []);
+      return(
+        <div className="com-posts">
+          {items.length!==0?(
+            <>
+              {items}
+            </>
+          ):<p className="none-yet">No Media Uploaded yet</p>}
+        </div>
+      )
     }
     const handleOptionsClick = (e, member) => {
         e.stopPropagation();
@@ -131,9 +140,9 @@ function CommunityPage() {
         setCoor({top: rect.top, left: rect.left+80});
         setSelectedMember(member);
 
-        if(activeTab === "members" && isOwner) {
+        if(membersCom.includes(member) && isOwner) {
             setMode("Owner(Members)");
-        } else if(activeTab === "mods" && isOwner) {
+        } else if(mods.includes(member) && isOwner) {
             setMode("Owner(Mods)");
         } else if(activeTab === "members" && mods.includes(member)) {
             setMode("Moderator(Members)");
@@ -321,7 +330,7 @@ function CommunityPage() {
                                 {
                                     //dev testing isOwner
                                     isOwner?(
-                                        <button className="join-com" onClick={toggleEditing}>Edit Media</button>
+                                        <button className="join-com" onClick={toggleEditing}>Edit Community</button>
                                     ): isMember || mods?.some(mod => mod.id === userId)?(
                                         <button className="leave-com" onClick={handleLeaveClick}>Leave</button>
                                     ):<button className="join-com" onClick={handleJoinClick}>Join</button>
@@ -348,7 +357,7 @@ function CommunityPage() {
                         
                     </div>
                     <div className="tabs">
-                        {["posts", "media", "members", "mods"].map((tab) => (
+                        {["posts", "media", "members"].map((tab) => (
                             <button
                                 key={tab}
                                 onClick={() => {setActiveTab(tab); setPopUpMenu(false);}}
@@ -364,12 +373,15 @@ function CommunityPage() {
                             <ReadCommunityPost/>
                         ):activeTab==="media"?(
                             <ReadCommunityMedia/>
-                        ):activeTab==="mods"?(
+                        ):activeTab==="members"?(
                             <div  className="memholder">
+                                <h2>Mods: </h2>
                                 {
                                     mods.map(mod =>(
                                         <div key={mod.id} className="userBlock" onClick={(e)=>{e.stopPropagation(); navigate(`/profile/${mod.username}`);}}>
-                                            <div className="userCircle"></div>
+                                            <div className="userCircle">
+                                                {mod.pfp && <img src={mod.pfp} alt='userpfp'/>}
+                                            </div>
                                             
                                             <p className="user-m">{mod.username}</p>
                                             {mod.id === currCommunity.ownerId?(
@@ -383,9 +395,8 @@ function CommunityPage() {
                                         </div>
                                     ))
                                 }
-                            </div>
-                        ):<div className="memholder">
-                            {
+                                <h2>Members:</h2>
+                                {
                                 membersCom.map(member =>(
                                     <div key={member.id} className="userBlock" onClick={(e)=>{e.stopPropagation(); navigate(`/profile/${member.username}`)}}>
                                         <div className="userCircle"></div>
@@ -398,7 +409,8 @@ function CommunityPage() {
                                     </div>
                                 ))
                             }
-                        </div>
+                            </div>
+                        ):""
                     }
                     {mods.some(mod => mod.id === userId)?(
                         popUpMenu && <PopUpMenu top={coor.top} left={coor.left} member={selectedMember} setMembers={setMembers} setPopUpMenu={setPopUpMenu} setMods={setMods} Mode={mode} setCurrCommunity={setCurrCommunity}/>):""
