@@ -130,7 +130,7 @@ public class PostController {
             String user = userRep.findById(auth.getPrincipal().toString()).get().getUsername();
             Post post = postRepo.findById(content.id).get();
             if(user.equalsIgnoreCase(post.getUser())){
-                if(!post.getmedia().equals(""))
+                if(post.getmedia()!=null&&!post.getmedia().equals(""))
                     s3serv.deleteMedia(post.getmedia());
                 postRepo.delete(post);
             }

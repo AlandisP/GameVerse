@@ -65,7 +65,6 @@ public class S3Service {
         String Key = "";
         Matcher key = Pattern.compile("amazonaws.com\\/(.*)").matcher(pathname);
         while(key.find()){
-            System.out.println(key.group(1));
             Key = key.group(1);
         }
         s3Client.deleteObject(DeleteObjectRequest.builder().bucket(bucketName).key(Key).build());

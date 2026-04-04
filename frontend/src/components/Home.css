@@ -354,3 +354,8 @@
 .Displaying h2{
     margin:0px;
 }
+
+.Posting {
+    background-color: slategray !important;
+    width: auto !important;
+}
