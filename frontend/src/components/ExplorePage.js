@@ -21,9 +21,10 @@ function ExplorePage() {
   const [mode, setMode] = useState("trending");
 
   const [searchQuery, setSearchQuery] = useState("");
-  const [searchScope, setSearchScope] = useState("all"); // all | users | posts
+  const [searchScope, setSearchScope] = useState("all"); // all | users | posts | games
   const [userResults, setUserResults] = useState([]);
   const [postResults, setPostResults] = useState([]);
+  const [gameResults, setGameResults] = useState([]);
   const [searchLoading, setSearchLoading] = useState(false);
   const [searchError, setSearchError] = useState(null);
 
@@ -56,6 +57,15 @@ function ExplorePage() {
   const normalizePostsResponse = (data) => {
     if (Array.isArray(data)) return data;
     if (Array.isArray(data?.posts)) return data.posts;
+    if (Array.isArray(data?.data)) return data.data;
+    return [];
+  };
+
+  const normalizeGamesResponse = (data) => {
+    if (Array.isArray(data)) return data;
+    if (Array.isArray(data?.items)) return data.items;
+    if (Array.isArray(data?.games)) return data.games;
+    if (Array.isArray(data?.results)) return data.results;
     if (Array.isArray(data?.data)) return data.data;
     return [];
   };
@@ -128,6 +138,69 @@ function ExplorePage() {
     return `${BASE_URL}${raw}`;
   };
 
+  const getGameLabel = (g) => g?.name || g?.title || g?.appid || "Unknown game";
+
+  const getGameImageSrc = (g) => {
+    const raw =
+      g?.image ||
+      g?.header_image ||
+      g?.thumb ||
+      g?.capsule ||
+      g?.cover ||
+      g?.logoUrl ||
+      "";
+
+    if (!raw) return "";
+
+    if (raw.startsWith("http://") || raw.startsWith("https://")) {
+      return raw;
+    }
+
+    return `${BASE_URL}${raw}`;
+  };
+
+  const getGameHref = (g) => {
+    if (g?.storeUrl) return g.storeUrl;
+    const appid = g?.appid ?? g?.id;
+    return appid ? `https://store.steampowered.com/app/${appid}` : "#";
+  };
+
+  const getGamePrice = (g) => {
+    const price =
+      g?.price ||
+      g?.price_text ||
+      g?.final_price ||
+      g?.formatted_price ||
+      g?.price_overview ||
+      "";
+
+    if (!price) return "";
+
+    if (typeof price === "string" || typeof price === "number") {
+      return String(price);
+    }
+
+    if (typeof price === "object") {
+      if (price.final != null) {
+        const dollars = Number(price.final) / 100;
+        const currency = price.currency || "";
+        return currency
+          ? `${currency} ${dollars.toFixed(2)}`
+          : dollars.toFixed(2);
+      }
+
+      if (price.initial != null) {
+        const dollars = Number(price.initial) / 100;
+        const currency = price.currency || "";
+        return currency
+          ? `${currency} ${dollars.toFixed(2)}`
+          : dollars.toFixed(2);
+      }
+    }
+
+    return "";
+  };
+
   useEffect(() => {
     let mounted = true;
 
@@ -163,6 +236,7 @@ function ExplorePage() {
     if (!q) {
       setUserResults([]);
       setPostResults([]);
+      setGameResults([]);
       setSearchError(null);
       setSearchLoading(false);
       return;
@@ -182,7 +256,7 @@ function ExplorePage() {
 
         const tasks = [];
 
-        if (searchScope !== "posts") {
+        if (searchScope === "all" || searchScope === "users") {
           tasks.push(
             axios
               .get(`${BASE_URL}/users/matches`, {
@@ -197,11 +271,21 @@ function ExplorePage() {
                     ? res.data.data
                     : [],
               }))
-              .catch(() => ({ type: "users", data: [] })),
+              .catch((err) => {
+                console.error("Steam game search failed:", err);
+                console.error("Status:", err.response?.status);
+                console.error("Body:", err.response?.data);
+
+                setSearchError(
+                  `Steam search failed (${err.response?.status || "network error"})`,
+                );
+
+                return { type: "games", data: [] };
+              }),
           );
         }
 
-        if (searchScope !== "users") {
+        if (searchScope === "all" || searchScope === "posts") {
           tasks.push(
             axios
               .get(`${BASE_URL}/post/matches`, {
@@ -219,19 +303,40 @@ function ExplorePage() {
           );
         }
 
+        if (searchScope === "all" || searchScope === "games") {
+          tasks.push(
+            axios
+              .get(`${BASE_URL}/auth/steam/search-games`, {
+                params: { query: q, limit: 12 },
+                headers,
+              })
+              .then((res) => ({
+                type: "games",
+                data: normalizeGamesResponse(res.data),
+              }))
+              .catch((err) => {
+                console.error("Steam game search failed:", err);
+                return { type: "games", data: [] };
+              }),
+          );
+        }
+
         const results = await Promise.all(tasks);
         if (!active) return;
 
         const foundUsers = results.find((r) => r.type === "users")?.data || [];
         const foundPosts = results.find((r) => r.type === "posts")?.data || [];
+        const foundGames = results.find((r) => r.type === "games")?.data || [];
 
         setUserResults(foundUsers);
         setPostResults(foundPosts);
+        setGameResults(foundGames);
       } catch (err) {
         if (!active) return;
         setSearchError("Search failed.");
         setUserResults([]);
         setPostResults([]);
+        setGameResults([]);
       } finally {
         if (active) setSearchLoading(false);
       }
@@ -255,8 +360,8 @@ function ExplorePage() {
             <div>
               <h1 className="explore-title">Explore</h1>
               <p className="explore-subtitle">
-                Search people or posts, then switch between trending, newest,
-                and random.
+                Search people, posts, or games, then switch between trending,
+                newest, and random.
               </p>
             </div>
 
@@ -282,6 +387,13 @@ function ExplorePage() {
               >
                 Posts only
               </button>
+              <button
+                type="button"
+                className={`filter-btn ${searchScope === "games" ? "active" : ""}`}
+                onClick={() => setSearchScope("games")}
+              >
+                Games only
+              </button>
             </div>
 
             <div className="sidebar-tip">
@@ -297,7 +409,7 @@ function ExplorePage() {
                   <img src={searchIcon} alt="search" className="search-icon" />
                   <input
                     type="text"
-                    placeholder="Search users or posts..."
+                    placeholder="Search users, posts, or games..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                   />
@@ -324,10 +436,12 @@ function ExplorePage() {
                       <h2>Search results</h2>
                       <p>
                         {searchScope === "all"
-                          ? "Showing both users and posts"
+                          ? "Showing users, posts, and games"
                           : searchScope === "users"
                             ? "Showing users only"
-                            : "Showing posts only"}
+                            : searchScope === "posts"
+                              ? "Showing posts only"
+                              : "Showing games only"}
                       </p>
                     </div>
                   </div>
@@ -423,6 +537,66 @@ function ExplorePage() {
                                   <PostObj {...mapToPostObjProps(post)} />
                                 </div>
                               ))}
+                            </div>
+                          )}
+                        </section>
+                      )}
+
+                      {(searchScope === "all" || searchScope === "games") && (
+                        <section className="result-section">
+                          <div className="section-header">
+                            <h3>Games</h3>
+                            <span>{gameResults.length} found</span>
+                          </div>
+
+                          {gameResults.length === 0 ? (
+                            <div className="empty-state">No games found.</div>
+                          ) : (
+                            <div className="game-grid">
+                              {gameResults.map((game) => {
+                                const appid = game?.appid ?? game?.id;
+                                const name = getGameLabel(game);
+                                const href = getGameHref(game);
+                                const imageSrc = getGameImageSrc(game);
+                                const price = getGamePrice(game);
+
+                                return (
+                                  <a
+                                    key={appid || name}
+                                    href={href}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="game-card"
+                                  >
+                                    <div className="game-cover">
+                                      {imageSrc ? (
+                                        <img
+                                          src={imageSrc}
+                                          alt={name}
+                                          className="game-cover-img"
+                                        />
+                                      ) : (
+                                        <div className="game-cover-fallback">
+                                          {name?.slice(0, 2)?.toUpperCase()}
+                                        </div>
+                                      )}
+                                    </div>
+
+                                    <div className="game-info">
+                                      <div className="game-name">{name}</div>
+                                      {price ? (
+                                        <div className="game-price">
+                                          {price}
+                                        </div>
+                                      ) : (
+                                        <div className="game-price game-price-muted">
+                                          View on Steam
+                                        </div>
+                                      )}
+                                    </div>
+                                  </a>
+                                );
+                              })}
                             </div>
                           )}
                         </section>

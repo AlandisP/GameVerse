@@ -21,20 +21,20 @@ import jakarta.servlet.http.HttpServletRequest;
 public class SecurityConfiguration {
 
     @Autowired
-    private JwtAuthenticationFilter jwtAuthenticationFilter;  
+    private JwtAuthenticationFilter jwtAuthenticationFilter;
 
     @Bean
     SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-            .sessionManagement(session -> 
+            .sessionManagement(session ->
                 session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-            .authorizeHttpRequests((authorize) -> authorize
-                .requestMatchers("/auth/**").permitAll()  // Allow all /auth endpoints
+            .authorizeHttpRequests(authorize -> authorize
+                .requestMatchers("/auth/**").permitAll()
                 .requestMatchers("/users/**").permitAll()
                 .requestMatchers("/parties/test/**").permitAll()
-                .requestMatchers("parties/random-image/**").permitAll()
+                .requestMatchers("/parties/random-image/**").permitAll()
                 .anyRequest().authenticated())
-            .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)  // FIXED
+            .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
             .csrf(csrf -> csrf.disable())
             .cors(cors -> cors.configurationSource(corsConfigurationSource()));
 
@@ -42,18 +42,18 @@ public class SecurityConfiguration {
     }
 
     private CorsConfigurationSource corsConfigurationSource() {
-        return new CorsConfigurationSource() {
-            @Override
-            public CorsConfiguration getCorsConfiguration(HttpServletRequest request) {
-                CorsConfiguration ccfg = new CorsConfiguration();
-                ccfg.setAllowedOrigins(Arrays.asList("http://localhost:3000", "https://ccfrontend-production.up.railway.app"));
-                ccfg.setAllowedMethods(Collections.singletonList("*"));
-                ccfg.setAllowCredentials(true);
-                ccfg.setAllowedHeaders(Collections.singletonList("*"));
-                ccfg.setExposedHeaders(Arrays.asList("Authorization"));
-                ccfg.setMaxAge(3600L);
-                return ccfg;
-            }
+        return request -> {
+            CorsConfiguration ccfg = new CorsConfiguration();
+            ccfg.setAllowedOrigins(Arrays.asList(
+                "http://localhost:3000",
+                "https://ccfrontend-production.up.railway.app"
+            ));
+            ccfg.setAllowedMethods(Collections.singletonList("*"));
+            ccfg.setAllowCredentials(true);
+            ccfg.setAllowedHeaders(Collections.singletonList("*"));
+            ccfg.setExposedHeaders(Arrays.asList("Authorization"));
+            ccfg.setMaxAge(3600L);
+            return ccfg;
         };
     }
 
