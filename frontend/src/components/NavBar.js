@@ -189,12 +189,12 @@ function MakePostOverlay({isClosed, setIsClosed, GetPosts}) {
                 const formdat = new FormData();
                 formdat.append('body',text);
                 formdat.append('media',file);
-                formdat.append('communityid', selectedValue)
+                formdat.append('id', selectedValue)
                 const res = await axios.post(
-                    `${API_URL}/post/makepost`,formdat,
+                    `${API_URL}/post/makecommunitypost`,formdat,
                     { headers: { Authorization: `Bearer ${token}` },timeout:0 }
                 );
-                GetPosts();
+               // GetPosts();
                 setIsClosed(true);
             } else if(text!=""&&selectedValue===""){
                 // const res = await axios.post(
@@ -208,7 +208,7 @@ function MakePostOverlay({isClosed, setIsClosed, GetPosts}) {
                     `${API_URL}/post/makepost`,formdat,
                     { headers: { Authorization: `Bearer ${token}` },timeout:0 }
                 );
-                GetPosts();
+              //  GetPosts();
                 setIsClosed(true);
             }
         } catch (error) {
@@ -247,7 +247,7 @@ function MakePostOverlay({isClosed, setIsClosed, GetPosts}) {
                             <textarea  className= 'postarea' placeholder='What are you thinking?' maxLength="280" onChange={(e) => setText(e.target.value)}/>
                             <div className='image-upload'>
                                 <label for='file-input' onClick={()=>{setopen(true)}} >
-                                    <img src={imgicon} alt='upload' className='upimg'/>
+                                    <img src={imgicon} alt='upload' className={file===null?('upimg'):'upimg-active'}/>
                                 </label>
                                 {/* <input id='file-input' type="file" /> */}
                             </div>
