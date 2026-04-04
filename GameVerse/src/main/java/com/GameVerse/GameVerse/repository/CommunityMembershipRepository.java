@@ -16,6 +16,7 @@ public interface CommunityMembershipRepository extends MongoRepository<Community
     List<CommunityMembership> findTop5ByUserId(String userId);
     void deleteByUserIdAndCommunityId(String userId, String communityId);
     void deleteAllByCommunityId(String communityId);
+    void deleteAllByUserId(String userId);
     long countByCommunityId(String communityId);
     
 }

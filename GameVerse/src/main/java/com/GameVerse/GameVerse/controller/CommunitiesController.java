@@ -1,5 +1,6 @@
 package com.GameVerse.GameVerse.controller;
 
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
@@ -19,6 +20,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.GameVerse.GameVerse.model.Community;
 import com.GameVerse.GameVerse.model.CommunityCategory;
@@ -30,6 +32,7 @@ import com.GameVerse.GameVerse.repository.CommunityRepository;
 import com.GameVerse.GameVerse.repository.UserRepository;
 import com.GameVerse.GameVerse.services.CommunityService;
 import com.GameVerse.GameVerse.services.NotificationService;
+import com.GameVerse.GameVerse.security.S3Service;
 @RestController
 @RequestMapping("/communities")
 @CrossOrigin(origins = "http://localhost:3000")
@@ -49,6 +52,9 @@ public class CommunitiesController {
 
     @Autowired
     private CommunityMembershipRepository cmr;
+
+    @Autowired
+    private S3Service s3serv;
 
     private static final String type = "Community";
 
@@ -270,6 +276,27 @@ public class CommunitiesController {
         }
         communityService.transferOwnership(community.getId(), user.getId());
         return ResponseEntity.ok().body("Successfully made the new user the Owner!");
+    }
+
+    @PostMapping("/setmedia")
+    public ResponseEntity<?> editUserMedia(@RequestParam("name") String name, @RequestParam(value = "pfp", required = false) MultipartFile pfp, @RequestParam(value = "banner", required = false) MultipartFile banner, Authentication auth) {
+        try{
+            Community com = communityRepository.findByNameIgnoreCase(name);
+            if(pfp!=null){
+                String newpfp = s3serv.staticMedia(pfp, com.getName(), "ProfilePic");
+                com.setpfp(newpfp);
+            }
+            if(banner!=null){
+                String newbanner = s3serv.staticMedia(banner, com.getName(), "Banner");
+                com.setbanner(newbanner);
+            }
+            communityRepository.save(com);
+        }
+        catch(IOException e){
+            e.printStackTrace();
+        }
+
+        return ResponseEntity.ok("Profile Updates Successfully");
     }
 
 

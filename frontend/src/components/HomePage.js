@@ -15,32 +15,19 @@ function HomePage() {
     const navigate = useNavigate();
     const username = localStorage.getItem('username');
     const token  = localStorage.getItem('token');
-    const [activeTab, setActiveTab] = useState('home');
+    const [activeTab, setActiveTab] = useState('General');
+    const [platform, setSelectedValue] = useState('');
     const text = useRef(null);
     const maxlen = 300;
     const [postbod, setpostbod] = useState("");
     const [posts, setposts] = useState([]);
+    const [followingPosts, setFollowingPosts] = useState([]);
     const [bookmarks, setbooks] = useState([]);
     const [canref, refresh] = useState(0);
     const [uploadbox, setupload] = useState(false);
     const [uploadedFile, uploadFile] = useState(null);
-    // const [uploadtype, setuploadtype] = useState("");
     const clipico = useRef(null);
     const [imgsrc, setimgsrc] = useState(urlprefab+username+"/Profile/ProfilePic");
-
-    const handleNavClick = (e, path, tabId) => {
-        e.preventDefault();
-        setActiveTab(tabId);
-        navigate(path);
-
-    };
-
-    const handleLogout = () =>{
-        localStorage.removeItem('token');
-        localStorage.removeItem('username');
-        navigate('/');
-    }
-
     const autoresize = (e) =>{
         text.current.style.height = "fit-content";
         text.current.style.height = `${text.current.scrollHeight}px`;
@@ -67,6 +54,10 @@ function HomePage() {
         }
     }
 
+    const HandleChange = (e) => {
+        setSelectedValue(e.target.value);
+    }
+
     const getposts = async() =>{
         const result = await axios.get(
             `${API_URL}/post/getposts`,
@@ -76,8 +67,16 @@ function HomePage() {
             { headers: { Authorization: `Bearer ${token}` } });
         setbooks(bookmarks.data);
         setposts(result.data);
+        console.log(result.data);
         //setbooks(bookmarks.data);
+    }
 
+    const getFollowingPosts = async() =>{
+        const res = await axios.get(
+            `${API_URL}/post/getFollowingPosts`,
+            { headers: { Authorization: `Bearer ${token}` } }
+        );
+        setFollowingPosts(res.data);
     }
 
     const parselike = (postinf)=>{
@@ -86,29 +85,47 @@ function HomePage() {
         return like;
     }
 
-    const Readposts = () => {
-        const bookarray = Array.from(bookmarks);
-        const items = posts.map((post,ind)=>{
-            //console.log(post);
-                if(bookarray.includes(post["id"])){
-                    return <PostObj key={ind} User={post["user"]} Content={post["text"]} Likes={post["likes"]} Liked={parselike(post)} id={post["id"]} commcount={post["comments"].length} books={true} CreatedAt={post["createdAt"]} CommunityName={post["communityName"]} media={post["media"]} type={post["mediaType"]}/>
-                }
-                return <PostObj key={ind} User={post["user"]} Content={post["text"]} Likes={post["likes"]} Liked={parselike(post)} id={post["id"]} commcount={post["comments"].length} books={false} CreatedAt={post["createdAt"]} CommunityName={post["communityName"]} media={post["media"]} type={post["mediaType"]}/>
+    // const Readposts = () => {
+    //     const bookarray = Array.from(bookmarks);
+    //     const items = posts.map((post,ind)=>{
+    //         //console.log(post);
+    //             if(bookarray.includes(post["id"])){
+    //                 return <PostObj key={ind} User={post["user"]} Content={post["text"]} Likes={post["likes"]} Liked={parselike(post)} id={post["id"]} commcount={post["comments"].length} books={true} CreatedAt={post["createdAt"]} CommunityName={post["communityName"]} media={post["media"]} type={post["mediaType"]}/>
+    //             }
+    //             return <PostObj key={ind} User={post["user"]} Content={post["text"]} Likes={post["likes"]} Liked={parselike(post)} id={post["id"]} commcount={post["comments"].length} books={false} CreatedAt={post["createdAt"]} CommunityName={post["communityName"]} media={post["media"]} type={post["mediaType"]}/>
+    //     });
+    //     return(
+    //         <div>{items}</div>
+    //     )
+    // }
+    const bookarray = Array.from(bookmarks);
+    const GetAllPosts = () => {
+        const filtered = (platform? posts.filter(p=>p.tag===platform):posts);
+        const renderposts = filtered.map((post,ind)=>{
+            const isbookd = bookarray.includes(post["id"]) ? true : false;
+            return <PostObj key={post["id"]} User={post["user"]} Content={post["text"]} Likes={post["likes"]} Liked={parselike(post)} id={post["id"]} commcount={post["comments"].length} books={isbookd} CreatedAt={post["createdAt"]} CommunityName={post["communityName"]} media={post["media"]} type={post["mediaType"]}/>
+        });
+        return (
+            <div>{renderposts}</div>
+        );
+    }
+    const GetAllFollowingPosts = () => {
+        const filtered = (platform? followingPosts.filter(p=>p.tag===platform):followingPosts);
+        const renderfollowingposts = filtered.map((post,ind)=>{
+            const isbookd = bookarray.includes(post["id"]) ? true : false;
+            return <PostObj key={post["id"]} User={post["user"]} Content={post["text"]} Likes={post["likes"]} Liked={parselike(post)} id={post["id"]} commcount={post["comments"].length} books={isbookd} CreatedAt={post["createdAt"]} CommunityName={post["communityName"]} media={post["media"]} type={post["mediaType"]}/>
         });
         return(
-            <div>{items}</div>
-        )
+            <div>
+                {renderfollowingposts.length>0?(
+                    {renderfollowingposts}
+                ):<p className='none-yet'>There are no posts dedicated to this category😔</p>}
+            </div>
+        );
     }
-    const bookarray = Array.from(bookmarks);
-    const renderposts = posts.map((post,ind)=>{
-        //console.log(post);
-        if(bookarray.includes(post["id"])){
-                return <PostObj key={post["id"]} User={post["user"]} Content={post["text"]} Likes={post["likes"]} Liked={parselike(post)} id={post["id"]} commcount={post["comments"].length} books={true} CreatedAt={post["createdAt"]} CommunityName={post["communityName"]} media={post["media"]} type={post["mediaType"]}/>
-            }
-            return <PostObj key={post["id"]} User={post["user"]} Content={post["text"]} Likes={post["likes"]} Liked={parselike(post)} id={post["id"]} commcount={post["comments"].length} books={false} CreatedAt={post["createdAt"]} CommunityName={post["communityName"]} media={post["media"]} type={post["mediaType"]}/>
-    });
     useEffect(()=>{
             getposts();
+            getFollowingPosts();
     },[]);
     //Updating the file visibility in the clip
     // useEffect(()=>{
@@ -140,16 +157,46 @@ function HomePage() {
                     {/* <h3 style={{ color: "white", textAlign: "center" }}>
                         Welcome {username}, you are logged in!
                     </h3> */}
+                     <div className='tabs'>
+                        {["General", "Following"].map((tab) => (
+                            <button
+                                key={tab}
+                                onClick={() => {setActiveTab(tab);}}
+                                className={activeTab===tab?"tabs-sa":"tabs-s"}
+                            >
+                            {tab.charAt(0).toUpperCase() + tab.slice(1)}
+                            </button>
+                        ))}
+                    </div>
                     <div className='Post-Bar'>
                         <img className='PFP' src={imgsrc} onError={()=>{setimgsrc(Pfp)}}/>
                         <textarea rows='1' cols='50' maxLength={maxlen} ref={text} onChange={autoresize} placeholder='What are you thinking?'></textarea>
                         <img src={clip} className={`clip ${uploadedFile ? "hasfile" : ''}`} ref={clipico} onClick={()=>{setupload(true)}}/>
                         <button className='Post' onClick={makepost}>Post</button>
                     </div>
-                    <div className='Content'>
-                        {/* <Readposts/> */}
-                        <div>{renderposts}</div>
+                    <div className='Displaying'>
+                        <h3>Currently Showing</h3>
+                        <select  className="filter-drop" name='Platform' required value={platform} onChange={HandleChange}>
+                            <option value="">All</option>
+                            <option value='PS'>Playstation</option>
+                            <option value='PC'>PC</option>
+                            <option value='XB'>Xbox</option>
+                            <option value='NI'>Nintendo</option>
+                        </select>
                     </div>
+                    {
+                        activeTab==='General'?(
+                            <div className='Content'>
+                                <div>
+                                    <GetAllPosts/>
+                                </div>
+                            </div>
+                        ):<div className='Content'>
+                            <div>
+                                <GetAllFollowingPosts/>
+                            </div>
+                        </div>
+                    }
                 </div>
             </div>
             {uploadbox ? <UploadBox clearvar={setupload} fileinf={{file:uploadedFile,upload:uploadFile}}/> : ''}

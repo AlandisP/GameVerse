@@ -9,6 +9,7 @@ import CreateCommunityOverLay from './CommunitySubPages/CreateCommunityOverlay';
 import ExploreCommunities from './CommunitySubPages/ExploreCommunities';
 import UserCommunities from './CommunitySubPages/UserCommunities';
 
+const urlprefab = "https://gameverse-media-026955879175-us-east-2-an.s3.us-east-2.amazonaws.com/";
 
 function CommunitiesPage() {
     const username = localStorage.getItem('username');
@@ -160,7 +161,9 @@ function CommunitiesPage() {
                     <div className='minicoms'>
                         {userCommunities.map((community) => (
                             <div className='minicombox' key={community.id} onClick={() => navigate(`/communities/${community.name}`)}>
-                                <div className='placeholderbox'></div>
+                                <div className='placeholderbox'>
+                                    <img src={community.pfp}  alt='comimg'className='small-holder'/>
+                                </div>
                                 <div className='minicol'>
                                     <h3>{community.name}</h3>
                                     <p>{community.memberCount} members</p>
@@ -183,6 +186,7 @@ function FeaturedBlock({Name, Description, MemberCount}) {
     const [memberCount, setMemberCount] = useState(MemberCount);
     const isMember = members?.some(member => member.id === userId);
     const [joined, setJoined] = useState(isMember);
+    const [imgsrc, setimgsrc] = useState(urlprefab+Name+"/Profile/Banner");
 
     const handleJoinClick = async(e) => {
         try {
@@ -219,7 +223,11 @@ function FeaturedBlock({Name, Description, MemberCount}) {
 
     return (
         <div className='fcommunity' onClick={() => navigate(`/communities/${Name}`)}>
-            <div className='imgbox'></div>
+            <div className='imgbox'>
+                {imgsrc!=="" ?
+                <img src={imgsrc} onError={()=>{setimgsrc("")}}/>
+                : "" }
+            </div>
             <div className='topbox-txt'>
                 <h3>{Name}</h3>
                 <p className='count'>{memberCount}</p>

@@ -19,7 +19,14 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.GameVerse.GameVerse.model.PartyFinder;
 import com.GameVerse.GameVerse.model.User;
+import com.GameVerse.GameVerse.repository.BlockedRelationshipRepository;
+import com.GameVerse.GameVerse.repository.CommunityMembershipRepository;
+import com.GameVerse.GameVerse.repository.CommunityRepository;
+import com.GameVerse.GameVerse.repository.PartyFinderRepository;
+import com.GameVerse.GameVerse.repository.PostRepository;
+import com.GameVerse.GameVerse.repository.RelationshipRepository;
 import com.GameVerse.GameVerse.repository.UserRepository;
 import com.GameVerse.GameVerse.services.RelationshipServices;
 
@@ -35,6 +42,18 @@ public class UsersController {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
+    @Autowired
+    private PartyFinderRepository partyFinderRepo;
+    @Autowired
+    private BlockedRelationshipRepository blockedRelationshipRepository;
+    @Autowired
+    private CommunityMembershipRepository communityMembershipRepository;
+    @Autowired
+    private CommunityRepository communityRepository;
+    @Autowired
+    private RelationshipRepository relationshipRepository;
+    @Autowired
+    private PostRepository postRepository;
     @Autowired
     private UserRepository repository;
 
@@ -118,7 +137,22 @@ public ResponseEntity<?> deleteAccount(@RequestBody Map<String, String> body, Au
 
     if (!passwordEncoder.matches(password, user.getPassword()))
         return ResponseEntity.badRequest().body(Map.of("message", "Incorrect password"));
-
+    // REMOVE THEM FROM EVERYTHINGGGGGGGGGG
+    PartyFinder party = partyFinderRepo.findByMembersContaining(userId);
+    if(party != null) {
+        if(party.getCreatorId().equals(userId)) {
+            partyFinderRepo.deleteAllByCreatorId(userId);
+        } else {
+            party.removeMember(userId);
+        }
+    }
+    blockedRelationshipRepository.deleteAllByBlockedId(userId);
+    blockedRelationshipRepository.deleteAllByUserId(userId);
+    communityMembershipRepository.deleteAllByUserId(userId);
+    communityRepository.deleteAllByOwnerId(userId);
+    postRepository.deleteAllByUserId(user.getUsername());
+    relationshipRepository.deleteAllByFollowerId(userId);
+    relationshipRepository.deleteAllByFollowingId(userId);
     repository.deleteById(userId);
     return ResponseEntity.ok(Map.of("message", "Account deleted successfully"));
 }

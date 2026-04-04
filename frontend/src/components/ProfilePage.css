@@ -1,0 +1,33 @@
+.game-holder {
+    display: flex;
+    padding: 20px;
+    min-width: 400px;
+    padding: 20px;
+    gap: 10px;
+    border-bottom: 1px solid hsla(0, 0%, 83%, 0.65);
+}
+
+.game-holder img{
+    height: 35%;
+    width: 35%;
+    border-radius: 20px;
+}
+
+.pfheader{
+    background-color: #2f2f2f;
+    padding-bottom: 20px;
+    border-radius: 0 0 12px 12px;
+    margin-bottom: 25px;
+    position: relative;
+}
+
+.banner {
+    height: 190px;
+    background-color: #3f4b5b;
+    border-radius: 0 0 12px 12px;
+}
+
+.name-head{
+    font-size: 1.5rem;
+    font-weight: bold;
+}

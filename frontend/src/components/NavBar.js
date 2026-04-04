@@ -6,6 +6,7 @@ import './Home.css';
 import Pfp from '../images/Profile.png';
 import imgicon from '../images/uploadimg.png';
 import UploadBox from './MediaUpload';
+const urlprefab = "https://gameverse-media-026955879175-us-east-2-an.s3.us-east-2.amazonaws.com/";
 
 function NavBar() {
     const [activeTab, setActiveTab] = useState('');
@@ -162,6 +163,8 @@ function MakePostOverlay({isClosed, setIsClosed, GetPosts}) {
     const [selectedValue, setSelectedValue] = useState("");
     const [file, setfile] = useState(null);
     const [isopen, setopen] = useState(false);
+    const username = localStorage.getItem("username");
+    const [imgsrc, setimgsrc] = useState(urlprefab+username+"/Profile/ProfilePic");
 
     const getAllUserCommunities = async() => {
         try {
@@ -178,18 +181,19 @@ function MakePostOverlay({isClosed, setIsClosed, GetPosts}) {
     const makePost = async() => {
         try {
             if(text!="" && selectedValue!=""){
-                const res = await axios.post (
-                    `${API_URL}/post/makecommunitypost`, {body: text, id:selectedValue},
-                    { headers: { Authorization: `Bearer ${token}` } }
-                );
-                //Below is code for the media usage in upload, tweak community posting as neccessary
-                // const formdat = new FormData();
-                // formdat.append('body',text);
-                // formdat.append('media',file);
-                // const res = await axios.post(
-                //     `${API_URL}/post/makepost`,formdat,
-                //     { headers: { Authorization: `Bearer ${token}` },timeout:0 }
+                // const res = await axios.post (
+                //     `${API_URL}/post/makecommunitypost`, {body: text, id:selectedValue},
+                //     { headers: { Authorization: `Bearer ${token}` } }
                 // );
+                //Below is code for the media usage in upload, tweak community posting as neccessary
+                const formdat = new FormData();
+                formdat.append('body',text);
+                formdat.append('media',file);
+                formdat.append('communityid', selectedValue)
+                const res = await axios.post(
+                    `${API_URL}/post/makepost`,formdat,
+                    { headers: { Authorization: `Bearer ${token}` },timeout:0 }
+                );
                 GetPosts();
                 setIsClosed(true);
             } else if(text!=""&&selectedValue===""){
@@ -238,7 +242,7 @@ function MakePostOverlay({isClosed, setIsClosed, GetPosts}) {
                         ))}
                     </select>
                     <div className='postingbod'>
-                        <img src={Pfp} alt='pfp' className='pfp'/>
+                        <img src={imgsrc} alt='pfp' className='pfp'/>
                         <div className='column-box'>
                             <textarea  className= 'postarea' placeholder='What are you thinking?' maxLength="280" onChange={(e) => setText(e.target.value)}/>
                             <div className='image-upload'>

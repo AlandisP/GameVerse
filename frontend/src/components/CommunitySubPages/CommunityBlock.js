@@ -5,7 +5,7 @@ import logo from "../../images/search.png"
 import API_URL from '../../config/api';
 import axios from 'axios';
 import { Navigate, useNavigate } from 'react-router-dom';
-function CommunityBlock({Name, Description, Members, Category, id, OwnerId}) {
+function CommunityBlock({Name, Description, Members, Category, id, OwnerId, PFP}) {
     const navigate = useNavigate();
     const token = localStorage.getItem("token");
     const username = localStorage.getItem("username");
@@ -68,7 +68,9 @@ function CommunityBlock({Name, Description, Members, Category, id, OwnerId}) {
 
     return (
         <div className='communityBlock'>
-            <div className='emptyBox'></div>
+            <div className='emptyBox'>
+                <img src={PFP} className='compfp'/>
+            </div>
             <div className='text-container'>
                 <p className='comName' onClick={() => navigate(`/communities/${Name}`)}>{Name}</p>
                 <p className='memberCount'>{memberCount} Members</p>

@@ -5,6 +5,7 @@ import NavBar from "../NavBar";
 import API_URL from '../../config/api';
 import "./CommunityStyles.css";
 import "../Overlay.css";
+import UploadBox from '../MediaUpload';
 import members from "../../images/members.png";
 import dots from "../../images/dots.png";
 import settings from "../../images/settings.png";
@@ -36,6 +37,53 @@ function CommunityPage() {
     const [isClosed3, setIsClosed3] = useState(true);
     const [posts, setPosts] = useState([]);
 
+
+       //Profile pictures code
+    //#####################
+    const [isUploading, enableUpload] = useState(0);
+    const [pfp, setpfp] = useState(null);
+    const [banner, setbanner] = useState(null);
+    const [pfpUrl, setpfpUrl] = useState("");
+    const [pfpUrltemp, setpfpUrlt] = useState("");
+    const [bannerUrl, setbannerUrl] = useState("");
+    const [bannerUrltemp, setbannerUrlt] = useState("");
+
+    useEffect(()=>{
+      if(editing&&pfp){
+        setpfpUrlt(pfpUrl);
+        setpfpUrl(URL.createObjectURL(pfp));
+      }
+      if(editing&&!pfp&&pfpUrltemp!==""){
+        setpfpUrl(pfpUrltemp);
+        URL.revokeObjectURL(pfp);
+      }
+    },pfp);
+    useEffect(()=>{
+      if(editing&&banner){
+        setbannerUrlt(bannerUrl);
+        setbannerUrl(URL.createObjectURL(banner));
+      }
+      if(editing&&!banner&&bannerUrltemp!==""){
+        setbannerUrl(bannerUrltemp);
+        URL.revokeObjectURL(banner);
+      }
+    },banner);
+    const cancelEdit = ()=>{
+      if(pfp){
+        setpfpUrl(pfpUrltemp);
+        URL.revokeObjectURL(pfp);
+        setpfp(null);
+      }
+      if(banner){
+        setbannerUrl(bannerUrltemp);
+        URL.revokeObjectURL(banner);
+        setbanner(null);
+      }
+      setEditing(false);
+    }
+    //#####################
+
+
     const toggleEditing = () => {
         setEditing(!editing);
     }
@@ -60,7 +108,7 @@ function CommunityPage() {
 
     const ReadCommunityPost = () => {
         const items = posts.map((post, index)=>{
-             return <PostObj key={index} User={post["user"]} Content={post["text"]} Likes={post["likes"]} Liked={parselike(post)} id={post["id"]} commcount={post["comments"].length} books={false} CreatedAt={post["createdAt"]} CommunityName={post["communityName"]}/>
+             return <PostObj key={index} User={post["user"]} Content={post["text"]} Likes={post["likes"]} Liked={parselike(post)} id={post["id"]} commcount={post["comments"].length} books={false} CreatedAt={post["createdAt"]} CommunityName={post["communityName"]} media={post["media"]} type={post["mediaType"]}/>
         });
         return(
             <div className="com-posts">
@@ -70,11 +118,20 @@ function CommunityPage() {
     }
 
     const ReadCommunityMedia = () => {
-        return(
-            <div>
-                <h1>Post Media Will go here</h1>
-            </div>
-        );
+        const items = posts.filter(post => post.media).map((post,index) => {
+            if(post.media) {
+                return <PostObj key={index} User={post["user"]} Content={post["text"]} Likes={post["likes"]} Liked={parselike(post)} id={post["id"]} commcount={post["comments"].length} books={false} CreatedAt={post["createdAt"]} CommunityName={post["communityName"]} media={post["media"]} type={post["mediaType"]}/>
+            }
+        }, []);
+      return(
+        <div className="com-posts">
+          {items.length!==0?(
+            <>
+              {items}
+            </>
+          ):<p className="none-yet">No Media Uploaded yet</p>}
+        </div>
+      )
     }
     const handleOptionsClick = (e, member) => {
         e.stopPropagation();
@@ -83,9 +140,9 @@ function CommunityPage() {
         setCoor({top: rect.top, left: rect.left+80});
         setSelectedMember(member);
 
-        if(activeTab === "members" && isOwner) {
+        if(membersCom.includes(member) && isOwner) {
             setMode("Owner(Members)");
-        } else if(activeTab === "mods" && isOwner) {
+        } else if(mods.includes(member) && isOwner) {
             setMode("Owner(Mods)");
         } else if(activeTab === "members" && mods.includes(member)) {
             setMode("Moderator(Members)");
@@ -136,6 +193,10 @@ function CommunityPage() {
                 setCurrCommunity(res.data);
                 setLoading(false);
                 setBio(res.data.description);
+                if(res.data.pfp!=null)
+                setpfpUrl(res.data.pfp);
+                if(res.data.banner!=null)
+                setbannerUrl(res.data.banner);
             } catch(error) {
                 console.error("failed to get community:", error.response?.data || error.message)
             }
@@ -186,6 +247,14 @@ function CommunityPage() {
                 `${API_URL}/communities/${communityName}/editDescription`,
                 {description: bio}, { headers: { Authorization: `Bearer ${token}` } }
             );
+            const formdat = new FormData();
+            formdat.append('name', communityName);
+            formdat.append('pfp',pfp);
+            formdat.append('banner',banner);
+            await axios.post(
+                `${API_URL}/communities/setmedia`,formdat,
+                { headers: { Authorization: `Bearer ${token}` } }
+            );
             setCurrCommunity(prev => ({
                 ...prev,
                 description: bio
@@ -227,8 +296,25 @@ function CommunityPage() {
                 }
                 <div className="main-content" style={{ color: "white" }}>
                     <div className="header-com">
-                        <div className="banner"></div>
-                        <div className="comavatar"></div>
+                        <div className="banner">
+                            {bannerUrl!=="" ?
+                            <img src={bannerUrl} style={{
+                            width:"100%",
+                            height:"100%",
+                            objectFit: "fill"
+                            }}/>
+                            : "" }
+                        </div>
+                        <div className="comavatar">
+                            {pfpUrl?
+                            <img src={pfpUrl} style={{
+                            width:"100%",
+                            height:"100%",
+                            objectFit: "fill",
+                            borderRadius:"1.5rem"
+                            }}/>
+                        :""}
+                        </div>
                         <div className="comdetails">
                             <div className="header-top">
                                 <h2>{communityName}</h2>
@@ -242,8 +328,9 @@ function CommunityPage() {
                                 <img src={members} alt="members" className="memberimg"/>
                                 <p>{currCommunity.memberCount} Members</p>
                                 {
+                                    //dev testing isOwner
                                     isOwner?(
-                                        <button className="join-com" onClick={toggleEditing}>Edit Description</button>
+                                        <button className="join-com" onClick={toggleEditing}>Edit Community</button>
                                     ): isMember || mods?.some(mod => mod.id === userId)?(
                                         <button className="leave-com" onClick={handleLeaveClick}>Leave</button>
                                     ):<button className="join-com" onClick={handleJoinClick}>Join</button>
@@ -252,10 +339,16 @@ function CommunityPage() {
                             {
                                 editing?(
                                     <div>
+                                        <div className="Profile-Media-Edit">
+                                            <button onClick={()=>{enableUpload(1)}}>Edit Community Picture</button>
+                                            <button onClick={()=>{enableUpload(2)}}>Edit Banner</button>
+                                            {isUploading===1 ? <UploadBox clearvar={enableUpload} fileinf={{file:pfp,upload:setpfp}}/> : ''}
+                                            {isUploading===2 ? <UploadBox clearvar={enableUpload} fileinf={{file:banner,upload:setbanner}}/> : ''}
+                                        </div>
                                         <textarea className="editcomdesc" onChange={(e) => setBio(e.target.value)} value={bio}/>
                                         <div className="editingbtns">
                                             <button className="save" onClick={handleSaveDescription}>Save</button>
-                                            <button className="cancel" onClick={toggleEditing}>Cancel</button>
+                                            <button className="cancel" onClick={cancelEdit}>Cancel</button>
                                         </div>
                                     </div>
                                 ): ""
@@ -264,7 +357,7 @@ function CommunityPage() {
                         
                     </div>
                     <div className="tabs">
-                        {["posts", "media", "members", "mods"].map((tab) => (
+                        {["posts", "media", "members"].map((tab) => (
                             <button
                                 key={tab}
                                 onClick={() => {setActiveTab(tab); setPopUpMenu(false);}}
@@ -280,12 +373,15 @@ function CommunityPage() {
                             <ReadCommunityPost/>
                         ):activeTab==="media"?(
                             <ReadCommunityMedia/>
-                        ):activeTab==="mods"?(
+                        ):activeTab==="members"?(
                             <div  className="memholder">
+                                <h2>Mods: </h2>
                                 {
                                     mods.map(mod =>(
                                         <div key={mod.id} className="userBlock" onClick={(e)=>{e.stopPropagation(); navigate(`/profile/${mod.username}`);}}>
-                                            <div className="userCircle"></div>
+                                            <div className="userCircle">
+                                                {mod.pfp && <img src={mod.pfp} alt='userpfp'/>}
+                                            </div>
                                             
                                             <p className="user-m">{mod.username}</p>
                                             {mod.id === currCommunity.ownerId?(
@@ -299,9 +395,8 @@ function CommunityPage() {
                                         </div>
                                     ))
                                 }
-                            </div>
-                        ):<div className="memholder">
-                            {
+                                <h2>Members:</h2>
+                                {
                                 membersCom.map(member =>(
                                     <div key={member.id} className="userBlock" onClick={(e)=>{e.stopPropagation(); navigate(`/profile/${member.username}`)}}>
                                         <div className="userCircle"></div>
@@ -314,7 +409,8 @@ function CommunityPage() {
                                     </div>
                                 ))
                             }
-                        </div>
+                            </div>
+                        ):""
                     }
                     {mods.some(mod => mod.id === userId)?(
                         popUpMenu && <PopUpMenu top={coor.top} left={coor.left} member={selectedMember} setMembers={setMembers} setPopUpMenu={setPopUpMenu} setMods={setMods} Mode={mode} setCurrCommunity={setCurrCommunity}/>):""

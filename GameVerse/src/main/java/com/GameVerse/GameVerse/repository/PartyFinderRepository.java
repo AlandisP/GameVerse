@@ -19,4 +19,5 @@ public interface PartyFinderRepository extends MongoRepository<PartyFinder, Stri
     PartyFinder findByCreatorId(String id);
     boolean existsByName(String name);
     boolean existsByMembersContaining(String userId);
+    void deleteAllByCreatorId(String ownerId);
 }

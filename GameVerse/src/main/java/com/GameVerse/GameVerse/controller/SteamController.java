@@ -7,11 +7,14 @@ import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.client.RestTemplate;
 import org.springframework.web.servlet.view.RedirectView;
 
 import com.GameVerse.GameVerse.model.User;
@@ -102,5 +105,12 @@ public class SteamController {
         } catch (Exception e) {
             return false;
         }
+    }
+
+    @GetMapping("/getOwnedGames/{steamId}")
+    public ResponseEntity<?> getOwnedGames(@PathVariable String steamId) {
+        String url = "https://api.steampowered.com/IPlayerService/GetOwnedGames/v1/?key=" + apiKey +"&steamid="+ steamId + "&include_appinfo=true&include_played_free_games=1";
+        RestTemplate rest = new RestTemplate();
+        return ResponseEntity.ok(rest.getForObject(url, Object.class));
     }
 }

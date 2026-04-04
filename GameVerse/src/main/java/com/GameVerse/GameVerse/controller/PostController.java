@@ -81,6 +81,10 @@ public class PostController {
         public String content;
     }
 
+    static class idinf{
+        public String id;
+    }
+
     @PostMapping("/makepost")
     public ResponseEntity<String> makepost(@RequestParam("body") String content, @RequestParam(value = "media", required = false) MultipartFile media, Authentication auth){
         try{
@@ -114,11 +118,30 @@ public class PostController {
     // }
 
     @PostMapping("/makecommunitypost")
-    public ResponseEntity<?> makecommunitypost(@RequestBody PostCommunityContent content, Authentication auth) {
+    public ResponseEntity<?> makecommunitypost(@RequestParam("body") String content, @RequestParam("id") String communityid, @RequestParam(value = "media", required = false) MultipartFile media, Authentication auth) {
         String username = userRep.findById(auth.getPrincipal().toString()).get().getUsername();
-        communityService.communityPost(content.id, username, content.body);
+        communityService.communityPost(communityid, username, content, media);
         return ResponseEntity.ok().body("new Post successfully created");
     }
+
+    @PostMapping("/deletepost")
+    public ResponseEntity<?> delpost(@RequestBody idinf content, Authentication auth){
+        try{
+            String user = userRep.findById(auth.getPrincipal().toString()).get().getUsername();
+            Post post = postRepo.findById(content.id).get();
+            if(user.equalsIgnoreCase(post.getUser())){
+                if(!post.getmedia().equals(""))
+                    s3serv.deleteMedia(post.getmedia());
+                postRepo.delete(post);
+            }
+        return ResponseEntity.ok().body("");
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.internalServerError().body("000");
+        }
+    }
+
     @GetMapping("/getposts")
     public ResponseEntity<List<Post>> getapost(Authentication auth){
         String userId = (String) auth.getPrincipal();

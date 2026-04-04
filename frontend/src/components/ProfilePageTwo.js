@@ -9,7 +9,7 @@ import UploadBox from './MediaUpload';
 import dots from "./../images/dots.png";
 import "./Overlay.css";
 import SignIn from "./../images/sits_01.png";
-
+import "./ProfilePage.css";
 function ProfilePageTwo() {
     const { username } = useParams();
     const navigate = useNavigate();
@@ -24,12 +24,14 @@ function ProfilePageTwo() {
     const [activeTab, setActiveTab] = useState("posts");
     const [isFollowing, setIsFollowing] = useState(false);
     const [posts, setPosts] = useState([]);
+    const [games, setGames] = useState([]);
     const [likedposts, setLikedPosts] = useState([]);
     const [isOpen, setIsOpen] = useState(false);
     const[coor, setCoor] = useState({top:0, left:0});
     const [blockIds, setBlockIds] = useState([]);
     const [userBlockIds, setUserBlockIds] = useState([]);
     const [mode, setMode] = useState("");
+    const [isOverlayOpen, setIsOverlayOpen] = useState([]);
 
 
     //Profile pictures code
@@ -92,7 +94,7 @@ function ProfilePageTwo() {
 
     const parselike = (postinf)=>{
         const array = postinf["liked"];
-        const like = array[username];
+        const like = array[username ?? loggedInUsername];
         return like;
     }
 
@@ -157,8 +159,8 @@ function ProfilePageTwo() {
         );
     }
     const ReadUserMedia = () => {
-      const items = posts.map((post,index) => {
-        if(post.media !== null) {
+      const items = posts.filter(post => post.media).map((post,index) => {
+        if(post.media) {
           return <PostObj key={index} User={post["user"]} Content={post["text"]} Likes={post["likes"]} Liked={parselike(post)} id={post["id"]} commcount={post["comments"].length} books={false} CreatedAt={post["createdAt"]} CommunityName={post["communityName"]} media={post["media"]} type={post["mediaType"]}/>
         }
       });
@@ -168,7 +170,7 @@ function ProfilePageTwo() {
             <>
               {items}
             </>
-          ):<p className="none-yet">No Media Uploaded</p>}
+          ):<p className="none-yet">No Media Uploaded yet</p>}
         </div>
       )
     }
@@ -181,7 +183,7 @@ function ProfilePageTwo() {
           liked = true
         }
         const items = likedposts.map((post, index)=>{
-             return <PostObj key={index} User={post["user"]} Content={post["text"]} Likes={post["likes"]} Liked={liked} id={post["id"]} commcount={post["comments"].length} books={false} CreatedAt={post["createdAt"]} CommunityName={post["communityName"]} media={post["media"]} type={post["mediaType"]}/>
+             return <PostObj key={index} User={post["user"]} Content={post["text"]} Likes={post["likes"]} Liked={parselike(post)} id={post["id"]} commcount={post["comments"].length} books={false} CreatedAt={post["createdAt"]} CommunityName={post["communityName"]} media={post["media"]} type={post["mediaType"]}/>
         });
         return(
             <div className="com-posts">
@@ -229,7 +231,7 @@ function ProfilePageTwo() {
         setpfpUrl(res.data.pfp);
         if(res.data.banner!=null)
         setbannerUrl(res.data.banner);
-      console.log(res.data);
+        
         // If viewing someone else's profile and logged in, fetch follow status
         if (username && token) {
           try {
@@ -290,7 +292,7 @@ function ProfilePageTwo() {
       );
       setProfile({ ...profile, bio });
       if(pfp!=null||banner!=null){
-        console.log(pfp);
+        //console.log(pfp);
         const formdat = new FormData();
         formdat.append('pfp',pfp);
         formdat.append('banner',banner);
@@ -298,7 +300,7 @@ function ProfilePageTwo() {
             `${API_URL}/profile/setmedia`,formdat,
             { headers: { Authorization: `Bearer ${token}` } }
         );
-        console.log("media updated");
+        //console.log("media updated");
       }
       setEditMode(false);
     } catch (err) {
@@ -374,6 +376,38 @@ function ProfilePageTwo() {
       return () => document.removeEventListener("click", handleOutsideClick);
   }, []);
 
+    useEffect(() => {
+      if(!profile) return;
+      const GetUserSteamInfo = async() => {
+        if(profile.steamId!==null) {
+          try {
+            const res = await axios.get(
+              `${API_URL}/auth/steam/getOwnedGames/${profile.steamId}`,
+              { headers: { Authorization: `Bearer ${token}` } }
+            );
+            setGames(res.data.response.games);
+
+          }catch(error) {
+            console.error("failed to get steam info: ", error.response?.data || error.message);
+          }
+        }
+      }
+      GetUserSteamInfo();
+
+    },[profile]);
+
+    const ReadUserGames = () => {
+      const items = games.map((game, ind) => {
+          return <ShownGames key={game.appid} Name={game.name} Image={`https://cdn.akamai.steamstatic.com/steam/apps/${game.appid}/header.jpg`} PlayTime={game.playtime_forever}/>
+        }
+      );
+      return (
+        <div>
+          {items}
+        </div>
+      );
+    }
+
 
 
   const Sidebar = () => <NavBar />;
@@ -419,15 +453,7 @@ function ProfilePageTwo() {
       <Sidebar />
       <div className="main-content" style={{ color: "white" }}>
         {/* HEADER */}
-        <div
-          style={{
-            backgroundColor: "#2f2f2f",
-            paddingBottom: "20px",
-            borderRadius: "0 0 12px 12px",
-            marginBottom: "25px",
-            position: "relative",
-          }}
-        >
+        <div className="pfheader">
           {/* Banner */}
           <div
             style={{
@@ -640,7 +666,7 @@ function ProfilePageTwo() {
                 justifyContent: "space-around",
               }}
             >
-              {["posts", "media", "likes","achievements"].map((tab) => (
+              {["posts", "media", "likes","Steam Games"].map((tab) => (
                 <button
                   key={tab}
                   onClick={() => setActiveTab(tab)}
@@ -690,15 +716,15 @@ function ProfilePageTwo() {
             }
             </>
           )}
-          {activeTab==="achievements" &&(
+          {activeTab==="Steam Games" &&(
             <>
             <div className="com-posts">
-              {profile.steamId===null&&currUser.id===profile.id?(
+              {isOwnProfile&&profile.steamId==null?(
                 <>
                 <p className="none-yet">You must sign in with steam to show your achievements. Please click the link to sign into steam</p>
                 <a href={`http://localhost:8080/auth/steam?token=${token}`}>
                   <img src={SignIn} alt="steamlogin"/>
-                </a> </>):<p>test txt</p>
+                </a> </>):profile.steamId===null?(<p className="none-yet">This user has not logged into steam</p>):<ReadUserGames/>
               }
 
             </div>
@@ -751,5 +777,17 @@ function ProfilePageTwo() {
         </div>
     );
   }
+
+function ShownGames({Name, Image, PlayTime}) {
+  return (
+    <div className="game-holder">
+      <img src={Image} alt={Name}/>
+      <div>
+        <p className="name-head">{Name}</p>
+        <p>{PlayTime} minutes played</p>
+      </div>
+    </div>
+  );
+}
 
 export default ProfilePageTwo;
