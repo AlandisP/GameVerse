@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import axios from "axios";
 import NavBar from "./NavBar";
 import logo from "../images/search.png";
@@ -57,6 +57,7 @@ function shouldShowSenderName(activeConversation, msg, currentUser) {
     !msg.isDeleted
   );
 }
+
 async function validateUsernameExists(username) {
   const token = localStorage.getItem("token");
 
@@ -108,6 +109,19 @@ async function createGroupConversation(currentUsername, title, usernames) {
   return res.data;
 }
 
+async function fetchBackendConversations(currentUsername) {
+  const token = localStorage.getItem("token");
+
+  const res = await axios.get(`${API_URL}/api/conversations/mine`, {
+    params: { currentUsername },
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  return res.data;
+}
+
 async function ensureConversationDoc({
   convoId,
   participants = [],
@@ -138,7 +152,6 @@ async function ensureConversationDoc({
 
 function MessagePage() {
   const { receiverUsername } = useParams();
-  const navigate = useNavigate();
 
   const sender = localStorage.getItem("username");
 
@@ -176,70 +189,6 @@ function MessagePage() {
   useEffect(() => {
     setShowMembers(false);
   }, [activeConversationId]);
-
-  useEffect(() => {
-  let cancelled = false;
-
-  async function openFromUrl() {
-    if (!sender || !receiverUsername) return;
-    if (openingRef.current) return;
-
-    // 🚫 prevent reopening same DM
-    if (
-      activeReceiver &&
-      receiverUsername &&
-      activeReceiver.toLowerCase() === receiverUsername.toLowerCase() &&
-      activeConversationId
-    ) {
-      return;
-    }
-
-    if (receiverUsername.toLowerCase() === sender.toLowerCase()) {
-      setActiveConversationId("");
-      setActiveReceiver("");
-      setMessages([]);
-      return;
-    }
-
-    try {
-      openingRef.current = true;
-
-      const exists = await validateUsernameExists(receiverUsername);
-      if (cancelled) return;
-
-      if (!exists) {
-        setComposeError(`User "${receiverUsername}" does not exist.`);
-        return;
-      }
-
-      const convo = await createOrGetConversation(sender, receiverUsername);
-      if (cancelled) return;
-
-      await ensureConversationDoc({
-        convoId: convo.id,
-        participants: [sender, receiverUsername],
-        type: "DIRECT",
-        title: "",
-      });
-
-      if (cancelled) return;
-
-      setActiveConversationId(convo.id);
-      setActiveReceiver(receiverUsername);
-      setComposeError("");
-    } catch (e) {
-      console.error(e);
-    } finally {
-      openingRef.current = false;
-    }
-  }
-
-  openFromUrl();
-
-  return () => {
-    cancelled = true;
-  };
-}, [sender, receiverUsername, activeReceiver, activeConversationId]);
 
   useEffect(() => {
     if (!sender || typeof sender !== "string" || !sender.trim()) return;
@@ -287,55 +236,54 @@ function MessagePage() {
   }, [conversations, search, sender]);
 
   useEffect(() => {
-  // 🧹 cleanup old listener
-  if (messagesUnsubRef.current) {
-    messagesUnsubRef.current();
-    messagesUnsubRef.current = null;
-  }
-
-  if (
-    !activeConversationId ||
-    typeof activeConversationId !== "string" ||
-    !activeConversationId.trim()
-  ) {
-    setMessages([]);
-    return;
-  }
-
-  const convId = activeConversationId.trim();
-
-  const q = query(
-    collection(db, "conversations", convId, "messages"),
-    orderBy("timestamp", "asc")
-  );
-
-  // 🔥 KEY FIX: delay subscription slightly
-  const timeout = setTimeout(() => {
-    messagesUnsubRef.current = onSnapshot(
-      q,
-      (snapshot) => {
-        const list = snapshot.docs.map((d) => ({
-          id: d.id,
-          ...d.data(),
-        }));
-        setMessages(list);
-      },
-      (err) => {
-        console.error("onSnapshot messages error:", err);
-        setMessages([]);
-      }
-    );
-  }, 0);
-
-  return () => {
-    clearTimeout(timeout);
-
     if (messagesUnsubRef.current) {
       messagesUnsubRef.current();
       messagesUnsubRef.current = null;
     }
-  };
-}, [activeConversationId]);
+
+    if (
+      !activeConversationId ||
+      typeof activeConversationId !== "string" ||
+      !activeConversationId.trim()
+    ) {
+      setMessages([]);
+      return;
+    }
+
+    const convId = activeConversationId.trim();
+
+    const q = query(
+      collection(db, "conversations", convId, "messages"),
+      orderBy("timestamp", "asc")
+    );
+
+    const timeout = setTimeout(() => {
+      messagesUnsubRef.current = onSnapshot(
+        q,
+        (snapshot) => {
+          const list = snapshot.docs.map((d) => ({
+            id: d.id,
+            ...d.data(),
+          }));
+          setMessages(list);
+        },
+        (err) => {
+          console.error("onSnapshot messages error:", err);
+          setMessages([]);
+        }
+      );
+    }, 0);
+
+    return () => {
+      clearTimeout(timeout);
+
+      if (messagesUnsubRef.current) {
+        messagesUnsubRef.current();
+        messagesUnsubRef.current = null;
+      }
+    };
+  }, [activeConversationId]);
+
   async function recomputeConversationLastMessage(convoId) {
     const msgsRef = collection(db, "conversations", convoId, "messages");
     const qLast = query(msgsRef, orderBy("timestamp", "desc"), limit(25));
@@ -552,8 +500,6 @@ function MessagePage() {
       setActiveConversationId(convoId);
       setActiveReceiver(target);
 
-      navigate(`/messages/${target}`);
-
       setIsComposing(false);
       setNewDmUsername("");
       setEditingId("");
@@ -564,109 +510,105 @@ function MessagePage() {
     }
   }
 
- async function startNewGroupConversation() {
-  if (!sender) return;
+  async function startNewGroupConversation() {
+    if (!sender) return;
 
-  const title = groupTitle.trim();
-  const rawMembers = groupMembersInput
-    .split(",")
-    .map((name) => name.trim())
-    .filter(Boolean);
+    const title = groupTitle.trim();
+    const rawMembers = groupMembersInput
+      .split(",")
+      .map((name) => name.trim())
+      .filter(Boolean);
 
-  const uniqueMembers = [...new Set(rawMembers)].filter(
-    (name) => name.toLowerCase() !== sender.toLowerCase()
-  );
-
-  if (!title) {
-    setGroupError("Enter a group title.");
-    return;
-  }
-
-  if (uniqueMembers.length < 2) {
-    setGroupError("Enter at least 2 other usernames.");
-    return;
-  }
-
-  try {
-    setGroupError("");
-
-    const convo = await createGroupConversation(sender, title, uniqueMembers);
-    const convoId = convo.id;
-
-    const newConversation = {
-      id: convoId,
-      participants: [sender, ...uniqueMembers],
-      type: "GROUP",
-      title,
-      lastMessageText: "",
-      lastMessageAt: null,
-      lastMessageSender: "",
-      lastMessageId: "",
-      lastMessage: "",
-      lastSender: "",
-    };
-
-    await ensureConversationDoc({
-      convoId,
-      participants: newConversation.participants,
-      type: "GROUP",
-      title,
-    });
-
-    // ✅ add it instantly to local UI
-    setConversations((prev) => {
-      const alreadyExists = prev.some((c) => c.id === convoId);
-      if (alreadyExists) return prev;
-      return [newConversation, ...prev];
-    });
-
-    setActiveConversationId(convoId);
-    setActiveReceiver("");
-    setIsCreatingGroup(false);
-    setGroupTitle("");
-    setGroupMembersInput("");
-    setEditingId("");
-    setEditingText("");
-  } catch (e) {
-    console.error(e);
-    setGroupError(
-      e?.response?.data?.error || "Could not create group conversation."
+    const uniqueMembers = [...new Set(rawMembers)].filter(
+      (name) => name.toLowerCase() !== sender.toLowerCase()
     );
-  }
-}
 
-  async function openConversation(convo) {
-  const isGroup = convo.type === "GROUP";
-
-  try {
-    // 🚫 prevent reopening same convo (VERY IMPORTANT)
-    if (convo.id === activeConversationId) return;
-
-    await ensureConversationDoc({
-      convoId: convo.id,
-      participants: convo.participants || [],
-      type: convo.type || "DIRECT",
-      title: convo.title || "",
-    });
-
-    setActiveConversationId(convo.id);
-    setComposeError("");
-    setEditingId("");
-    setEditingText("");
-
-    if (isGroup) {
-      setActiveReceiver("");
+    if (!title) {
+      setGroupError("Enter a group title.");
       return;
     }
 
-    const other = getOtherUser(convo.participants, sender);
-    setActiveReceiver(other || "");
+    if (uniqueMembers.length < 2) {
+      setGroupError("Enter at least 2 other usernames.");
+      return;
+    }
 
-    
-  } catch (e) {
-    console.error(e);
+    try {
+      setGroupError("");
+
+      const convo = await createGroupConversation(sender, title, uniqueMembers);
+      const convoId = convo.id;
+
+      const newConversation = {
+        id: convoId,
+        participants: [sender, ...uniqueMembers],
+        type: "GROUP",
+        title,
+        lastMessageText: "",
+        lastMessageAt: null,
+        lastMessageSender: "",
+        lastMessageId: "",
+        lastMessage: "",
+        lastSender: "",
+      };
+
+      await ensureConversationDoc({
+        convoId,
+        participants: newConversation.participants,
+        type: "GROUP",
+        title,
+      });
+
+      setConversations((prev) => {
+        const alreadyExists = prev.some((c) => c.id === convoId);
+        if (alreadyExists) return prev;
+        return [newConversation, ...prev];
+      });
+
+      setActiveConversationId(convoId);
+      setActiveReceiver("");
+      setIsCreatingGroup(false);
+      setGroupTitle("");
+      setGroupMembersInput("");
+      setEditingId("");
+      setEditingText("");
+    } catch (e) {
+      console.error(e);
+      setGroupError(
+        e?.response?.data?.error || "Could not create group conversation."
+      );
+    }
   }
-}
+
+  async function openConversation(convo) {
+    const isGroup = convo.type === "GROUP";
+
+    try {
+      if (convo.id === activeConversationId) return;
+
+      await ensureConversationDoc({
+        convoId: convo.id,
+        participants: convo.participants || [],
+        type: convo.type || "DIRECT",
+        title: convo.title || "",
+      });
+
+      setActiveConversationId(convo.id);
+      setComposeError("");
+      setEditingId("");
+      setEditingText("");
+
+      if (isGroup) {
+        setActiveReceiver("");
+        return;
+      }
+
+      const other = getOtherUser(convo.participants, sender);
+      setActiveReceiver(other || "");
+    } catch (e) {
+      console.error(e);
+    }
+  }
 
   return (
     <div className="page-container">
@@ -1078,7 +1020,11 @@ function MessagePage() {
           >
             {messages.map((msg) => {
               const isMine = msg.sender === sender;
-              const showSenderName = shouldShowSenderName(activeConversation, msg, sender);
+              const showSenderName = shouldShowSenderName(
+                activeConversation,
+                msg,
+                sender
+              );
 
               return (
                 <div
@@ -1094,23 +1040,21 @@ function MessagePage() {
                     alignItems: isMine ? "flex-end" : "flex-start",
                     background: "transparent",
                   }}
->
+                >
                   {showSenderName ? (
-                     <div
-                     style={{
-                      fontSize: "12px",
-                      color: "#bdbdbd",
-                      marginBottom: "4px",
-                      paddingLeft: "4px",
-                      fontWeight: 700,
-                    }}
-                  >
-                    {msg.sender}
+                    <div
+                      style={{
+                        fontSize: "12px",
+                        color: "#bdbdbd",
+                        marginBottom: "4px",
+                        paddingLeft: "4px",
+                        fontWeight: 700,
+                      }}
+                    >
+                      {msg.sender}
                     </div>
-                    ) : null}
-                  
-                  
-                
+                  ) : null}
+
                   {msg.isDeleted ? (
                     <div
                       style={{
