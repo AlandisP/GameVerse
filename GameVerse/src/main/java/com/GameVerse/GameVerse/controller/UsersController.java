@@ -161,11 +161,6 @@ public class UsersController {
 
     }
 
-    @GetMapping("/recommendations")
-    public ResponseEntity<?> getRecommendations(Authentication auth) {
-        String userId = (String) auth.getPrincipal();
-        return ResponseEntity.ok(recService.followRecommendations(userId));
-    }
 
     @DeleteMapping("/delete-account")
 public ResponseEntity<?> deleteAccount(@RequestBody Map<String, String> body, Authentication auth) {

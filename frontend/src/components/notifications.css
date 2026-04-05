@@ -62,7 +62,7 @@
 }
 
 .extras {
-    
+    margin-left: 20px;
 }
 
 .no-notis {
@@ -74,4 +74,23 @@
 .message-txt:hover {
     text-decoration: underline;
     cursor: pointer;
+}
+
+.rec-holder {
+    display: flex;
+    flex-direction: column;
+    border: 1px solid #3b82f6;
+    height: fit-content;
+    width: auto;
+    border-radius: 20px;
+    padding: 10px;
+}
+
+.userrec{
+    display: flex;
+    gap: 10px;
+    padding: 10px;
+    border-bottom: 1px solid  hsla(0, 0%, 83%, 0.65);
+    cursor: pointer;
+    background-color: transparent;
 }

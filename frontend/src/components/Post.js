@@ -118,7 +118,6 @@ function PostObj ({User, Content, Likes, Liked, id, books, commcount, CreatedAt,
                 </div>
             );
         }
-        console.log("POST:", User, "media:", media, "type:", type);
         return(
             <div>
             {!deleted?

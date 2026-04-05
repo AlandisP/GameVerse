@@ -16,6 +16,7 @@ import com.GameVerse.GameVerse.model.User;
 import com.GameVerse.GameVerse.repository.NotificationRepository;
 import com.GameVerse.GameVerse.repository.UserRepository;
 import com.GameVerse.GameVerse.services.NotificationService;
+import com.GameVerse.GameVerse.services.RecommendationService;
 
 @RestController
 @RequestMapping("/notifications")
@@ -30,6 +31,9 @@ public class NotificationController {
 
     @Autowired
     private NotificationService service;
+
+    @Autowired
+    private RecommendationService recService;
 
     @GetMapping("/{username}")
     public ResponseEntity<?> getUnreadNotifications(@PathVariable String username, Authentication auth) {
@@ -59,6 +63,12 @@ public class NotificationController {
         }
         Long  count = notificationRepository.countByUserIdAndReadFalse(userId);
         return ResponseEntity.ok().body(count);
+    }
+
+    @GetMapping("/recommendations")
+    public ResponseEntity<?> getRecommendations(Authentication auth) {
+        String userId = (String) auth.getPrincipal();
+        return ResponseEntity.ok(recService.followRecommendations(userId));
     }
 
 

@@ -20,7 +20,6 @@ function FollowersAndFollowingOverlay({isOpen, Username, onClose, Tab}) {
     const navigate = useNavigate();
 
     
-    const followingIds = new Set(following.map(u => u.id));
 
     const getFollowers = async() => {
         // user followers
@@ -111,7 +110,7 @@ function FollowersAndFollowingOverlay({isOpen, Username, onClose, Tab}) {
         const items = following.map((user, ind)=>
             <div key={ind} className='follower' onClick={() => {navigate(`/profile/${user.username}`); onClose();}}>
                 <div className='circle'>
-                    <img src={user.pfp} alt='userpfp'/>
+                    <img src={user.pfp?(user.pfp):Pfp} alt='userpfp'/>
                 </div>
                 <div className='info-holders'>
                     <h3>{user.username}</h3>

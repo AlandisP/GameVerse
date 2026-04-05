@@ -216,6 +216,19 @@ p {
     gap: 10px;
 }
 
+.right-right{
+    display: flex;
+    flex-direction: row;
+    gap: 5px;
+    background-color: transparent;
+    align-items: center;
+    margin-left: auto;
+}
+
+.right-right p{
+    margin: 0;
+}
+
 @media (max-width: 768px) {
     .top-container {
         margin: 10px;

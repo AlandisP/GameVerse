@@ -128,11 +128,11 @@
 
 .catbox2 {
     background-color: rgb(44, 42, 42);
-    border-radius: .8rem;
+    border-radius: .5rem;
     font-size: 1rem;
     padding: .3rem;
     font-weight: bold;
-    border: 2px solid transparent;
+    border: 1px solid transparent;
 }
 
 .catbox2:hover {
@@ -149,9 +149,8 @@
     border-radius: .5rem;
     font-size: 1rem;
     padding: .3rem;
-    margin-right: 7px;
     font-weight: bold;
-    border: 2px solid antiquewhite;
+    border: 1px solid antiquewhite;
 }
 
 .select-list{
@@ -424,6 +423,7 @@
     height: 100%;
     object-fit: fill;
     border-radius: 50%;
+    background-color: transparent;
 }
 
 .info-holders {
