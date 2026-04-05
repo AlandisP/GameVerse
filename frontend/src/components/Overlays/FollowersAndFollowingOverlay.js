@@ -6,10 +6,10 @@ import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import Pfp from '../../images/Profile.png'
 import dots from '../../images/dots.png'
-function FollowersAndFollowingOverlay({isOpen, Username, onClose}) {
+function FollowersAndFollowingOverlay({isOpen, Username, onClose, Tab}) {
     const token  = localStorage.getItem('token');
     const username = localStorage.getItem('username');
-    const [activeTab, setActiveTab] = useState('Following');
+    const [activeTab, setActiveTab] = useState(Tab);
     const [followers, setFollowers] = useState([]);
     const [following, setFollowing] = useState([]);
     const [loggedFollowers, setLoggedFollowers] = useState([]);
@@ -21,7 +21,6 @@ function FollowersAndFollowingOverlay({isOpen, Username, onClose}) {
 
     
     const followingIds = new Set(following.map(u => u.id));
-    const isFollowing = (userId) => followingIds.has(userId);
 
     const getFollowers = async() => {
         // user followers
@@ -120,10 +119,10 @@ function FollowersAndFollowingOverlay({isOpen, Username, onClose}) {
                 </div>
                 {username===user.username?(<></>):
                 loggedFollowing.includes(user.id)?(
-                    <button className='pfpbutton2' onClick={() => handleUnfollow(user.username)}><span>Following</span></button>
+                    <button className='pfpbutton2' onClick={(e) => {handleUnfollow(user.username); e.stopPropagation();}}><span>Following</span></button>
                     ):loggedFollowers.includes(user.id)?(
-                        <button className='pfpbutton' onClick={() => handleFollow(user.username)}>Follow Back</button>
-                    ):<button className='pfpbutton' onClick={() => handleFollow(user.username)}>Follow</button>
+                        <button className='pfpbutton' onClick={(e) => {handleFollow(user.username); e.stopPropagation();}}>Follow Back</button>
+                    ):<button className='pfpbutton' onClick={(e) => {handleFollow(user.username); e.stopPropagation();}}>Follow</button>
                 }
             </div>
         );
@@ -152,10 +151,10 @@ function FollowersAndFollowingOverlay({isOpen, Username, onClose}) {
                 </div>
                 {username===user.username?(<></>):
                 loggedFollowing.includes(user.id)?(
-                    <button className='pfpbutton2' onClick={() => handleUnfollow(user.username)}><span>Following</span></button>
+                    <button className='pfpbutton2' onClick={(e) => {handleUnfollow(user.username); e.stopPropagation();}}><span>Following</span></button>
                     ):loggedFollowers.includes(user.id)?(
-                        <button className='pfpbutton' onClick={() => handleFollow(user.username)}>Follow Back</button>
-                    ):<button className='pfpbutton' onClick={() => handleFollow(user.username)}>Follow</button>
+                        <button className='pfpbutton' onClick={(e) => {handleFollow(user.username); e.stopPropagation();}}>Follow Back</button>
+                    ):<button className='pfpbutton' onClick={(e) => {handleFollow(user.username);e.stopPropagation();}}>Follow</button>
                 }
                 {username===Username?(<img src={dots} alt='dots' className='dotsimg' onClick={(e) => handleOptionsClick(e, user)}/>):""}
             </div>
@@ -181,6 +180,10 @@ function FollowersAndFollowingOverlay({isOpen, Username, onClose}) {
         getFollowers();
         getFollowing();
     },[token]);
+
+    useEffect(() => {
+        setActiveTab(Tab);
+    }, [Tab]);
 
     return (
         <>

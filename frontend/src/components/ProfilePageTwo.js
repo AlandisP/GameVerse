@@ -33,6 +33,7 @@ function ProfilePageTwo() {
     const [userBlockIds, setUserBlockIds] = useState([]);
     const [mode, setMode] = useState("");
     const [isOverlayOpen, setIsOverlayOpen] = useState(false);
+    const [selectedTab, setSelectedTab] = useState("");
 
 
     //Profile pictures code
@@ -198,6 +199,12 @@ function ProfilePageTwo() {
     const fetchProfile = async () => {
       try {
         setLoading(true);
+        setPosts([]);     
+        setLikedPosts([]);   
+        setGames([]);        
+        setProfile(null);    
+        setpfpUrl("");   
+        setbannerUrl(""); 
         let res;
 
         if (username) {
@@ -452,7 +459,7 @@ function ProfilePageTwo() {
   return (
     <div className="page-container">
       <Sidebar />
-      <FFOverlay isOpen={isOverlayOpen} Username={profile.username} onClose={() => setIsOverlayOpen(false)}/>
+      <FFOverlay isOpen={isOverlayOpen} Username={profile.username} onClose={() => setIsOverlayOpen(false)} Tab={selectedTab}/>
       <div className="main-content" style={{ color: "white" }}>
         {/* HEADER */}
         <div className="pfheader">
@@ -517,13 +524,13 @@ function ProfilePageTwo() {
 
                 {/* Follower / Following counts */}
                 <div style={{ display: "flex", gap: "16px", marginTop: "8px" }}>
-                  <span className="flowhov" style={{ color: "#aaaaaa" }} onClick={()=>setIsOverlayOpen(true)}>
+                  <span className="flowhov" style={{ color: "#aaaaaa" }} onClick={()=> {setIsOverlayOpen(true); setSelectedTab('Following');}}>
                     <strong style={{ color: "white" }}>
                       {profile.followingCount ?? 0}
                     </strong>{" "}
                     Following
                   </span>
-                  <span  className="flowhov" style={{ color: "#aaaaaa" }}>
+                  <span  className="flowhov" style={{ color: "#aaaaaa" }} onClick={()=> {setIsOverlayOpen(true); setSelectedTab('Followers')}}>
                     <strong style={{ color: "white" }}>
                       {profile.followerCount ?? 0}
                     </strong>{" "}
