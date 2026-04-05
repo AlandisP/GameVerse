@@ -28,16 +28,15 @@ public class SecurityConfiguration {
         http
             .sessionManagement(session ->
                 session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-            .csrf(csrf -> csrf.disable())
-            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .authorizeHttpRequests((authorize) -> authorize
-                .requestMatchers("/auth/**").permitAll()
+                .requestMatchers("/auth/**").permitAll()  // Allow all /auth endpoints
                 .requestMatchers("/users/**").permitAll()
                 .requestMatchers("/parties/test/**").permitAll()
-                .requestMatchers("/parties/random-image/**").permitAll()
-                .requestMatchers("/api/conversations/**").permitAll()
+                .requestMatchers("parties/random-image/**").permitAll()
                 .anyRequest().authenticated())
-            .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+            .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)  // FIXED
+            .csrf(csrf -> csrf.disable())
+            .cors(cors -> cors.configurationSource(corsConfigurationSource()));
 
         return http.build();
     }
@@ -47,10 +46,7 @@ public class SecurityConfiguration {
             @Override
             public CorsConfiguration getCorsConfiguration(HttpServletRequest request) {
                 CorsConfiguration ccfg = new CorsConfiguration();
-                ccfg.setAllowedOrigins(Arrays.asList(
-                    "http://localhost:3000",
-                    "https://ccfrontend-production.up.railway.app"
-                ));
+                ccfg.setAllowedOrigins(Arrays.asList("http://localhost:3000", "https://ccfrontend-production.up.railway.app"));
                 ccfg.setAllowedMethods(Collections.singletonList("*"));
                 ccfg.setAllowCredentials(true);
                 ccfg.setAllowedHeaders(Collections.singletonList("*"));
