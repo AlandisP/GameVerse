@@ -30,6 +30,7 @@ import com.GameVerse.GameVerse.repository.PartyFinderRepository;
 import com.GameVerse.GameVerse.repository.PostRepository;
 import com.GameVerse.GameVerse.repository.RelationshipRepository;
 import com.GameVerse.GameVerse.repository.UserRepository;
+import com.GameVerse.GameVerse.services.RecommendationService;
 import com.GameVerse.GameVerse.services.RelationshipServices;
 
 
@@ -40,6 +41,9 @@ public class UsersController {
 
     @Autowired
     private RelationshipServices relationshipService;
+
+    @Autowired
+    private RecommendationService recService;
 
     @Autowired
     private PasswordEncoder passwordEncoder;
@@ -157,6 +161,12 @@ public class UsersController {
 
     }
 
+    @GetMapping("/recommendations")
+    public ResponseEntity<?> getRecommendations(Authentication auth) {
+        String userId = (String) auth.getPrincipal();
+        return ResponseEntity.ok(recService.followRecommendations(userId));
+    }
+
     @DeleteMapping("/delete-account")
 public ResponseEntity<?> deleteAccount(@RequestBody Map<String, String> body, Authentication auth) {
     String userId = (String) auth.getPrincipal();
@@ -211,7 +221,7 @@ public ResponseEntity<?> changePassword(@RequestBody Map<String, String> body, A
 }
 
   @PutMapping("/change-username")
-public ResponseEntity<?> changeUsername(@RequestBody Map<String, String> body, Authentication auth) {
+  public ResponseEntity<?> changeUsername(@RequestBody Map<String, String> body, Authentication auth) {
     String userId = (String) auth.getPrincipal();
     String newUsername = body.get("newUsername");
 

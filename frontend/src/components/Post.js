@@ -118,6 +118,7 @@ function PostObj ({User, Content, Likes, Liked, id, books, commcount, CreatedAt,
                 </div>
             );
         }
+        console.log("POST:", User, "media:", media, "type:", type);
         return(
             <div>
             {!deleted?
@@ -140,7 +141,7 @@ function PostObj ({User, Content, Likes, Liked, id, books, commcount, CreatedAt,
             <ParsedText className='written-content' text={Content}/>
             <div className='media'>
                 {media!=null && /image/g.test(type) ? <img src={media} className='Post-Media'/> : ''}
-                {media!=null && /video/g.test(type) ? <video className='Post-Media' controls><source src={media}/></video> : ''}
+                {media!=null && /video/g.test(type) ? <video className='Post-Media' controls><source src={media} type={type}/></video> : ''}
             </div>
             <div className='interaction-bar'>
                 <img src={didLike ? HeartFull : Heart} onClick={likeinteract}/>

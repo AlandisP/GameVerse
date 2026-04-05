@@ -21,6 +21,7 @@ import java.util.*;
 import javax.management.RuntimeErrorException;
 
 import com.GameVerse.GameVerse.model.Post;
+import com.GameVerse.GameVerse.model.Role;
 @Service
 public class CommunityService {
     @Autowired
@@ -42,6 +43,9 @@ public class CommunityService {
         User user = userRepository.findById(ownerId).orElse(null);
         if(user == null) {
             throw new RuntimeException("User doesn't exist");
+        }
+        if(communityRepository.existsByOwnerId(ownerId) && user.getRole() == Role.USER) {
+            throw new RuntimeException("Cannot create another community. You can't create more than 1 community.");
         }
         Community com = new Community(ownerId, name, description, category);
         communityRepository.save(com);

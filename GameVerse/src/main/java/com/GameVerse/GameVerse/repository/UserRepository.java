@@ -16,5 +16,6 @@ public interface UserRepository extends MongoRepository<User, String>{
     @Query(value = "{ 'username' : { $regex : ?0, $options: 'i' } }", exists = true)
     boolean existsByUsername(String username);
     List<User> findByUsernameContainingIgnoreCase(String text);
+    List<User> findAllByPlatform(String platform);
 }
 

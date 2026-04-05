@@ -14,6 +14,7 @@ public interface CommunityRepository extends MongoRepository<Community, String>{
     List<Community> findTop3ByOrderByMemberCountDesc();
     List<Community> findAllByOrderByMemberCountDesc();
     boolean existsByNameIgnoreCase(String name);
+    boolean existsByOwnerId(String ownderId);
     Community findByNameIgnoreCase(String name);
     void deleteAllByOwnerId(String ownerId);
 }
