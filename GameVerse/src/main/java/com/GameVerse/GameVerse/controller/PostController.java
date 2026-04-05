@@ -129,7 +129,11 @@ public class PostController {
         try{
             String user = userRep.findById(auth.getPrincipal().toString()).get().getUsername();
             Post post = postRepo.findById(content.id).get();
-            if(user.equalsIgnoreCase(post.getUser()) || communityRepository.findById(post.getCommunityId()).orElse(null).getModeratorIds().contains((String)auth.getPrincipal())){
+            Boolean moderator = false;
+            if(post.getCommunityId()!=null){
+               moderator = communityRepository.findById(post.getCommunityId()).get().getModeratorIds().contains(auth.getPrincipal().toString());
+            }
+            if(user.equalsIgnoreCase(post.getUser())||moderator){
                 if(post.getmedia()!=null&&!post.getmedia().equals(""))
                     s3serv.deleteMedia(post.getmedia());
                 postRepo.delete(post);
