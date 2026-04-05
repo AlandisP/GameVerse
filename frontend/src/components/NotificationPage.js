@@ -9,6 +9,7 @@ import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import { useRef } from "react";
 import { useNavigate } from "react-router-dom";
+import Pfp from '../images/Profile.png'
 dayjs.extend(relativeTime);
 
 function NotificationPage() {
@@ -16,7 +17,63 @@ function NotificationPage() {
     const userId = localStorage.getItem("userId");
     const username = localStorage.getItem("username");
     const [notifications, setNotifications] = useState([]);
-    
+    const [recommendations, setRecommendations] = useState([]);
+    const [loggedFollowers, setLoggedFollowers] = useState([]);
+    const [loggedFollowing, setLoggedFollowing] = useState([]);
+    const navigate = useNavigate();
+
+    const handleFollow = async(userName)=>{
+        try {
+            const res = await axios.post(
+                `${API_URL}/profile/${userName}/follow`,{},
+                { headers: { Authorization: `Bearer ${token}` } }
+            );
+            getFollowing();
+        } catch (error) {
+            console.error("failed to follow user: ", error.response?.data || error.message);
+        }  
+    }
+
+    const handleUnfollow = async(userName) => {
+        try {
+            const res = await axios.post(
+                `${API_URL}/profile/${userName}/unfollow`,{},
+                { headers: { Authorization: `Bearer ${token}` } }
+            );
+            getFollowing();
+        } catch (error) {
+            console.error("failed to unfollow user: ", error.response?.data || error.message);
+        }   
+    }
+
+    const getFollowers = async() => {
+        // logged in user followers
+        try {
+            const res = await axios.get(
+                `${API_URL}/users/followers/${username}`,
+                { headers: { Authorization: `Bearer ${token}` } }
+            );
+            setLoggedFollowers(res.data.map(u=>u.id));  
+            console.log(res.data);
+        } catch (error) {
+            console.error("failed to get users: ", error.response?.data || error.message);
+        }
+    }
+
+    const getFollowing = async() => {
+        // gets the logged in user following
+        try {
+            const res = await axios.get(
+                `${API_URL}/users/following/${username}`,
+                { headers: { Authorization: `Bearer ${token}` } }
+            );
+            setLoggedFollowing(res.data.map(u=>u.id));  
+            console.log(res.data);
+        } catch (error) {
+            console.error("failed to get users: ", error.response?.data || error.message);
+        }
+    }
+
 
     useEffect(() => {
         const getNotis = async() => {
@@ -27,6 +84,17 @@ function NotificationPage() {
             setNotifications(res.data)
         };
         getNotis();
+        const getRecommendations = async() => {
+            const res = await axios.get(
+                `${API_URL}/notifications/recommendations`,
+                { headers: { Authorization: `Bearer ${token}` } }
+            );
+            setRecommendations(res.data);
+            console.log(res.data);
+        }
+        getRecommendations();
+        getFollowers();
+        getFollowing();
     },[token]);
 
     const ReadNotis = () => {
@@ -38,6 +106,32 @@ function NotificationPage() {
                 <div>{items}</div>
             ): <div>
                 <p className="no-notis"> No Current Notifications</p>
+            </div>
+        );
+    }
+
+    const ReadRecs = () => {
+        const items = recommendations.map((user,ind) => (
+            <div key={ind} className="userrec" onClick={() => navigate(`/profile/${user.username}`)}>
+                <div className='circle'>
+                    <img src={user.pfp?(user.pfp):Pfp} alt='userpfp'/>
+                </div>
+                <div className='info-holders'>
+                    <h3>{user.username}</h3>
+                    <p>{user.bio}</p>
+                </div>
+                {
+                    loggedFollowing.includes(user.id)?(
+                    <button className='pfpbutton2' onClick={(e) => {handleUnfollow(user.username); e.stopPropagation();}}><span>Following</span></button>
+                    ):loggedFollowers.includes(user.id)?(
+                        <button className='pfpbutton' onClick={(e) => {handleFollow(user.username); e.stopPropagation();}}>Follow Back</button>
+                    ):<button className='pfpbutton' onClick={(e) => {handleFollow(user.username); e.stopPropagation();}}>Follow</button>
+                }
+            </div>
+        ));
+        return(
+            <div>
+                {items}
             </div>
         );
     }
@@ -57,6 +151,9 @@ function NotificationPage() {
                     </div>
                     <div className="extras">
                         <h2 className="header-1">Who to Follow</h2>
+                        <div className="rec-holder">
+                            <ReadRecs/>
+                        </div>
                     </div>
 
                  </div>
