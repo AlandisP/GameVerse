@@ -28,9 +28,10 @@
     width: 97%;
     height: 4rem;
     align-items: center;
-    background-color: grey;
+    background-color: rgb(44, 42, 42);
     padding: .5rem;
     border-radius: 20px;
+    border: 1px solid grey;
 }
 
 .noti-text {

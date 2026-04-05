@@ -108,7 +108,7 @@ function CommunityPage() {
 
     const ReadCommunityPost = () => {
         const items = posts.map((post, index)=>{
-             return <PostObj key={index} User={post["user"]} Content={post["text"]} Likes={post["likes"]} Liked={parselike(post)} id={post["id"]} commcount={post["comments"].length} books={false} CreatedAt={post["createdAt"]} CommunityName={post["communityName"]} media={post["media"]} type={post["mediaType"]}/>
+             return <PostObj key={index} User={post["user"]} Content={post["text"]} Likes={post["likes"]} Liked={parselike(post)} id={post["id"]} commcount={post["comments"].length} books={false} CreatedAt={post["createdAt"]} CommunityName={post["communityName"]} media={post["media"]} type={post["mediaType"]} IsMod={mods.some(m => m.id === userId)}/>
         });
         return(
             <div className="com-posts">
@@ -120,7 +120,7 @@ function CommunityPage() {
     const ReadCommunityMedia = () => {
         const items = posts.filter(post => post.media).map((post,index) => {
             if(post.media) {
-                return <PostObj key={index} User={post["user"]} Content={post["text"]} Likes={post["likes"]} Liked={parselike(post)} id={post["id"]} commcount={post["comments"].length} books={false} CreatedAt={post["createdAt"]} CommunityName={post["communityName"]} media={post["media"]} type={post["mediaType"]}/>
+                return <PostObj key={index} User={post["user"]} Content={post["text"]} Likes={post["likes"]} Liked={parselike(post)} id={post["id"]} commcount={post["comments"].length} books={false} CreatedAt={post["createdAt"]} CommunityName={post["communityName"]} media={post["media"]} type={post["mediaType"]} IsMod={mods.includes(userId)}/>
             }
         }, []);
       return(
@@ -177,6 +177,7 @@ function CommunityPage() {
                     { headers: { Authorization: `Bearer ${token}` } }
                 );
                 setMods(res.data);
+                console.log(res.data);
 
             } catch(error) {
                 

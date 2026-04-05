@@ -129,7 +129,7 @@ public class PostController {
         try{
             String user = userRep.findById(auth.getPrincipal().toString()).get().getUsername();
             Post post = postRepo.findById(content.id).get();
-            if(user.equalsIgnoreCase(post.getUser())){
+            if(user.equalsIgnoreCase(post.getUser()) || communityRepository.findById(post.getCommunityId()).orElse(null).getModeratorIds().contains((String)auth.getPrincipal())){
                 if(post.getmedia()!=null&&!post.getmedia().equals(""))
                     s3serv.deleteMedia(post.getmedia());
                 postRepo.delete(post);
@@ -240,6 +240,7 @@ public class PostController {
                     && !nopes.contains(poster.getId());
             })
             .collect(Collectors.toList());
+            Collections.reverse(posts);
 
         return ResponseEntity.ok(posts);
     }

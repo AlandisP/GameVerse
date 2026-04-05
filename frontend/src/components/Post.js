@@ -14,7 +14,7 @@ import dots from "./../images/dots.png";
 import { shortTimeAgo } from '../utils/shortTimeAgo'
 import API_URL from '../config/api'
 const urlprefab = "https://gameverse-media-026955879175-us-east-2-an.s3.us-east-2.amazonaws.com/";
-function PostObj ({User, Content, Likes, Liked, id, books, commcount, CreatedAt, CommunityName, media, type, popup}){
+function PostObj ({User, Content, Likes, Liked, id, books, commcount, CreatedAt, CommunityName, media, type, popup, IsMod}){
         const postid = id;
         const username = localStorage.getItem('username');
         const [didLike, setdidLike]= useState(Liked);
@@ -108,13 +108,14 @@ function PostObj ({User, Content, Likes, Liked, id, books, commcount, CreatedAt,
             }
         },[pop]);
         const PopUp = ({item})=>{
+            console.log(IsMod);
             return(
                 <div className='Popup' style={{left:`${item.current.offsetLeft-70}px`,top:`${item.current.offsetTop+20}px`}}>
                     <button onClick={bookinteract}>{didBook?"Bookmarked":"Bookmark"}</button>
-                    {username!=User?
-                    <button onClick={blockUser}>Block</button> :
-                    <button onClick={deletePost}>Delete</button>
-                    }   
+                    {username===User || IsMod?
+                    (<button onClick={deletePost}>Delete</button>):""
+                    }
+                    {username!==User?(<button onClick={blockUser}>Block</button>):""}
                 </div>
             );
         }
