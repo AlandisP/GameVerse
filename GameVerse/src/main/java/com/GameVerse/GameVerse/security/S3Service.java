@@ -33,10 +33,11 @@ public class S3Service {
             randomUID = "";
         }
         String key = user + "/" + type + "/" + randomUID + file.getOriginalFilename();
+        String filteredkey = key.replaceAll("[^a-zA-Z0-9._/-]*","");
         s3Client.putObject(
             PutObjectRequest.builder()
                 .bucket(bucketName)
-                .key(key)
+                .key(filteredkey)
                 .contentType(file.getContentType())
                 .build(),
             RequestBody.fromBytes(file.getBytes())
@@ -50,10 +51,11 @@ public class S3Service {
 
     public String staticMedia(MultipartFile file, String user, String type) throws IOException {
         String key = user + "/Profile/"+type;
+        String filteredkey = key.replaceAll("[^a-zA-Z0-9._/-]*","");
         s3Client.putObject(
             PutObjectRequest.builder()
                 .bucket(bucketName)
-                .key(key)
+                .key(filteredkey)
                 .contentType(file.getContentType())
                 .build(),
             RequestBody.fromBytes(file.getBytes())
