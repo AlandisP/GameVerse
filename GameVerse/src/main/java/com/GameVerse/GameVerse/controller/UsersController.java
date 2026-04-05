@@ -3,6 +3,7 @@ package com.GameVerse.GameVerse.controller;
 
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -20,6 +21,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.GameVerse.GameVerse.model.PartyFinder;
+import com.GameVerse.GameVerse.model.Relationship;
 import com.GameVerse.GameVerse.model.User;
 import com.GameVerse.GameVerse.repository.BlockedRelationshipRepository;
 import com.GameVerse.GameVerse.repository.CommunityMembershipRepository;
@@ -114,6 +116,30 @@ public class UsersController {
         }
         relationshipService.unfollowUser(currUser.getId(), following.getId());
         return ResponseEntity.ok("Successfully unfollowed the user");
+    }
+
+    // Following List
+    @GetMapping("/following/{username}")
+    public ResponseEntity<?> viewFollowingList(@PathVariable String username, Authentication auth) {
+        String userId = (String) auth.getPrincipal();
+        User user = repository.findByUsernameIgnoreCase(username);
+        if(user == null) {
+            return ResponseEntity.badRequest().body("User doesn't exist");
+        }
+        List<String> arr = relationshipRepository.findAllByFollowerId(user.getId()).stream().map(Relationship::getFollowingId).collect(Collectors.toList());
+        return ResponseEntity.ok(arr.stream().map(id ->  repository.findById(id).orElse(null)).collect(Collectors.toList()));
+    }
+
+    //Follower List
+    @GetMapping("/followers/{username}")
+    public ResponseEntity<?> viewFollowerList(@PathVariable String username, Authentication auth) {
+        String userId = (String) auth.getPrincipal();
+        User user = repository.findByUsernameIgnoreCase(username);
+        if(user == null) {
+            return ResponseEntity.badRequest().body("User doesn't exist");
+        }
+        List<String> arr = relationshipRepository.findAllByFollowingId(user.getId()).stream().map(Relationship::getFollowerId).collect(Collectors.toList());
+        return ResponseEntity.ok(arr.stream().map(id ->  repository.findById(id).orElse(null)).collect(Collectors.toList()));
     }
 
     @GetMapping("/usernames")

@@ -659,3 +659,8 @@ nav.sidebar div,
 .blockbtn:hover::before {
     content: "Unblock";
 }
+
+.flowhov:hover {
+    text-decoration: underline;
+    cursor: pointer;
+}

@@ -173,6 +173,18 @@ public class UserProfileController {
         return ResponseEntity.ok().build();
     }
 
+    @PostMapping("/removeFollower/{username}")
+    public ResponseEntity<?> removeFollower(@PathVariable String username, Authentication auth) {
+        String userId = (String) auth.getPrincipal();
+        User follower = repository.findByUsernameIgnoreCase(username);
+        if(follower == null) {
+            return ResponseEntity.badRequest().body("User not found");
+        }
+        relationshipServices.unfollowUser(follower.getId(), userId);
+        return ResponseEntity.ok().body("Removed user from followers");
+
+    }
+
     @PostMapping("/{username}/unfollow")
     public ResponseEntity<?> unfollowUser(@PathVariable String username, Authentication auth) {
         String followerId = (String) auth.getPrincipal();
