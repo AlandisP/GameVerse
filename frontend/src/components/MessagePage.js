@@ -34,6 +34,29 @@ function getConversationLastMessageId(convo) {
   return convo?.lastMessageId || "";
 }
 
+function getConversationDisplayName(convo, me) {
+  if (!convo) return "";
+  if (convo.type === "GROUP") return convo.title || "Untitled Group";
+  return getOtherUser(convo.participants, me);
+}
+
+function getGroupMembers(convo) {
+  if (!convo?.participants) return [];
+  return convo.participants.filter(Boolean);
+}
+
+function formatMemberLabel(member, me) {
+  return member === me ? `${member} (you)` : member;
+}
+
+function shouldShowSenderName(activeConversation, msg, currentUser) {
+  return (
+    activeConversation?.type === "GROUP" &&
+    msg.sender &&
+    msg.sender !== currentUser &&
+    !msg.isDeleted
+  );
+}
 async function validateUsernameExists(username) {
   const token = localStorage.getItem("token");
 
@@ -65,15 +88,42 @@ async function createOrGetConversation(currentUsername, targetUsername) {
   return res.data;
 }
 
-async function ensureConversationDoc(convoId, sender, receiver) {
-  if (!convoId || !sender || !receiver) return;
+async function createGroupConversation(currentUsername, title, usernames) {
+  const token = localStorage.getItem("token");
+
+  const res = await axios.post(
+    `${API_URL}/api/conversations/groups`,
+    {
+      currentUsername,
+      title,
+      usernames,
+    },
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+
+  return res.data;
+}
+
+async function ensureConversationDoc({
+  convoId,
+  participants = [],
+  type = "DIRECT",
+  title = "",
+}) {
+  if (!convoId || !participants.length) return;
 
   const convoRef = doc(db, "conversations", convoId);
 
   await setDoc(
     convoRef,
     {
-      participants: [sender, receiver],
+      participants,
+      type,
+      title: type === "GROUP" ? title : "",
       updatedAt: serverTimestamp(),
       lastMessageText: "",
       lastMessageAt: null,
@@ -108,66 +158,88 @@ function MessagePage() {
   const [newDmUsername, setNewDmUsername] = useState("");
   const [composeError, setComposeError] = useState("");
 
+  const [isCreatingGroup, setIsCreatingGroup] = useState(false);
+  const [groupTitle, setGroupTitle] = useState("");
+  const [groupMembersInput, setGroupMembersInput] = useState("");
+  const [groupError, setGroupError] = useState("");
+
+  const [showMembers, setShowMembers] = useState(false);
+
   const messagesUnsubRef = useRef(null);
   const inboxUnsubRef = useRef(null);
   const openingRef = useRef(false);
 
+  const activeConversation = useMemo(() => {
+    return conversations.find((c) => c.id === activeConversationId) || null;
+  }, [conversations, activeConversationId]);
+
   useEffect(() => {
-    let cancelled = false;
+    setShowMembers(false);
+  }, [activeConversationId]);
 
-    async function openFromUrl() {
-      if (!sender || !receiverUsername) return;
-      if (openingRef.current) return;
+  useEffect(() => {
+  let cancelled = false;
 
-      if (receiverUsername.toLowerCase() === sender.toLowerCase()) {
-        setActiveConversationId("");
-        setActiveReceiver("");
-        setMessages([]);
+  async function openFromUrl() {
+    if (!sender || !receiverUsername) return;
+    if (openingRef.current) return;
+
+    // 🚫 prevent reopening same DM
+    if (
+      activeReceiver &&
+      receiverUsername &&
+      activeReceiver.toLowerCase() === receiverUsername.toLowerCase() &&
+      activeConversationId
+    ) {
+      return;
+    }
+
+    if (receiverUsername.toLowerCase() === sender.toLowerCase()) {
+      setActiveConversationId("");
+      setActiveReceiver("");
+      setMessages([]);
+      return;
+    }
+
+    try {
+      openingRef.current = true;
+
+      const exists = await validateUsernameExists(receiverUsername);
+      if (cancelled) return;
+
+      if (!exists) {
+        setComposeError(`User "${receiverUsername}" does not exist.`);
         return;
       }
 
-      try {
-        openingRef.current = true;
+      const convo = await createOrGetConversation(sender, receiverUsername);
+      if (cancelled) return;
 
-        const exists = await validateUsernameExists(receiverUsername);
-        if (cancelled) return;
+      await ensureConversationDoc({
+        convoId: convo.id,
+        participants: [sender, receiverUsername],
+        type: "DIRECT",
+        title: "",
+      });
 
-        if (!exists) {
-          setComposeError(`User "${receiverUsername}" does not exist.`);
-          setActiveConversationId("");
-          setActiveReceiver("");
-          setMessages([]);
-          return;
-        }
+      if (cancelled) return;
 
-        const convo = await createOrGetConversation(sender, receiverUsername);
-        if (cancelled) return;
-
-        const convoId = convo.id;
-        await ensureConversationDoc(convoId, sender, receiverUsername);
-        if (cancelled) return;
-
-        setActiveConversationId(convoId);
-        setActiveReceiver(receiverUsername);
-        setComposeError("");
-      } catch (e) {
-        if (cancelled) return;
-        console.error(e);
-        setComposeError("Could not open conversation.");
-        setActiveConversationId("");
-        setActiveReceiver("");
-        setMessages([]);
-      } finally {
-        openingRef.current = false;
-      }
+      setActiveConversationId(convo.id);
+      setActiveReceiver(receiverUsername);
+      setComposeError("");
+    } catch (e) {
+      console.error(e);
+    } finally {
+      openingRef.current = false;
     }
+  }
 
-    openFromUrl();
+  openFromUrl();
 
-    return () => {
-      cancelled = true;
-    };
-  }, [sender, receiverUsername]);
+  return () => {
+    cancelled = true;
+  };
+}, [sender, receiverUsername, activeReceiver, activeConversationId]);
 
   useEffect(() => {
     if (!sender || typeof sender !== "string" || !sender.trim()) return;
@@ -186,29 +258,12 @@ function MessagePage() {
     inboxUnsubRef.current = onSnapshot(
       inboxQuery,
       (snapshot) => {
-        const map = new Map();
+        const list = snapshot.docs.map((d) => ({
+          id: d.id,
+          ...d.data(),
+        }));
 
-        snapshot.docs.forEach((d) => {
-          const data = d.data();
-          const other = getOtherUser(data.participants, sender);
-          if (!other) return;
-
-          const existing = map.get(other);
-
-          if (!existing) {
-            map.set(other, { id: d.id, ...data });
-            return;
-          }
-
-          const existingTime = existing.updatedAt?.seconds || 0;
-          const currentTime = data.updatedAt?.seconds || 0;
-
-          if (currentTime >= existingTime) {
-            map.set(other, { id: d.id, ...data });
-          }
-        });
-
-        setConversations(Array.from(map.values()));
+        setConversations(list);
       },
       (err) => console.error("onSnapshot inbox error:", err)
     );
@@ -226,33 +281,36 @@ function MessagePage() {
     if (!s) return conversations;
 
     return conversations.filter((c) => {
-      const other = getOtherUser(c.participants, sender).toLowerCase();
-      return other.includes(s);
+      const displayName = getConversationDisplayName(c, sender).toLowerCase();
+      return displayName.includes(s);
     });
   }, [conversations, search, sender]);
 
   useEffect(() => {
-    if (messagesUnsubRef.current) {
-      messagesUnsubRef.current();
-      messagesUnsubRef.current = null;
-    }
+  // 🧹 cleanup old listener
+  if (messagesUnsubRef.current) {
+    messagesUnsubRef.current();
+    messagesUnsubRef.current = null;
+  }
 
-    if (
-      !activeConversationId ||
-      typeof activeConversationId !== "string" ||
-      !activeConversationId.trim()
-    ) {
-      setMessages([]);
-      return;
-    }
+  if (
+    !activeConversationId ||
+    typeof activeConversationId !== "string" ||
+    !activeConversationId.trim()
+  ) {
+    setMessages([]);
+    return;
+  }
 
-    const convId = activeConversationId.trim();
+  const convId = activeConversationId.trim();
 
-    const q = query(
-      collection(db, "conversations", convId, "messages"),
-      orderBy("timestamp", "asc")
-    );
+  const q = query(
+    collection(db, "conversations", convId, "messages"),
+    orderBy("timestamp", "asc")
+  );
 
+  // 🔥 KEY FIX: delay subscription slightly
+  const timeout = setTimeout(() => {
     messagesUnsubRef.current = onSnapshot(
       q,
       (snapshot) => {
@@ -267,15 +325,17 @@ function MessagePage() {
         setMessages([]);
       }
     );
+  }, 0);
 
-    return () => {
-      if (messagesUnsubRef.current) {
-        messagesUnsubRef.current();
-        messagesUnsubRef.current = null;
-      }
-    };
-  }, [activeConversationId]);
+  return () => {
+    clearTimeout(timeout);
 
+    if (messagesUnsubRef.current) {
+      messagesUnsubRef.current();
+      messagesUnsubRef.current = null;
+    }
+  };
+}, [activeConversationId]);
   async function recomputeConversationLastMessage(convoId) {
     const msgsRef = collection(db, "conversations", convoId, "messages");
     const qLast = query(msgsRef, orderBy("timestamp", "desc"), limit(25));
@@ -313,30 +373,43 @@ function MessagePage() {
 
   async function sendMessage() {
     const text = messageInput.trim();
-    if (!text || !sender || !activeReceiver) return;
+    if (!text || !sender || !activeConversationId) return;
 
-    try {
-      const exists = await validateUsernameExists(activeReceiver);
-      if (!exists) {
-        setComposeError(`User "${activeReceiver}" does not exist.`);
+    const isGroup = activeConversation?.type === "GROUP";
+
+    if (!isGroup) {
+      try {
+        const exists = await validateUsernameExists(activeReceiver);
+        if (!exists) {
+          setComposeError(`User "${activeReceiver}" does not exist.`);
+          return;
+        }
+      } catch (e) {
+        console.error(e);
+        setComposeError("Could not validate user.");
         return;
       }
-    } catch (e) {
-      console.error(e);
-      setComposeError("Could not validate user.");
-      return;
     }
 
     let convoId = activeConversationId;
 
     try {
-      if (!convoId) {
+      if (!convoId && !isGroup && activeReceiver) {
         const convo = await createOrGetConversation(sender, activeReceiver);
         convoId = convo.id;
         setActiveConversationId(convoId);
       }
 
-      await ensureConversationDoc(convoId, sender, activeReceiver);
+      const participants =
+        activeConversation?.participants ||
+        (activeReceiver ? [sender, activeReceiver] : [sender]);
+
+      await ensureConversationDoc({
+        convoId,
+        participants,
+        type: activeConversation?.type || "DIRECT",
+        title: activeConversation?.title || "",
+      });
 
       const convoRef = doc(db, "conversations", convoId);
       const msgRef = doc(collection(db, "conversations", convoId, "messages"));
@@ -346,7 +419,12 @@ function MessagePage() {
       batch.set(
         convoRef,
         {
-          participants: [sender, activeReceiver],
+          participants,
+          type: activeConversation?.type || "DIRECT",
+          title:
+            activeConversation?.type === "GROUP"
+              ? activeConversation?.title || ""
+              : "",
           updatedAt: serverTimestamp(),
           lastMessageText: text,
           lastMessageAt: serverTimestamp(),
@@ -360,7 +438,7 @@ function MessagePage() {
 
       batch.set(msgRef, {
         sender,
-        receiver: activeReceiver,
+        receiver: isGroup ? null : activeReceiver,
         content: text,
         timestamp: serverTimestamp(),
         editedAt: null,
@@ -464,7 +542,12 @@ function MessagePage() {
       const convo = await createOrGetConversation(sender, target);
       const convoId = convo.id;
 
-      await ensureConversationDoc(convoId, sender, target);
+      await ensureConversationDoc({
+        convoId,
+        participants: [sender, target],
+        type: "DIRECT",
+        title: "",
+      });
 
       setActiveConversationId(convoId);
       setActiveReceiver(target);
@@ -481,25 +564,109 @@ function MessagePage() {
     }
   }
 
-  async function openConversation(convo) {
-    const other = getOtherUser(convo.participants, sender);
-    if (!other) return;
+ async function startNewGroupConversation() {
+  if (!sender) return;
 
-    try {
-      await ensureConversationDoc(convo.id, sender, other);
+  const title = groupTitle.trim();
+  const rawMembers = groupMembersInput
+    .split(",")
+    .map((name) => name.trim())
+    .filter(Boolean);
 
-      setActiveConversationId(convo.id);
-      setActiveReceiver(other);
+  const uniqueMembers = [...new Set(rawMembers)].filter(
+    (name) => name.toLowerCase() !== sender.toLowerCase()
+  );
 
-      setComposeError("");
-      setEditingId("");
-      setEditingText("");
-
-      navigate(`/messages/${other}`);
-    } catch (e) {
-      console.error(e);
-    }
+  if (!title) {
+    setGroupError("Enter a group title.");
+    return;
   }
+
+  if (uniqueMembers.length < 2) {
+    setGroupError("Enter at least 2 other usernames.");
+    return;
+  }
+
+  try {
+    setGroupError("");
+
+    const convo = await createGroupConversation(sender, title, uniqueMembers);
+    const convoId = convo.id;
+
+    const newConversation = {
+      id: convoId,
+      participants: [sender, ...uniqueMembers],
+      type: "GROUP",
+      title,
+      lastMessageText: "",
+      lastMessageAt: null,
+      lastMessageSender: "",
+      lastMessageId: "",
+      lastMessage: "",
+      lastSender: "",
+    };
+
+    await ensureConversationDoc({
+      convoId,
+      participants: newConversation.participants,
+      type: "GROUP",
+      title,
+    });
+
+    // ✅ add it instantly to local UI
+    setConversations((prev) => {
+      const alreadyExists = prev.some((c) => c.id === convoId);
+      if (alreadyExists) return prev;
+      return [newConversation, ...prev];
+    });
+
+    setActiveConversationId(convoId);
+    setActiveReceiver("");
+    setIsCreatingGroup(false);
+    setGroupTitle("");
+    setGroupMembersInput("");
+    setEditingId("");
+    setEditingText("");
+  } catch (e) {
+    console.error(e);
+    setGroupError(
+      e?.response?.data?.error || "Could not create group conversation."
+    );
+  }
+}
+
+  async function openConversation(convo) {
+  const isGroup = convo.type === "GROUP";
+
+  try {
+    // 🚫 prevent reopening same convo (VERY IMPORTANT)
+    if (convo.id === activeConversationId) return;
+
+    await ensureConversationDoc({
+      convoId: convo.id,
+      participants: convo.participants || [],
+      type: convo.type || "DIRECT",
+      title: convo.title || "",
+    });
+
+    setActiveConversationId(convo.id);
+    setComposeError("");
+    setEditingId("");
+    setEditingText("");
+
+    if (isGroup) {
+      setActiveReceiver("");
+      return;
+    }
+
+    const other = getOtherUser(convo.participants, sender);
+    setActiveReceiver(other || "");
+
+    
+  } catch (e) {
+    console.error(e);
+  }
+}
 
   return (
     <div className="page-container">
@@ -523,25 +690,48 @@ function MessagePage() {
           >
             <h1 style={{ color: "white", margin: 0 }}>Messages</h1>
 
-            <button
-              onClick={() => {
-                setIsComposing((v) => !v);
-                setComposeError("");
-                setNewDmUsername("");
-              }}
-              style={{
-                marginTop: "12px",
-                padding: "8px 12px",
-                borderRadius: "10px",
-                border: "none",
-                backgroundColor: "#058BFE",
-                color: "white",
-                cursor: "pointer",
-                fontWeight: 700,
-              }}
-            >
-              New message
-            </button>
+            <div style={{ display: "flex", gap: "10px", marginTop: "12px" }}>
+              <button
+                onClick={() => {
+                  setIsComposing((v) => !v);
+                  setIsCreatingGroup(false);
+                  setComposeError("");
+                  setNewDmUsername("");
+                }}
+                style={{
+                  padding: "8px 12px",
+                  borderRadius: "10px",
+                  border: "none",
+                  backgroundColor: "#058BFE",
+                  color: "white",
+                  cursor: "pointer",
+                  fontWeight: 700,
+                }}
+              >
+                New message
+              </button>
+
+              <button
+                onClick={() => {
+                  setIsCreatingGroup((v) => !v);
+                  setIsComposing(false);
+                  setGroupError("");
+                  setGroupTitle("");
+                  setGroupMembersInput("");
+                }}
+                style={{
+                  padding: "8px 12px",
+                  borderRadius: "10px",
+                  border: "none",
+                  backgroundColor: "#4A90E2",
+                  color: "white",
+                  cursor: "pointer",
+                  fontWeight: 700,
+                }}
+              >
+                New group
+              </button>
+            </div>
           </div>
 
           {isComposing ? (
@@ -626,6 +816,107 @@ function MessagePage() {
             </div>
           ) : null}
 
+          {isCreatingGroup ? (
+            <div style={{ padding: "12px 20px" }}>
+              <div
+                style={{
+                  backgroundColor: "#2f2f2f",
+                  border: "1px solid #444",
+                  borderRadius: "12px",
+                  padding: "12px",
+                  color: "white",
+                }}
+              >
+                <div style={{ fontWeight: 700, marginBottom: "8px" }}>
+                  Create a Group Chat
+                </div>
+
+                <input
+                  value={groupTitle}
+                  onChange={(e) => setGroupTitle(e.target.value)}
+                  placeholder="Group title"
+                  style={{
+                    width: "100%",
+                    padding: "10px",
+                    borderRadius: "10px",
+                    border: "none",
+                    outline: "none",
+                    backgroundColor: "#1f1f1f",
+                    color: "white",
+                    marginBottom: "10px",
+                  }}
+                />
+
+                <input
+                  value={groupMembersInput}
+                  onChange={(e) => setGroupMembersInput(e.target.value)}
+                  placeholder="Enter usernames, comma separated"
+                  style={{
+                    width: "100%",
+                    padding: "10px",
+                    borderRadius: "10px",
+                    border: "none",
+                    outline: "none",
+                    backgroundColor: "#1f1f1f",
+                    color: "white",
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") startNewGroupConversation();
+                  }}
+                />
+
+                {groupError ? (
+                  <div
+                    style={{
+                      color: "#ffb3b3",
+                      marginTop: "8px",
+                      fontSize: "0.9rem",
+                    }}
+                  >
+                    {groupError}
+                  </div>
+                ) : null}
+
+                <div style={{ display: "flex", gap: "10px", marginTop: "10px" }}>
+                  <button
+                    onClick={startNewGroupConversation}
+                    style={{
+                      flex: 1,
+                      padding: "10px",
+                      borderRadius: "10px",
+                      border: "none",
+                      backgroundColor: "#4A90E2",
+                      color: "white",
+                      cursor: "pointer",
+                      fontWeight: 700,
+                    }}
+                  >
+                    Create
+                  </button>
+                  <button
+                    onClick={() => {
+                      setIsCreatingGroup(false);
+                      setGroupError("");
+                      setGroupTitle("");
+                      setGroupMembersInput("");
+                    }}
+                    style={{
+                      padding: "10px",
+                      borderRadius: "10px",
+                      border: "1px solid #444",
+                      backgroundColor: "transparent",
+                      color: "white",
+                      cursor: "pointer",
+                      fontWeight: 700,
+                    }}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            </div>
+          ) : null}
+
           <div style={{ padding: "20px" }}>
             <div
               style={{
@@ -653,7 +944,7 @@ function MessagePage() {
 
           <div style={{ overflowY: "auto", padding: "0 10px 20px 10px" }}>
             {filteredConversations.map((c) => {
-              const other = getOtherUser(c.participants, sender);
+              const displayName = getConversationDisplayName(c, sender);
               const isActive = c.id === activeConversationId;
               const preview = getConversationPreviewText(c);
 
@@ -673,7 +964,7 @@ function MessagePage() {
                     cursor: "pointer",
                   }}
                 >
-                  <div style={{ fontWeight: 700 }}>{other}</div>
+                  <div style={{ fontWeight: 700 }}>{displayName}</div>
                   <div
                     style={{
                       color: "#bdbdbd",
@@ -705,10 +996,76 @@ function MessagePage() {
               borderBottom: "1px solid #000",
               padding: "50px 20px 18px",
               color: "white",
-              fontWeight: 700,
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              position: "relative",
             }}
           >
-            {activeReceiver ? `@${activeReceiver}` : "Select a conversation"}
+            <div style={{ fontWeight: 700 }}>
+              {activeConversation
+                ? getConversationDisplayName(activeConversation, sender)
+                : "Select a conversation"}
+            </div>
+
+            {activeConversation?.type === "GROUP" ? (
+              <div style={{ position: "relative" }}>
+                <button
+                  onClick={() => setShowMembers((v) => !v)}
+                  style={{
+                    padding: "8px 12px",
+                    borderRadius: "10px",
+                    border: "1px solid #444",
+                    backgroundColor: "#3a3a3a",
+                    color: "white",
+                    cursor: "pointer",
+                    fontWeight: 700,
+                  }}
+                >
+                  Members ({getGroupMembers(activeConversation).length})
+                </button>
+
+                {showMembers ? (
+                  <div
+                    style={{
+                      position: "absolute",
+                      top: "42px",
+                      right: 0,
+                      minWidth: "220px",
+                      backgroundColor: "#2f2f2f",
+                      border: "1px solid #444",
+                      borderRadius: "12px",
+                      padding: "10px",
+                      boxShadow: "0 8px 20px rgba(0,0,0,0.35)",
+                      zIndex: 20,
+                    }}
+                  >
+                    <div
+                      style={{
+                        fontWeight: 700,
+                        marginBottom: "8px",
+                        color: "white",
+                      }}
+                    >
+                      Group Members
+                    </div>
+
+                    {getGroupMembers(activeConversation).map((member) => (
+                      <div
+                        key={member}
+                        style={{
+                          color: "#d9d9d9",
+                          padding: "6px 0",
+                          borderBottom: "1px solid #3d3d3d",
+                        }}
+                      >
+                        {formatMemberLabel(member, sender)}
+                      </div>
+                    ))}
+                  </div>
+                ) : null}
+              </div>
+            ) : null}
           </div>
 
           <div
@@ -721,173 +1078,186 @@ function MessagePage() {
           >
             {messages.map((msg) => {
               const isMine = msg.sender === sender;
+              const showSenderName = shouldShowSenderName(activeConversation, msg, sender);
 
               return (
                 <div
                   key={msg.id}
                   style={{
-                    display: "flex",
-                    justifyContent: isMine ? "flex-end" : "flex-start",
+                    width: "fit-content",
+                    maxWidth: "60%",
+                    marginLeft: isMine ? "auto" : 0,
+                    marginRight: isMine ? 0 : "auto",
                     marginBottom: "14px",
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: isMine ? "flex-end" : "flex-start",
+                    background: "transparent",
                   }}
-                >
-                  <div
-                    style={{
-                      maxWidth: "60%",
-                      display: "flex",
-                      flexDirection: "column",
-                      alignItems: isMine ? "flex-end" : "flex-start",
+>
+                  {showSenderName ? (
+                     <div
+                     style={{
+                      fontSize: "12px",
+                      color: "#bdbdbd",
+                      marginBottom: "4px",
+                      paddingLeft: "4px",
+                      fontWeight: 700,
                     }}
                   >
-                    {msg.isDeleted ? (
+                    {msg.sender}
+                    </div>
+                    ) : null}
+                  
+                  
+                
+                  {msg.isDeleted ? (
+                    <div
+                      style={{
+                        backgroundColor: "#444",
+                        color: "white",
+                        padding: "10px 14px",
+                        borderRadius: "18px",
+                        fontStyle: "italic",
+                        opacity: 0.8,
+                        width: "fit-content",
+                        maxWidth: "100%",
+                        wordBreak: "break-word",
+                      }}
+                    >
+                      Message deleted
+                    </div>
+                  ) : editingId === msg.id ? (
+                    <div
+                      style={{
+                        backgroundColor: isMine ? "#4A90E2" : "#444",
+                        padding: "10px 14px",
+                        borderRadius: "18px",
+                        width: "fit-content",
+                        maxWidth: "100%",
+                        minWidth: "220px",
+                      }}
+                    >
+                      <input
+                        value={editingText}
+                        onChange={(e) => setEditingText(e.target.value)}
+                        style={{
+                          width: "100%",
+                          padding: "8px 10px",
+                          borderRadius: "10px",
+                          border: "none",
+                          outline: "none",
+                          boxSizing: "border-box",
+                        }}
+                      />
                       <div
                         style={{
-                          backgroundColor: "#444",
-                          color: "white",
-                          padding: "10px 14px",
-                          borderRadius: "18px",
-                          fontStyle: "italic",
-                          opacity: 0.8,
-                          display: "inline-block",
-                          maxWidth: "100%",
-                          wordBreak: "break-word",
+                          marginTop: "8px",
+                          display: "flex",
+                          gap: "8px",
+                          justifyContent: "flex-end",
                         }}
                       >
-                        Message deleted
-                      </div>
-                    ) : editingId === msg.id ? (
-                      <div
-                        style={{
-                          backgroundColor: isMine ? "#4A90E2" : "#444",
-                          padding: "10px 14px",
-                          borderRadius: "18px",
-                          display: "inline-block",
-                          maxWidth: "100%",
-                          minWidth: "220px",
-                        }}
-                      >
-                        <input
-                          value={editingText}
-                          onChange={(e) => setEditingText(e.target.value)}
+                        <button
+                          onClick={() => editMessage(msg)}
                           style={{
-                            width: "100%",
-                            padding: "8px 10px",
-                            borderRadius: "10px",
+                            backgroundColor: "white",
+                            color: "#111",
                             border: "none",
-                            outline: "none",
-                            boxSizing: "border-box",
-                          }}
-                        />
-                        <div
-                          style={{
-                            marginTop: "8px",
-                            display: "flex",
-                            gap: "8px",
-                            justifyContent: "flex-end",
+                            borderRadius: "999px",
+                            padding: "6px 12px",
+                            cursor: "pointer",
+                            fontSize: "12px",
+                            fontWeight: 700,
                           }}
                         >
-                          <button
-                            onClick={() => editMessage(msg)}
-                            style={{
-                              backgroundColor: "white",
-                              color: "#111",
-                              border: "none",
-                              borderRadius: "999px",
-                              padding: "6px 12px",
-                              cursor: "pointer",
-                              fontSize: "12px",
-                              fontWeight: 700,
-                            }}
-                          >
-                            Save
-                          </button>
-                          <button
-                            onClick={() => {
-                              setEditingId("");
-                              setEditingText("");
-                            }}
-                            style={{
-                              backgroundColor: "transparent",
-                              color: "white",
-                              border: "1px solid rgba(255,255,255,0.6)",
-                              borderRadius: "999px",
-                              padding: "6px 12px",
-                              cursor: "pointer",
-                              fontSize: "12px",
-                            }}
-                          >
-                            Cancel
-                          </button>
-                        </div>
-                      </div>
-                    ) : (
-                      <div
-                        style={{
-                          backgroundColor: isMine ? "#4A90E2" : "#444",
-                          color: "white",
-                          padding: "10px 14px",
-                          borderRadius: "18px",
-                          display: "inline-block",
-                          maxWidth: "100%",
-                          wordBreak: "break-word",
-                          width: "fit-content",
-                        }}
-                      >
-                        {msg.content}
-                        {msg.editedAt ? (
-                          <span
-                            style={{
-                              marginLeft: "8px",
-                              fontSize: "12px",
-                              opacity: 0.75,
-                            }}
-                          >
-                            edited
-                          </span>
-                        ) : null}
-                      </div>
-                    )}
-
-                    {isMine && !msg.isDeleted && editingId !== msg.id ? (
-                      <div
-                        style={{
-                          display: "flex",
-                          gap: "10px",
-                          marginTop: "6px",
-                        }}
-                      >
+                          Save
+                        </button>
                         <button
                           onClick={() => {
-                            setEditingId(msg.id);
-                            setEditingText(msg.content || "");
+                            setEditingId("");
+                            setEditingText("");
                           }}
                           style={{
-                            background: "transparent",
-                            border: "none",
-                            color: "#bdbdbd",
-                            fontSize: "12px",
+                            backgroundColor: "transparent",
+                            color: "white",
+                            border: "1px solid rgba(255,255,255,0.6)",
+                            borderRadius: "999px",
+                            padding: "6px 12px",
                             cursor: "pointer",
-                            padding: 0,
+                            fontSize: "12px",
                           }}
                         >
-                          Edit
-                        </button>
-                        <button
-                          onClick={() => deleteMessage(msg)}
-                          style={{
-                            background: "transparent",
-                            border: "none",
-                            color: "#bdbdbd",
-                            fontSize: "12px",
-                            cursor: "pointer",
-                            padding: 0,
-                          }}
-                        >
-                          Delete
+                          Cancel
                         </button>
                       </div>
-                    ) : null}
-                  </div>
+                    </div>
+                  ) : (
+                    <div
+                      style={{
+                        backgroundColor: isMine ? "#4A90E2" : "#444",
+                        color: "white",
+                        padding: "10px 14px",
+                        borderRadius: "18px",
+                        width: "fit-content",
+                        maxWidth: "100%",
+                        wordBreak: "break-word",
+                      }}
+                    >
+                      {msg.content}
+                      {msg.editedAt ? (
+                        <span
+                          style={{
+                            marginLeft: "8px",
+                            fontSize: "12px",
+                            opacity: 0.75,
+                          }}
+                        >
+                          edited
+                        </span>
+                      ) : null}
+                    </div>
+                  )}
+
+                  {isMine && !msg.isDeleted && editingId !== msg.id ? (
+                    <div
+                      style={{
+                        display: "flex",
+                        gap: "10px",
+                        marginTop: "6px",
+                      }}
+                    >
+                      <button
+                        onClick={() => {
+                          setEditingId(msg.id);
+                          setEditingText(msg.content || "");
+                        }}
+                        style={{
+                          background: "transparent",
+                          border: "none",
+                          color: "#bdbdbd",
+                          fontSize: "12px",
+                          cursor: "pointer",
+                          padding: 0,
+                        }}
+                      >
+                        Edit
+                      </button>
+                      <button
+                        onClick={() => deleteMessage(msg)}
+                        style={{
+                          background: "transparent",
+                          border: "none",
+                          color: "#bdbdbd",
+                          fontSize: "12px",
+                          cursor: "pointer",
+                          padding: 0,
+                        }}
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  ) : null}
                 </div>
               );
             })}
@@ -899,7 +1269,7 @@ function MessagePage() {
               borderTop: "1px solid #000",
               display: "flex",
               backgroundColor: "#2d2d2d",
-              opacity: activeReceiver ? 1 : 0.5,
+              opacity: activeConversationId ? 1 : 0.5,
               gap: "10px",
             }}
           >
@@ -907,9 +1277,11 @@ function MessagePage() {
               value={messageInput}
               onChange={(e) => setMessageInput(e.target.value)}
               placeholder={
-                activeReceiver ? "Type a message..." : "Select a conversation..."
+                activeConversationId
+                  ? "Type a message..."
+                  : "Select a conversation..."
               }
-              disabled={!activeReceiver}
+              disabled={!activeConversationId}
               onKeyDown={(e) => {
                 if (e.key === "Enter") sendMessage();
               }}
@@ -926,14 +1298,14 @@ function MessagePage() {
 
             <button
               onClick={sendMessage}
-              disabled={!activeReceiver}
+              disabled={!activeConversationId}
               style={{
                 padding: "10px 18px",
                 borderRadius: "999px",
                 border: "none",
                 backgroundColor: "#4A90E2",
                 color: "white",
-                cursor: activeReceiver ? "pointer" : "not-allowed",
+                cursor: activeConversationId ? "pointer" : "not-allowed",
                 fontWeight: 700,
               }}
             >
