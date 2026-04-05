@@ -113,4 +113,24 @@ public class SteamController {
         RestTemplate rest = new RestTemplate();
         return ResponseEntity.ok(rest.getForObject(url, Object.class));
     }
+
+    @GetMapping("/search-games")
+    public ResponseEntity<?> searchGames(
+        @RequestParam String query,
+        @RequestParam(defaultValue = "12") int limit) {
+    try {
+        String encodedQuery = URLEncoder.encode(query, "UTF-8");
+        String url = "https://store.steampowered.com/api/storesearch/?term="
+                + encodedQuery + "&l=english&cc=US";
+
+        RestTemplate rest = new RestTemplate();
+        return ResponseEntity.ok(rest.getForObject(url, Object.class));
+    } catch (Exception e) {
+        return ResponseEntity.status(502).body(Map.of(
+                "error", "Steam search failed",
+                "message", e.getMessage()
+        ));
+    }
+}
+    
 }
