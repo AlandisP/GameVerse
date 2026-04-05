@@ -2,6 +2,7 @@ package com.GameVerse.GameVerse.repository;
 
 import java.util.List;
 
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.mongodb.repository.Query;
 import org.springframework.stereotype.Repository;
@@ -18,4 +19,5 @@ public interface PostRepository extends MongoRepository<Post, String>{
     @Query(value = "{'liked.username' : ?0}")
     List<Post> findAllByLikedUsername(String username);
     void deleteAllByUserId(String username);
+    List<Post> findAllByOrderByCreatedAtDesc(Pageable pageable);
 }

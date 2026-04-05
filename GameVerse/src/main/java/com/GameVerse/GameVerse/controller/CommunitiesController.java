@@ -30,9 +30,9 @@ import com.GameVerse.GameVerse.model.User;
 import com.GameVerse.GameVerse.repository.CommunityMembershipRepository;
 import com.GameVerse.GameVerse.repository.CommunityRepository;
 import com.GameVerse.GameVerse.repository.UserRepository;
+import com.GameVerse.GameVerse.security.S3Service;
 import com.GameVerse.GameVerse.services.CommunityService;
 import com.GameVerse.GameVerse.services.NotificationService;
-import com.GameVerse.GameVerse.security.S3Service;
 @RestController
 @RequestMapping("/communities")
 @CrossOrigin(origins = "http://localhost:3000")
@@ -83,8 +83,12 @@ public class CommunitiesController {
         if(communityRepository.existsByNameIgnoreCase(req.name)) {
             return ResponseEntity.badRequest().body("Community with this name already exists");
         }
-        communityService.createCommunity(id, req.name, req.description, req.category);
-        return ResponseEntity.ok().body("Community Created!");
+        try {
+            communityService.createCommunity(id, req.name, req.description, req.category);
+            return ResponseEntity.ok().body("Community Created!");
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
 
     @GetMapping("/{name}")

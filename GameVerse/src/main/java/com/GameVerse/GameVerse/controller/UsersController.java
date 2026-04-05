@@ -3,6 +3,7 @@ package com.GameVerse.GameVerse.controller;
 
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -20,6 +21,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.GameVerse.GameVerse.model.PartyFinder;
+import com.GameVerse.GameVerse.model.Relationship;
 import com.GameVerse.GameVerse.model.User;
 import com.GameVerse.GameVerse.repository.BlockedRelationshipRepository;
 import com.GameVerse.GameVerse.repository.CommunityMembershipRepository;
@@ -28,6 +30,8 @@ import com.GameVerse.GameVerse.repository.PartyFinderRepository;
 import com.GameVerse.GameVerse.repository.PostRepository;
 import com.GameVerse.GameVerse.repository.RelationshipRepository;
 import com.GameVerse.GameVerse.repository.UserRepository;
+import com.GameVerse.GameVerse.security.S3Service;
+import com.GameVerse.GameVerse.services.RecommendationService;
 import com.GameVerse.GameVerse.services.RelationshipServices;
 
 
@@ -38,6 +42,9 @@ public class UsersController {
 
     @Autowired
     private RelationshipServices relationshipService;
+
+    @Autowired
+    private RecommendationService recService;
 
     @Autowired
     private PasswordEncoder passwordEncoder;
@@ -57,6 +64,9 @@ public class UsersController {
     @Autowired
     private UserRepository repository;
 
+    @Autowired
+    private S3Service s3serv;
+
 
     @GetMapping
     public List<User> getAllUsers() {
@@ -67,6 +77,12 @@ public class UsersController {
     public User createUser(@RequestBody User user) {
         return repository.save(user);
     }
+    
+    @GetMapping("/exists/{username}")
+    public ResponseEntity<?> usernameExists(@PathVariable String username) {
+    boolean exists = repository.existsByUsername(username);
+    return ResponseEntity.ok(Map.of("exists", exists));
+}
 
     @GetMapping("/{id}")
     public User getUserById(@PathVariable String id) {
@@ -116,6 +132,30 @@ public class UsersController {
         return ResponseEntity.ok("Successfully unfollowed the user");
     }
 
+    // Following List
+    @GetMapping("/following/{username}")
+    public ResponseEntity<?> viewFollowingList(@PathVariable String username, Authentication auth) {
+        String userId = (String) auth.getPrincipal();
+        User user = repository.findByUsernameIgnoreCase(username);
+        if(user == null) {
+            return ResponseEntity.badRequest().body("User doesn't exist");
+        }
+        List<String> arr = relationshipRepository.findAllByFollowerId(user.getId()).stream().map(Relationship::getFollowingId).collect(Collectors.toList());
+        return ResponseEntity.ok(arr.stream().map(id ->  repository.findById(id).orElse(null)).collect(Collectors.toList()));
+    }
+
+    //Follower List
+    @GetMapping("/followers/{username}")
+    public ResponseEntity<?> viewFollowerList(@PathVariable String username, Authentication auth) {
+        String userId = (String) auth.getPrincipal();
+        User user = repository.findByUsernameIgnoreCase(username);
+        if(user == null) {
+            return ResponseEntity.badRequest().body("User doesn't exist");
+        }
+        List<String> arr = relationshipRepository.findAllByFollowingId(user.getId()).stream().map(Relationship::getFollowerId).collect(Collectors.toList());
+        return ResponseEntity.ok(arr.stream().map(id ->  repository.findById(id).orElse(null)).collect(Collectors.toList()));
+    }
+
     @GetMapping("/usernames")
     public ResponseEntity<?> getUsers(@RequestParam List<String> userIds) {
         List<String> usernames = userIds.stream()
@@ -125,9 +165,11 @@ public class UsersController {
 
     }
 
+
     @DeleteMapping("/delete-account")
 public ResponseEntity<?> deleteAccount(@RequestBody Map<String, String> body, Authentication auth) {
     String userId = (String) auth.getPrincipal();
+    String username = repository.findById(userId).get().getUsername();
     String password = body.get("password");
 
     if (password == null || password.isEmpty())
@@ -154,6 +196,12 @@ public ResponseEntity<?> deleteAccount(@RequestBody Map<String, String> body, Au
     relationshipRepository.deleteAllByFollowerId(userId);
     relationshipRepository.deleteAllByFollowingId(userId);
     repository.deleteById(userId);
+    try{
+        s3serv.deleteAllMedia(username);
+    } catch(Exception e){
+        
+    }
+    
     return ResponseEntity.ok(Map.of("message", "Account deleted successfully"));
 }
 
@@ -179,7 +227,7 @@ public ResponseEntity<?> changePassword(@RequestBody Map<String, String> body, A
 }
 
   @PutMapping("/change-username")
-public ResponseEntity<?> changeUsername(@RequestBody Map<String, String> body, Authentication auth) {
+  public ResponseEntity<?> changeUsername(@RequestBody Map<String, String> body, Authentication auth) {
     String userId = (String) auth.getPrincipal();
     String newUsername = body.get("newUsername");
 
@@ -196,10 +244,5 @@ public ResponseEntity<?> changeUsername(@RequestBody Map<String, String> body, A
     return ResponseEntity.ok(Map.of("message", "Username updated successfully"));
 }
 
-    @GetMapping("/exists/{username}")
-    public ResponseEntity<?> userExist(Authentication auth, @PathVariable String username) {
-        boolean exists = repository.existsByUsername(username);
-        return ResponseEntity.ok(Map.of("exists", exists));
-    }
 
 }

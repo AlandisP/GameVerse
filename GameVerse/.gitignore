@@ -36,3 +36,4 @@ build/
 application.properties
 .env
 *.env
+oracleJdk-25/

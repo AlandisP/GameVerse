@@ -14,7 +14,7 @@ import img5 from "../images/gen5.png";
 import img6 from "../images/gen6.png";
 import img7 from "../images/gen7.png";
 
-function Party({Name, Description, Categories, Count, id, Members, Status, CreatorId, refresh, refreshCurrent}) {
+function Party({Name, Description, Categories, Count, id, Members, Status, CreatorId, refresh, refreshCurrent, Time}) {
     const token = localStorage.getItem("token");
     const userId = localStorage.getItem("userId");
     const [error, setError] = useState("");
@@ -101,7 +101,10 @@ function Party({Name, Description, Categories, Count, id, Members, Status, Creat
                     <p className='members' onClick={handleOpenMembers}> {Members.length}/{Count} Players</p>
                 </div>
                 <div className='right'>
-                    <p className='active'>{transformString(Status)}</p>
+                    <div className="right-right">
+                        <p className='active'>{transformString(Status)}</p>
+                        <p className="time-ago">{Time}</p>
+                    </div>
                     {
                         isOwner?(
                             <div className="owner-party">

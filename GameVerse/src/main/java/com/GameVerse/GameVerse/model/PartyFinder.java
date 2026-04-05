@@ -1,5 +1,6 @@
 package com.GameVerse.GameVerse.model;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -20,6 +21,7 @@ public class PartyFinder {
     private ArrayList<String> members;
     private Status status;
     private List<Category> categories;
+    private Instant createdAt;
 
     public PartyFinder() {
 
@@ -34,6 +36,8 @@ public class PartyFinder {
         members = new ArrayList<>();
         members.add(creatorId);
         this.status = Status.WAITING;
+        createdAt = Instant.now();
+
     }
 
     public Status getStatus() {
@@ -108,6 +112,14 @@ public class PartyFinder {
 
     public void setMaxMembers(int mems) {
         this.maxMembers = mems;
+    }
+
+    public Instant getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setTime(Instant time) {
+        this.createdAt = time;
     }
 
 
