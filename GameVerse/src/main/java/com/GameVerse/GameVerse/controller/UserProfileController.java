@@ -251,6 +251,7 @@ public class UserProfileController {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
+
     // Get the strings
     @GetMapping("/getBlockList")
     public ResponseEntity<?> getBlockList(Authentication auth) {
