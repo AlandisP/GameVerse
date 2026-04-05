@@ -22,10 +22,6 @@ import {
   setDoc,
 } from "firebase/firestore";
 
-function getConversationId(user1, user2) {
-  return user1 < user2 ? `${user1}_${user2}` : `${user2}_${user1}`;
-}
-
 function getOtherUser(participants, me) {
   return participants?.find((p) => p !== me) || "";
 }
@@ -38,16 +34,27 @@ function getConversationLastMessageId(convo) {
   return convo?.lastMessageId || "";
 }
 
-/**
- * Validation via backend.
- * Backend should expose:
- *   GET /users/exists/{username} -> { exists: true/false }
- */
 async function validateUsernameExists(username) {
   const token = localStorage.getItem("token");
 
-  const res = await axios.get(
-    `${API_URL}/users/exists/${username}`,
+  const res = await axios.get(`${API_URL}/users/exists/${username}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  return Boolean(res.data?.exists);
+}
+
+async function createOrGetConversation(currentUsername, targetUsername) {
+  const token = localStorage.getItem("token");
+
+  const res = await axios.post(
+    `${API_URL}/api/conversations/direct`,
+    {
+      currentUsername,
+      targetUsername,
+    },
     {
       headers: {
         Authorization: `Bearer ${token}`,
@@ -55,14 +62,9 @@ async function validateUsernameExists(username) {
     }
   );
 
-  return Boolean(res.data?.exists);
+  return res.data;
 }
 
-
-/**
- * Ensure the conversation document exists so the inbox list can show it
- * even before the first message is sent.
- */
 async function ensureConversationDoc(convoId, sender, receiver) {
   if (!convoId || !sender || !receiver) return;
 
@@ -73,14 +75,10 @@ async function ensureConversationDoc(convoId, sender, receiver) {
     {
       participants: [sender, receiver],
       updatedAt: serverTimestamp(),
-
-      // These can be blank until a real message is sent.
       lastMessageText: "",
       lastMessageAt: null,
       lastMessageSender: "",
       lastMessageId: "",
-
-      // legacy fields if your UI reads them
       lastMessage: "",
       lastSender: "",
     },
@@ -103,26 +101,24 @@ function MessagePage() {
 
   const [search, setSearch] = useState("");
 
-  // Edit state
   const [editingId, setEditingId] = useState("");
   const [editingText, setEditingText] = useState("");
 
-  // New message composer state
   const [isComposing, setIsComposing] = useState(false);
   const [newDmUsername, setNewDmUsername] = useState("");
   const [composeError, setComposeError] = useState("");
 
   const messagesUnsubRef = useRef(null);
   const inboxUnsubRef = useRef(null);
+  const openingRef = useRef(false);
 
-  // If URL has a receiver, validate they exist first, then open/ensure convo.
   useEffect(() => {
     let cancelled = false;
 
     async function openFromUrl() {
       if (!sender || !receiverUsername) return;
+      if (openingRef.current) return;
 
-      // Prevent self DM
       if (receiverUsername.toLowerCase() === sender.toLowerCase()) {
         setActiveConversationId("");
         setActiveReceiver("");
@@ -131,6 +127,8 @@ function MessagePage() {
       }
 
       try {
+        openingRef.current = true;
+
         const exists = await validateUsernameExists(receiverUsername);
         if (cancelled) return;
 
@@ -142,9 +140,10 @@ function MessagePage() {
           return;
         }
 
-        const convoId = getConversationId(sender, receiverUsername);
+        const convo = await createOrGetConversation(sender, receiverUsername);
+        if (cancelled) return;
 
-        // Ensure convo doc exists so it appears in inbox list
+        const convoId = convo.id;
         await ensureConversationDoc(convoId, sender, receiverUsername);
         if (cancelled) return;
 
@@ -154,10 +153,12 @@ function MessagePage() {
       } catch (e) {
         if (cancelled) return;
         console.error(e);
-        setComposeError("Could not validate user.");
+        setComposeError("Could not open conversation.");
         setActiveConversationId("");
         setActiveReceiver("");
         setMessages([]);
+      } finally {
+        openingRef.current = false;
       }
     }
 
@@ -168,11 +169,9 @@ function MessagePage() {
     };
   }, [sender, receiverUsername]);
 
-  // Load inbox conversation list (single stable listener)
   useEffect(() => {
     if (!sender || typeof sender !== "string" || !sender.trim()) return;
 
-    // Kill previous inbox listener if any
     if (inboxUnsubRef.current) {
       inboxUnsubRef.current();
       inboxUnsubRef.current = null;
@@ -187,11 +186,29 @@ function MessagePage() {
     inboxUnsubRef.current = onSnapshot(
       inboxQuery,
       (snapshot) => {
-        const convos = snapshot.docs.map((d) => ({
-          id: d.id,
-          ...d.data(),
-        }));
-        setConversations(convos);
+        const map = new Map();
+
+        snapshot.docs.forEach((d) => {
+          const data = d.data();
+          const other = getOtherUser(data.participants, sender);
+          if (!other) return;
+
+          const existing = map.get(other);
+
+          if (!existing) {
+            map.set(other, { id: d.id, ...data });
+            return;
+          }
+
+          const existingTime = existing.updatedAt?.seconds || 0;
+          const currentTime = data.updatedAt?.seconds || 0;
+
+          if (currentTime >= existingTime) {
+            map.set(other, { id: d.id, ...data });
+          }
+        });
+
+        setConversations(Array.from(map.values()));
       },
       (err) => console.error("onSnapshot inbox error:", err)
     );
@@ -214,9 +231,7 @@ function MessagePage() {
     });
   }, [conversations, search, sender]);
 
-  // Load messages for active conversation (NO overlapping listeners)
   useEffect(() => {
-    // Always stop old listener first
     if (messagesUnsubRef.current) {
       messagesUnsubRef.current();
       messagesUnsubRef.current = null;
@@ -279,7 +294,6 @@ function MessagePage() {
         lastMessageSender: "",
         lastMessageId: "",
         updatedAt: serverTimestamp(),
-        // legacy
         lastMessage: "",
         lastSender: "",
       });
@@ -292,7 +306,6 @@ function MessagePage() {
       lastMessageSender: next.sender || "",
       lastMessageId: next.id,
       updatedAt: serverTimestamp(),
-      // legacy
       lastMessage: next.content || "",
       lastSender: next.sender || "",
     });
@@ -302,7 +315,6 @@ function MessagePage() {
     const text = messageInput.trim();
     if (!text || !sender || !activeReceiver) return;
 
-    // Validate receiver exists before sending (blocks fake users)
     try {
       const exists = await validateUsernameExists(activeReceiver);
       if (!exists) {
@@ -315,102 +327,115 @@ function MessagePage() {
       return;
     }
 
-    const convoId =
-      activeConversationId || getConversationId(sender, activeReceiver);
+    let convoId = activeConversationId;
 
-    if (!activeConversationId) setActiveConversationId(convoId);
+    try {
+      if (!convoId) {
+        const convo = await createOrGetConversation(sender, activeReceiver);
+        convoId = convo.id;
+        setActiveConversationId(convoId);
+      }
 
-    // Ensure convo doc exists (safe)
-    await ensureConversationDoc(convoId, sender, activeReceiver);
+      await ensureConversationDoc(convoId, sender, activeReceiver);
 
-    const convoRef = doc(db, "conversations", convoId);
-    const msgRef = doc(collection(db, "conversations", convoId, "messages"));
+      const convoRef = doc(db, "conversations", convoId);
+      const msgRef = doc(collection(db, "conversations", convoId, "messages"));
 
-    const batch = writeBatch(db);
+      const batch = writeBatch(db);
 
-    // Update convo summary fields
-    batch.set(
-      convoRef,
-      {
-        participants: [sender, activeReceiver],
-        updatedAt: serverTimestamp(),
-        lastMessageText: text,
-        lastMessageAt: serverTimestamp(),
-        lastMessageSender: sender,
-        lastMessageId: msgRef.id,
-        // legacy
-        lastMessage: text,
-        lastSender: sender,
-      },
-      { merge: true }
-    );
+      batch.set(
+        convoRef,
+        {
+          participants: [sender, activeReceiver],
+          updatedAt: serverTimestamp(),
+          lastMessageText: text,
+          lastMessageAt: serverTimestamp(),
+          lastMessageSender: sender,
+          lastMessageId: msgRef.id,
+          lastMessage: text,
+          lastSender: sender,
+        },
+        { merge: true }
+      );
 
-    batch.set(msgRef, {
-      sender,
-      receiver: activeReceiver,
-      content: text,
-      timestamp: serverTimestamp(),
-      editedAt: null,
-      isDeleted: false,
-    });
+      batch.set(msgRef, {
+        sender,
+        receiver: activeReceiver,
+        content: text,
+        timestamp: serverTimestamp(),
+        editedAt: null,
+        isDeleted: false,
+      });
 
-    await batch.commit();
-    setMessageInput("");
-    setComposeError("");
+      await batch.commit();
+      setMessageInput("");
+      setComposeError("");
+    } catch (e) {
+      console.error(e);
+      setComposeError("Could not send message.");
+    }
   }
 
   async function editMessage(msg) {
     const text = editingText.trim();
     if (!text || !activeConversationId) return;
 
-    const msgRef = doc(
-      db,
-      "conversations",
-      activeConversationId,
-      "messages",
-      msg.id
-    );
+    try {
+      const msgRef = doc(
+        db,
+        "conversations",
+        activeConversationId,
+        "messages",
+        msg.id
+      );
 
-    await updateDoc(msgRef, { content: text, editedAt: serverTimestamp() });
+      await updateDoc(msgRef, { content: text, editedAt: serverTimestamp() });
 
-    const convo = conversations.find((c) => c.id === activeConversationId);
-    if (getConversationLastMessageId(convo) === msg.id) {
-      await updateDoc(doc(db, "conversations", activeConversationId), {
-        lastMessageText: text,
-        lastMessage: text, // legacy
-        updatedAt: serverTimestamp(),
-      });
+      const convo = conversations.find((c) => c.id === activeConversationId);
+      if (getConversationLastMessageId(convo) === msg.id) {
+        await updateDoc(doc(db, "conversations", activeConversationId), {
+          lastMessageText: text,
+          lastMessage: text,
+          updatedAt: serverTimestamp(),
+        });
+      }
+
+      setEditingId("");
+      setEditingText("");
+    } catch (e) {
+      console.error(e);
     }
-
-    setEditingId("");
-    setEditingText("");
   }
 
   async function deleteMessage(msg) {
     if (!activeConversationId) return;
 
-    const msgRef = doc(
-      db,
-      "conversations",
-      activeConversationId,
-      "messages",
-      msg.id
-    );
+    try {
+      const msgRef = doc(
+        db,
+        "conversations",
+        activeConversationId,
+        "messages",
+        msg.id
+      );
 
-    await updateDoc(msgRef, {
-      isDeleted: true,
-      content: "",
-      deletedAt: serverTimestamp(),
-    });
+      await updateDoc(msgRef, {
+        isDeleted: true,
+        content: "",
+        deletedAt: serverTimestamp(),
+      });
 
-    const convo = conversations.find((c) => c.id === activeConversationId);
-    if (getConversationLastMessageId(convo) === msg.id) {
-      await recomputeConversationLastMessage(activeConversationId);
-    }
+      const convo = conversations.find((c) => c.id === activeConversationId);
+      if (getConversationLastMessageId(convo) === msg.id) {
+        await recomputeConversationLastMessage(activeConversationId);
+      }
 
-    if (editingId === msg.id) {
-      setEditingId("");
-      setEditingText("");
+      if (editingId === msg.id) {
+        setEditingId("");
+        setEditingText("");
+      }
+    } catch (e) {
+      console.error(e);
     }
   }
 
@@ -427,60 +452,59 @@ function MessagePage() {
       return;
     }
 
-    // Validate exists first
     try {
       const exists = await validateUsernameExists(target);
       if (!exists) {
         setComposeError(`User "${target}" does not exist.`);
         return;
       }
+
+      setComposeError("");
+
+      const convo = await createOrGetConversation(sender, target);
+      const convoId = convo.id;
+
+      await ensureConversationDoc(convoId, sender, target);
+
+      setActiveConversationId(convoId);
+      setActiveReceiver(target);
+
+      navigate(`/messages/${target}`);
+
+      setIsComposing(false);
+      setNewDmUsername("");
+      setEditingId("");
+      setEditingText("");
     } catch (e) {
       console.error(e);
-      setComposeError("Could not validate user.");
-      return;
+      setComposeError("Could not start conversation.");
     }
-
-    setComposeError("");
-
-    const convoId = getConversationId(sender, target);
-
-    // Ensure convo doc exists so it appears immediately in the inbox list
-    await ensureConversationDoc(convoId, sender, target);
-
-    setActiveConversationId(convoId);
-    setActiveReceiver(target);
-
-    navigate(`/messages/${target}`);
-
-    setIsComposing(false);
-    setNewDmUsername("");
-    setEditingId("");
-    setEditingText("");
   }
 
   async function openConversation(convo) {
     const other = getOtherUser(convo.participants, sender);
-
     if (!other) return;
 
-    // Ensure convo doc exists (safe)
-    await ensureConversationDoc(convo.id, sender, other);
+    try {
+      await ensureConversationDoc(convo.id, sender, other);
 
-    setActiveConversationId(convo.id);
-    setActiveReceiver(other);
+      setActiveConversationId(convo.id);
+      setActiveReceiver(other);
 
-    setComposeError("");
-    setEditingId("");
-    setEditingText("");
+      setComposeError("");
+      setEditingId("");
+      setEditingText("");
 
-    navigate(`/messages/${other}`);
+      navigate(`/messages/${other}`);
+    } catch (e) {
+      console.error(e);
+    }
   }
 
   return (
     <div className="page-container">
       <NavBar />
       <div className="main-content" style={{ display: "flex", padding: 0 }}>
-        {/* LEFT SIDEBAR */}
         <div
           style={{
             width: "350px",
@@ -627,7 +651,6 @@ function MessagePage() {
             </div>
           </div>
 
-          {/* Conversation List */}
           <div style={{ overflowY: "auto", padding: "0 10px 20px 10px" }}>
             {filteredConversations.map((c) => {
               const other = getOtherUser(c.participants, sender);
@@ -668,7 +691,6 @@ function MessagePage() {
           </div>
         </div>
 
-        {/* RIGHT SIDE */}
         <div
           style={{
             flex: 1,
@@ -678,7 +700,6 @@ function MessagePage() {
             flexDirection: "column",
           }}
         >
-          {/* Header */}
           <div
             style={{
               borderBottom: "1px solid #000",
@@ -690,8 +711,14 @@ function MessagePage() {
             {activeReceiver ? `@${activeReceiver}` : "Select a conversation"}
           </div>
 
-          {/* Messages */}
-          <div style={{ flex: 1, overflowY: "auto", padding: "20px" }}>
+          <div
+            style={{
+              flex: 1,
+              overflowY: "auto",
+              padding: "20px 24px",
+              backgroundColor: "#2d2d2d",
+            }}
+          >
             {messages.map((msg) => {
               const isMine = msg.sender === sender;
 
@@ -699,81 +726,134 @@ function MessagePage() {
                 <div
                   key={msg.id}
                   style={{
-                    marginBottom: "10px",
                     display: "flex",
                     justifyContent: isMine ? "flex-end" : "flex-start",
+                    marginBottom: "14px",
                   }}
                 >
-                  <div style={{ maxWidth: "60%" }}>
-                    <div
-                      style={{
-                        backgroundColor: isMine ? "#4A90E2" : "#444",
-                        padding: "10px 15px",
-                        borderRadius: "20px",
-                        color: "white",
-                        opacity: msg.isDeleted ? 0.7 : 1,
-                      }}
-                    >
-                      {msg.isDeleted ? (
-                        <span style={{ fontStyle: "italic" }}>
-                          Message deleted
-                        </span>
-                      ) : editingId === msg.id ? (
-                        <div>
-                          <input
-                            value={editingText}
-                            onChange={(e) => setEditingText(e.target.value)}
+                  <div
+                    style={{
+                      maxWidth: "60%",
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: isMine ? "flex-end" : "flex-start",
+                    }}
+                  >
+                    {msg.isDeleted ? (
+                      <div
+                        style={{
+                          backgroundColor: "#444",
+                          color: "white",
+                          padding: "10px 14px",
+                          borderRadius: "18px",
+                          fontStyle: "italic",
+                          opacity: 0.8,
+                          display: "inline-block",
+                          maxWidth: "100%",
+                          wordBreak: "break-word",
+                        }}
+                      >
+                        Message deleted
+                      </div>
+                    ) : editingId === msg.id ? (
+                      <div
+                        style={{
+                          backgroundColor: isMine ? "#4A90E2" : "#444",
+                          padding: "10px 14px",
+                          borderRadius: "18px",
+                          display: "inline-block",
+                          maxWidth: "100%",
+                          minWidth: "220px",
+                        }}
+                      >
+                        <input
+                          value={editingText}
+                          onChange={(e) => setEditingText(e.target.value)}
+                          style={{
+                            width: "100%",
+                            padding: "8px 10px",
+                            borderRadius: "10px",
+                            border: "none",
+                            outline: "none",
+                            boxSizing: "border-box",
+                          }}
+                        />
+                        <div
+                          style={{
+                            marginTop: "8px",
+                            display: "flex",
+                            gap: "8px",
+                            justifyContent: "flex-end",
+                          }}
+                        >
+                          <button
+                            onClick={() => editMessage(msg)}
                             style={{
-                              width: "100%",
-                              padding: "8px",
-                              borderRadius: "10px",
+                              backgroundColor: "white",
+                              color: "#111",
                               border: "none",
-                              outline: "none",
-                            }}
-                          />
-                          <div
-                            style={{
-                              marginTop: "8px",
-                              display: "flex",
-                              gap: "8px",
-                              justifyContent: "flex-end",
+                              borderRadius: "999px",
+                              padding: "6px 12px",
+                              cursor: "pointer",
+                              fontSize: "12px",
+                              fontWeight: 700,
                             }}
                           >
-                            <button onClick={() => editMessage(msg)}>
-                              Save
-                            </button>
-                            <button
-                              onClick={() => {
-                                setEditingId("");
-                                setEditingText("");
-                              }}
-                            >
-                              Cancel
-                            </button>
-                          </div>
+                            Save
+                          </button>
+                          <button
+                            onClick={() => {
+                              setEditingId("");
+                              setEditingText("");
+                            }}
+                            style={{
+                              backgroundColor: "transparent",
+                              color: "white",
+                              border: "1px solid rgba(255,255,255,0.6)",
+                              borderRadius: "999px",
+                              padding: "6px 12px",
+                              cursor: "pointer",
+                              fontSize: "12px",
+                            }}
+                          >
+                            Cancel
+                          </button>
                         </div>
-                      ) : (
-                        <div>
-                          {msg.content}
-                          {msg.editedAt ? (
-                            <span
-                              style={{ marginLeft: "8px", fontSize: "0.8rem" }}
-                            >
-                              (edited)
-                            </span>
-                          ) : null}
-                        </div>
-                      )}
-                    </div>
+                      </div>
+                    ) : (
+                      <div
+                        style={{
+                          backgroundColor: isMine ? "#4A90E2" : "#444",
+                          color: "white",
+                          padding: "10px 14px",
+                          borderRadius: "18px",
+                          display: "inline-block",
+                          maxWidth: "100%",
+                          wordBreak: "break-word",
+                          width: "fit-content",
+                        }}
+                      >
+                        {msg.content}
+                        {msg.editedAt ? (
+                          <span
+                            style={{
+                              marginLeft: "8px",
+                              fontSize: "12px",
+                              opacity: 0.75,
+                            }}
+                          >
+                            edited
+                          </span>
+                        ) : null}
+                      </div>
+                    )}
 
-                    {/* Controls */}
                     {isMine && !msg.isDeleted && editingId !== msg.id ? (
                       <div
                         style={{
-                          marginTop: "6px",
                           display: "flex",
-                          justifyContent: "flex-end",
-                          gap: "8px",
+                          gap: "10px",
+                          marginTop: "6px",
                         }}
                       >
                         <button
@@ -781,13 +861,27 @@ function MessagePage() {
                             setEditingId(msg.id);
                             setEditingText(msg.content || "");
                           }}
-                          style={{ fontSize: "0.8rem" }}
+                          style={{
+                            background: "transparent",
+                            border: "none",
+                            color: "#bdbdbd",
+                            fontSize: "12px",
+                            cursor: "pointer",
+                            padding: 0,
+                          }}
                         >
                           Edit
                         </button>
                         <button
                           onClick={() => deleteMessage(msg)}
-                          style={{ fontSize: "0.8rem" }}
+                          style={{
+                            background: "transparent",
+                            border: "none",
+                            color: "#bdbdbd",
+                            fontSize: "12px",
+                            cursor: "pointer",
+                            padding: 0,
+                          }}
                         >
                           Delete
                         </button>
@@ -799,14 +893,14 @@ function MessagePage() {
             })}
           </div>
 
-          {/* Input */}
           <div
             style={{
-              padding: "15px",
-              borderTop: "1px solid black",
+              padding: "14px 16px",
+              borderTop: "1px solid #000",
               display: "flex",
-              backgroundColor: "#1f1f1f",
+              backgroundColor: "#2d2d2d",
               opacity: activeReceiver ? 1 : 0.5,
+              gap: "10px",
             }}
           >
             <input
@@ -821,13 +915,12 @@ function MessagePage() {
               }}
               style={{
                 flex: 1,
-                padding: "10px",
-                borderRadius: "20px",
+                padding: "12px 16px",
+                borderRadius: "999px",
                 border: "none",
                 outline: "none",
-                backgroundColor: "#2d2d2d",
+                backgroundColor: "#1f1f1f",
                 color: "white",
-                marginRight: "10px",
               }}
             />
 
@@ -835,12 +928,13 @@ function MessagePage() {
               onClick={sendMessage}
               disabled={!activeReceiver}
               style={{
-                padding: "10px 20px",
-                borderRadius: "20px",
+                padding: "10px 18px",
+                borderRadius: "999px",
                 border: "none",
                 backgroundColor: "#4A90E2",
                 color: "white",
                 cursor: activeReceiver ? "pointer" : "not-allowed",
+                fontWeight: 700,
               }}
             >
               Send

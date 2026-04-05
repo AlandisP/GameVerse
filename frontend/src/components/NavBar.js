@@ -165,6 +165,7 @@ function MakePostOverlay({isClosed, setIsClosed, GetPosts}) {
     const [isopen, setopen] = useState(false);
     const username = localStorage.getItem("username");
     const [imgsrc, setimgsrc] = useState(urlprefab+username+"/Profile/ProfilePic");
+    const [posting, makingpost] = useState(false);
 
     const getAllUserCommunities = async() => {
         try {
@@ -180,36 +181,41 @@ function MakePostOverlay({isClosed, setIsClosed, GetPosts}) {
 
     const makePost = async() => {
         try {
-            if(text!="" && selectedValue!=""){
-                // const res = await axios.post (
-                //     `${API_URL}/post/makecommunitypost`, {body: text, id:selectedValue},
-                //     { headers: { Authorization: `Bearer ${token}` } }
-                // );
-                //Below is code for the media usage in upload, tweak community posting as neccessary
-                const formdat = new FormData();
-                formdat.append('body',text);
-                formdat.append('media',file);
-                formdat.append('id', selectedValue)
-                const res = await axios.post(
-                    `${API_URL}/post/makecommunitypost`,formdat,
-                    { headers: { Authorization: `Bearer ${token}` },timeout:0 }
-                );
-               // GetPosts();
-                setIsClosed(true);
-            } else if(text!=""&&selectedValue===""){
-                // const res = await axios.post(
-                //     `${API_URL}/post/makepost`, {body: text},
-                //     { headers: { Authorization: `Bearer ${token}` } }
-                // );
-                const formdat = new FormData();
-                formdat.append('body',text);
-                formdat.append('media',file);
-                const res = await axios.post(
-                    `${API_URL}/post/makepost`,formdat,
-                    { headers: { Authorization: `Bearer ${token}` },timeout:0 }
-                );
-              //  GetPosts();
-                setIsClosed(true);
+            if(!posting){
+                makingpost(true);
+                if(text!="" && selectedValue!=""){
+                    // const res = await axios.post (
+                    //     `${API_URL}/post/makecommunitypost`, {body: text, id:selectedValue},
+                    //     { headers: { Authorization: `Bearer ${token}` } }
+                    // );
+                    //Below is code for the media usage in upload, tweak community posting as neccessary
+                    const formdat = new FormData();
+                    formdat.append('body',text);
+                    formdat.append('media',file);
+                    formdat.append('id', selectedValue)
+                    const res = await axios.post(
+                        `${API_URL}/post/makecommunitypost`,formdat,
+                        { headers: { Authorization: `Bearer ${token}` },timeout:0 }
+                    );
+                // GetPosts();
+                    setIsClosed(true);
+                    makingpost(false);
+                } else if(text!=""&&selectedValue===""){
+                    // const res = await axios.post(
+                    //     `${API_URL}/post/makepost`, {body: text},
+                    //     { headers: { Authorization: `Bearer ${token}` } }
+                    // );
+                    const formdat = new FormData();
+                    formdat.append('body',text);
+                    formdat.append('media',file);
+                    const res = await axios.post(
+                        `${API_URL}/post/makepost`,formdat,
+                        { headers: { Authorization: `Bearer ${token}` },timeout:0 }
+                    );
+                //  GetPosts();
+                    setIsClosed(true);
+                    makingpost(false);
+                }
             }
         } catch (error) {
            console.error("failed to make a post: ", error.response?.data || error.message); 
@@ -254,7 +260,7 @@ function MakePostOverlay({isClosed, setIsClosed, GetPosts}) {
                         </div>
                         <p className='text-count'>{text.length}/280</p>
                     </div>
-                    <button className='pst-btn' onClick={makePost}>Post</button>
+                    <button className={`pst-btn${posting?"-posting":""}`} onClick={makePost}>Post{posting?"ing... Please wait":""}</button>
                     </div>
                     
                 </div>

@@ -21,22 +21,23 @@ import jakarta.servlet.http.HttpServletRequest;
 public class SecurityConfiguration {
 
     @Autowired
-    private JwtAuthenticationFilter jwtAuthenticationFilter;  
+    private JwtAuthenticationFilter jwtAuthenticationFilter;
 
     @Bean
     SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-            .sessionManagement(session -> 
+            .sessionManagement(session ->
                 session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            .csrf(csrf -> csrf.disable())
+            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .authorizeHttpRequests((authorize) -> authorize
-                .requestMatchers("/auth/**").permitAll()  // Allow all /auth endpoints
+                .requestMatchers("/auth/**").permitAll()
                 .requestMatchers("/users/**").permitAll()
                 .requestMatchers("/parties/test/**").permitAll()
-                .requestMatchers("parties/random-image/**").permitAll()
+                .requestMatchers("/parties/random-image/**").permitAll()
+                .requestMatchers("/api/conversations/**").permitAll()
                 .anyRequest().authenticated())
-            .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)  // FIXED
-            .csrf(csrf -> csrf.disable())
-            .cors(cors -> cors.configurationSource(corsConfigurationSource()));
+            .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
@@ -46,7 +47,10 @@ public class SecurityConfiguration {
             @Override
             public CorsConfiguration getCorsConfiguration(HttpServletRequest request) {
                 CorsConfiguration ccfg = new CorsConfiguration();
-                ccfg.setAllowedOrigins(Arrays.asList("http://localhost:3000", "https://ccfrontend-production.up.railway.app"));
+                ccfg.setAllowedOrigins(Arrays.asList(
+                    "http://localhost:3000",
+                    "https://ccfrontend-production.up.railway.app"
+                ));
                 ccfg.setAllowedMethods(Collections.singletonList("*"));
                 ccfg.setAllowCredentials(true);
                 ccfg.setAllowedHeaders(Collections.singletonList("*"));

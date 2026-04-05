@@ -81,6 +81,18 @@ function PostObj ({User, Content, Likes, Liked, id, books, commcount, CreatedAt,
             );
             deleter(true);
         }
+
+        const blockUser = async() => {
+            try {
+                const res = await axios.post (
+                `${API_URL}/profile/block/${User}`,
+                {}, { headers: { Authorization: `Bearer ${token}` } }
+                );
+                window.location.reload();
+            } catch (error) {
+                console.error("failed to Block user: ", error.response?.data || error.message);
+            }
+        }
         useEffect(()=>{
             if(!pop)
                 return;
@@ -100,7 +112,7 @@ function PostObj ({User, Content, Likes, Liked, id, books, commcount, CreatedAt,
                 <div className='Popup' style={{left:`${item.current.offsetLeft-70}px`,top:`${item.current.offsetTop+20}px`}}>
                     <button onClick={bookinteract}>{didBook?"Bookmarked":"Bookmark"}</button>
                     {username!=User?
-                    <button>Block</button> :
+                    <button onClick={blockUser}>Block</button> :
                     <button onClick={deletePost}>Delete</button>
                     }   
                 </div>

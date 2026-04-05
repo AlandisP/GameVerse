@@ -612,6 +612,17 @@ nav.sidebar div,
     cursor: pointer;
 }
 
+.pst-btn-posting{
+    padding: 10px;
+    color:white;
+    border: none;
+    border-radius: 10px;
+    font-weight: bold;
+    font-size: 1rem;
+    cursor: pointer;
+    background-color: slategray;
+}
+
 .pst-btn {
     background-color: #2069dd;
 }
