@@ -97,6 +97,7 @@ function ExplorePage() {
     const content = p?.text ?? p?.content ?? "";
     const likes = Number(p?.likes || 0);
     const currentUser = localStorage.getItem("username");
+
     const liked =
       p?.liked && typeof p.liked === "object"
         ? Boolean(p.liked[currentUser])
@@ -108,6 +109,12 @@ function ExplorePage() {
       Likes: likes,
       Liked: liked,
       id: p?.id,
+      commcount: p?.comments?.length ?? 0,
+      books: Boolean(p?.books),
+      CreatedAt: p?.createdAt,
+      CommunityName: p?.communityName,
+      media: p?.media ?? p?.mediaUrl ?? null,
+      type: p?.mediaType ?? p?.type ?? "",
     };
   };
 
@@ -142,12 +149,13 @@ function ExplorePage() {
 
   const getGameImageSrc = (g) => {
     const raw =
-      g?.image ||
       g?.header_image ||
-      g?.thumb ||
-      g?.capsule ||
-      g?.cover ||
+      g?.capsule_image ||
+      g?.capsule_imagev5 ||
+      g?.tiny_image ||
       g?.logoUrl ||
+      g?.image ||
+      g?.bannerUrl ||
       "";
 
     if (!raw) return "";
@@ -271,17 +279,7 @@ function ExplorePage() {
                     ? res.data.data
                     : [],
               }))
-              .catch((err) => {
-                console.error("Steam game search failed:", err);
-                console.error("Status:", err.response?.status);
-                console.error("Body:", err.response?.data);
-
-                setSearchError(
-                  `Steam search failed (${err.response?.status || "network error"})`,
-                );
-
-                return { type: "games", data: [] };
-              }),
+              .catch(() => ({ type: "users", data: [] })),
           );
         }
 
@@ -308,7 +306,6 @@ function ExplorePage() {
             axios
               .get(`${BASE_URL}/auth/steam/search-games`, {
                 params: { query: q, limit: 12 },
-                headers,
               })
               .then((res) => ({
                 type: "games",
@@ -316,6 +313,8 @@ function ExplorePage() {
               }))
               .catch((err) => {
                 console.error("Steam game search failed:", err);
+                console.error("Status:", err.response?.status);
+                console.error("Body:", err.response?.data);
                 return { type: "games", data: [] };
               }),
           );
@@ -558,7 +557,7 @@ function ExplorePage() {
                                 const name = getGameLabel(game);
                                 const href = getGameHref(game);
                                 const imageSrc = getGameImageSrc(game);
-                                const price = getGamePrice(game);
+                                const priceText = getGamePrice(game);
 
                                 return (
                                   <a
@@ -568,15 +567,15 @@ function ExplorePage() {
                                     rel="noreferrer"
                                     className="game-card"
                                   >
-                                    <div className="game-cover">
+                                    <div className="game-banner">
                                       {imageSrc ? (
                                         <img
                                           src={imageSrc}
                                           alt={name}
-                                          className="game-cover-img"
+                                          className="game-banner-img"
                                         />
                                       ) : (
-                                        <div className="game-cover-fallback">
+                                        <div className="game-banner-fallback">
                                           {name?.slice(0, 2)?.toUpperCase()}
                                         </div>
                                       )}
@@ -584,9 +583,9 @@ function ExplorePage() {
 
                                     <div className="game-info">
                                       <div className="game-name">{name}</div>
-                                      {price ? (
+                                      {priceText ? (
                                         <div className="game-price">
-                                          {price}
+                                          {priceText}
                                         </div>
                                       ) : (
                                         <div className="game-price game-price-muted">
