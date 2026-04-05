@@ -104,7 +104,7 @@ public class PostController {
         //     newPost.setmedia(medianame);
         // }
         //System.out.println("Test media: "+medianame);
-        postRepo.save(newPost);
+        // postRepo.save(newPost);
         return ResponseEntity.ok().body(newPost.getId());
         }
         catch (Exception e) {
