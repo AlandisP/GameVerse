@@ -67,6 +67,12 @@ public class UsersController {
     public User createUser(@RequestBody User user) {
         return repository.save(user);
     }
+    
+    @GetMapping("/exists/{username}")
+    public ResponseEntity<?> usernameExists(@PathVariable String username) {
+    boolean exists = repository.existsByUsername(username);
+    return ResponseEntity.ok(Map.of("exists", exists));
+}
 
     @GetMapping("/{id}")
     public User getUserById(@PathVariable String id) {
@@ -196,10 +202,5 @@ public ResponseEntity<?> changeUsername(@RequestBody Map<String, String> body, A
     return ResponseEntity.ok(Map.of("message", "Username updated successfully"));
 }
 
-    @GetMapping("/exists/{username}")
-    public ResponseEntity<?> userExist(Authentication auth, @PathVariable String username) {
-        boolean exists = repository.existsByUsername(username);
-        return ResponseEntity.ok(Map.of("exists", exists));
-    }
 
 }
