@@ -43,7 +43,7 @@ public class NotificationController {
             return ResponseEntity.badRequest().body("User doesnt exist");
         }
         Pageable page = PageRequest.of(0, 8);
-        return ResponseEntity.ok().body(notificationRepository.findByUserIdOrderByCreatedAtDesc(userId, page));
+        return ResponseEntity.ok().body(notificationRepository.findByUserIdOrderByCreatedAtDesc(userId));
     }
 
     @PostMapping("/markRead/{id}")
