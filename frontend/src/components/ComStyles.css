@@ -125,6 +125,7 @@
     padding: .8rem;
     border-radius: 10px;
     margin: .2rem;
+    min-width: 0;
 }
 
 .fcommunity {
@@ -164,15 +165,19 @@
     background-color: transparent;
     display: flex;
     flex-direction: row;
-    line-height: 1px;
+    line-height: normal;
     margin-bottom: .01rem;
 }
 
 .topbox-txt h3 {
-    font-size: clamp(0.95rem, 1rem, 1.35rem);
+    font-size: clamp(0.75rem, 1rem, 1.35rem);
     margin: 0;
     padding: 0;
-    display: flex;
+    text-overflow: ellipsis;
+    min-width: 0;
+    flex:1;
+    word-break: break-word;
+    overflow-wrap: break-word;
 }
 
 .count {

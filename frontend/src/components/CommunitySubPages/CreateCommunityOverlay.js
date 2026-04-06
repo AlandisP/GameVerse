@@ -79,7 +79,7 @@ function CreateCommunityOverlay({isOpen, onClose, onCommunityCreated}) {
                     </div>
                     <div className='comcontent'>
                         <h2 className='headers'>Community Name</h2>
-                        <input  className = 'inputs' placeholder='Enter the Community Name' onChange={handleNameChange}></input>
+                        <input  className = 'inputs' placeholder='Enter the Community Name' onChange={handleNameChange} maxLength="80"></input>
                         <h2 className='headers'>Community Description</h2>
                         <textarea  maxLength="225" rows='1' cols="50" className = 'inputs2' placeholder='Whats the goal of your Community?' onChange={handleDescriptionChange}></textarea>
                         <h2 className='headers'>Community Category</h2>

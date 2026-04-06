@@ -20,6 +20,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.GameVerse.GameVerse.model.Community;
+import com.GameVerse.GameVerse.model.CommunityMembership;
 import com.GameVerse.GameVerse.model.PartyFinder;
 import com.GameVerse.GameVerse.model.Relationship;
 import com.GameVerse.GameVerse.model.User;
@@ -186,6 +188,36 @@ public ResponseEntity<?> deleteAccount(@RequestBody Map<String, String> body, Au
             partyFinderRepo.deleteAllByCreatorId(userId);
         } else {
             party.removeMember(userId);
+        }
+    }
+
+        // Update follower/following counts for affected users
+    List<Relationship> following = relationshipRepository.findAllByFollowerId(userId);
+    List<Relationship> followers = relationshipRepository.findAllByFollowingId(userId);
+
+    for (Relationship r : following) {
+        User followed = repository.findById(r.getFollowingId()).orElse(null);
+        if (followed != null) {
+            followed.setFollowerCount(Math.max(0, followed.getFollowerCount() - 1));
+            repository.save(followed);
+        }
+    }
+
+    for (Relationship r : followers) {
+        User follower = repository.findById(r.getFollowerId()).orElse(null);
+        if (follower != null) {
+            follower.setFollowingCount(Math.max(0, follower.getFollowingCount() - 1));
+            repository.save(follower);
+        }
+    }
+
+    // Update community member counts
+    List<CommunityMembership> memberships = communityMembershipRepository.findAllByUserId(userId);
+    for (CommunityMembership membership : memberships) {
+        Community community = communityRepository.findById(membership.getCommunityId()).orElse(null);
+        if (community != null) {
+            community.setMemberCount(Math.max(0, community.getMemberCount() - 1));
+            communityRepository.save(community);
         }
     }
     blockedRelationshipRepository.deleteAllByBlockedId(userId);

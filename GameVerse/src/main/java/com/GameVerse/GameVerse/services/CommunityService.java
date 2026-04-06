@@ -210,6 +210,9 @@ public class CommunityService {
         cmo.changeMemberType(MemberType.MODERATOR); // makes the current owner a moderator
         cMembership.changeMemberType(MemberType.OWNER); // makes the requested user the new owner
         community.setOwnerId(userId);
+        if(!community.getModeratorIds().contains(userId)) {
+            community.addModerator(userId);
+        }
         cr.save(cMembership);
         cr.save(cmo);
         communityRepository.save(community);

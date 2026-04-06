@@ -162,7 +162,7 @@ function CommunitiesPage() {
                         {userCommunities.map((community) => (
                             <div className='minicombox' key={community.id} onClick={() => navigate(`/communities/${community.name}`)}>
                                 <div className='placeholderbox'>
-                                    <img src={community.pfp}  alt='comimg'className='small-holder'/>
+                                    {community.pfp && <img src={community.pfp}  alt='comimg'className='small-holder'/>}
                                 </div>
                                 <div className='minicol'>
                                     <h3>{community.name}</h3>

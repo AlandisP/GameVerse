@@ -28,6 +28,7 @@ public class Community {
         this.category = category;
         memberCount = 1;
         postCount = 0;
+        moderatorIds.add(ownerId);
     }
 
     public String getId() {
