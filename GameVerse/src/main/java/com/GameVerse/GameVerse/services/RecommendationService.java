@@ -42,7 +42,7 @@ public class RecommendationService {
         List<User> results = new ArrayList<>();
 
         // 1. Mutuals' follows
-        if (results.size() < 10) {
+        if (results.size() < 7) {
             List<String> followerIds = mongoTemplate.find(
                 new Query(Criteria.where("followingId").is(userId)),
                 Relationship.class
@@ -75,7 +75,7 @@ public class RecommendationService {
         }
 
         // 2. Same platform
-        if (results.size() < 10 && currentUser.getPlatform() != null) {
+        if (results.size() < 7 && currentUser.getPlatform() != null) {
             List<User> samePlatform = userRepository.findAllByPlatform(currentUser.getPlatform())
                 .stream()
                 .filter(u -> !exclude.contains(u.getId()))
@@ -86,7 +86,7 @@ public class RecommendationService {
         }
 
         // 3. Popular users as filler
-        if (results.size() < 10) {
+        if (results.size() < 7) {
             List<User> popular = mongoTemplate.find(
                 new Query(Criteria.where("_id").nin(exclude))
                     .with(Sort.by(Sort.Direction.DESC, "followerCount"))
