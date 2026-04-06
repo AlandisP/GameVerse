@@ -67,7 +67,7 @@ public class RecommendationService {
                  .map(r -> userRepository.findById(r.getFollowingId()).orElse(null))
                  .filter(Objects::nonNull)
                  .distinct()
-                 .limit(10 - results.size())
+                 .limit(7 - results.size())
                  .toList();
                 results.addAll(mutualRecs);
                 mutualRecs.forEach(u -> exclude.add(u.getId()));
@@ -79,7 +79,7 @@ public class RecommendationService {
             List<User> samePlatform = userRepository.findAllByPlatform(currentUser.getPlatform())
                 .stream()
                 .filter(u -> !exclude.contains(u.getId()))
-                .limit(10 - results.size())
+                .limit(7 - results.size())
                 .toList();
             results.addAll(samePlatform);
             samePlatform.forEach(u -> exclude.add(u.getId()));
@@ -90,7 +90,7 @@ public class RecommendationService {
             List<User> popular = mongoTemplate.find(
                 new Query(Criteria.where("_id").nin(exclude))
                     .with(Sort.by(Sort.Direction.DESC, "followerCount"))
-                    .limit(10 - results.size()),
+                    .limit(7 - results.size()),
                 User.class
             );
             results.addAll(popular);
