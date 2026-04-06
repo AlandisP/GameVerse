@@ -117,7 +117,7 @@ function SettingsPage() {
         setLoadingBookmarks(true);
         setShowBookmarksModal(true);
         try {
-            // Step 1: get list of bookmarked post IDs
+            // Step 1: get bookmark IDs
             const res = await axios.get(`${API_URL}/post/getbooks`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
@@ -129,17 +129,16 @@ function SettingsPage() {
                 return;
             }
 
-            // Step 2: fetch each post, injecting _bookmarkId so removebookmark always has the right ID
-            const postDetails = await Promise.all(
-                ids.map(id =>
-                    axios.get(`${API_URL}/post/id/${id}`, {
-                        headers: { Authorization: `Bearer ${token}` }
-                    })
-                    .then(r => ({ ...r.data, _bookmarkId: id }))
-                    .catch(() => null)
-                )
-            );
-            setBookmarks(postDetails.filter(p => p !== null));
+            // Step 2: get ALL posts and filter to only bookmarked ones
+            const allPostsRes = await axios.get(`${API_URL}/post/getposts`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            const allPosts = allPostsRes.data || [];
+            const bookmarked = allPosts
+                .filter(p => ids.some(id => id == p.id))
+                .map(p => ({ ...p, _bookmarkId: p.id }));
+
+            setBookmarks(bookmarked);
         } catch (err) {
             setError('Failed to load bookmarks');
         } finally {
@@ -147,10 +146,10 @@ function SettingsPage() {
         }
     };
 
-    // Called by PostObj when user unbookmarks — mirrors how HomePage uses setbooks
+    // FIXED: loose equality to handle string/number ID mismatches
     const handleBookmarkChange = (removedId) => {
-        setBookmarkIds(prev => prev.filter(id => id !== removedId));
-        setBookmarks(prev => prev.filter(p => (p._bookmarkId ?? p.id) !== removedId));
+        setBookmarkIds(prev => prev.filter(id => id != removedId));
+        setBookmarks(prev => prev.filter(p => (p._bookmarkId ?? p.id) != removedId));
     };
 
     const parselike = (post) => {
@@ -328,7 +327,7 @@ function SettingsPage() {
                     </div>
                 )}
 
-                {/* Bookmarks Modal — uses PostObj just like HomePage */}
+                {/* Bookmarks Modal */}
                 {showBookmarksModal && (
                     <div style={modalOverlayStyle} onClick={closeAllModals}>
                         <div style={bookmarksModalStyle} onClick={(e) => e.stopPropagation()}>
@@ -356,13 +355,11 @@ function SettingsPage() {
                                                 media={post.media}
                                                 type={post.mediaType}
                                                 setbooks={(updater) => {
-                                                    // Support both function and direct value like HomePage's setbooks
                                                     const newIds = typeof updater === 'function'
                                                         ? updater(bookmarkIds)
                                                         : updater;
-                                                    // Find which ID was removed
-                                                    const removed = bookmarkIds.find(id => !newIds.includes(id));
-                                                    if (removed) handleBookmarkChange(removed);
+                                                    const removed = bookmarkIds.find(id => !newIds.some(nid => nid == id));
+                                                    if (removed !== undefined) handleBookmarkChange(removed);
                                                 }}
                                             />
                                         );
