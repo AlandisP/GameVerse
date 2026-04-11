@@ -72,6 +72,9 @@ public class PartyController {
         if(req.name.equals("")) {
             return ResponseEntity.badRequest().body("Party needs a name");
         }
+        if(req.time < 0 || req.time > 999) {
+             return ResponseEntity.badRequest().body("You cant set a timer less than 0 or higher than 1000");
+        }
         PartyFinder party = new PartyFinder(userId, req.name, req.description, req.maxMembers, req.categories);
         party.startTimer(req.time);
         partyRepository.save(party);
@@ -203,6 +206,9 @@ public class PartyController {
         }
         if(party.getMembers().size() > req.maxMembers) {
             return ResponseEntity.badRequest().body("You cannot set the members less than whats in the party");
+        }
+        if(req.time < 0 || req.time > 999) {
+             return ResponseEntity.badRequest().body("You cant set a timer less than 0");
         }
         party.setName(req.name);
         party.setDescription(req.description);
