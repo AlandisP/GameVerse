@@ -46,11 +46,12 @@ function HomePage() {
                 `${API_URL}/post/makepost`,formdat,
                 { headers: { Authorization: `Bearer ${token}` },timeout:0 }
             );
+            const now = new Date().toISOString();
             setposts(posts => {
                 const newArray = [...posts]; 
                 const mediaurl = uploadedFile!=null ? URL.createObjectURL(uploadedFile) : null;
                 const mediatypefile = uploadedFile!=null ? uploadedFile.type : "";
-                newArray.unshift({user:username,text:postbod,likes:0,liked:{},id:pid.data,comments:[],media:mediaurl,mediaType:mediatypefile, createdAt:shortTimeAgo(pid.createdAt)}); 
+                newArray.unshift({user:username,text:postbod,likes:0,liked:{},id:pid.data,comments:[],media:mediaurl,mediaType:mediatypefile, createdAt:now}); 
                 return newArray; 
             });
             uploadFile(null);
