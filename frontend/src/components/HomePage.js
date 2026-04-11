@@ -8,6 +8,7 @@ import PostObj from './Post'
 import API_URL from '../config/api';
 import clip from '../images/PaperClip.png'
 import UploadBox from './MediaUpload';
+import { shortTimeAgo } from '../utils/shortTimeAgo'
 
 const urlprefab = "https://gameverse-media-026955879175-us-east-2-an.s3.us-east-2.amazonaws.com/";
 
@@ -49,7 +50,7 @@ function HomePage() {
                 const newArray = [...posts]; 
                 const mediaurl = uploadedFile!=null ? URL.createObjectURL(uploadedFile) : null;
                 const mediatypefile = uploadedFile!=null ? uploadedFile.type : "";
-                newArray.unshift({user:username,text:postbod,likes:0,liked:{},id:pid.data,comments:[],media:mediaurl,mediaType:mediatypefile}); 
+                newArray.unshift({user:username,text:postbod,likes:0,liked:{},id:pid.data,comments:[],media:mediaurl,mediaType:mediatypefile, createdAt:shortTimeAgo(pid.createdAt)}); 
                 return newArray; 
             });
             uploadFile(null);

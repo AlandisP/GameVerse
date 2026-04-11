@@ -213,6 +213,10 @@ public class PostController {
         Post current = postRepo.findById(content.id).get();
         current.addcomment(username,content.content);
         postRepo.save(current);
+        if(!current.getUser().equals(username)) {
+             String message = username + " has commented on your post.";
+            notificationService.createNotification(type, message, userRep.findByUsernameIgnoreCase(current.getUser()).getId());
+        }
         return ResponseEntity.ok().body(true);
     }
 
