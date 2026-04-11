@@ -13,8 +13,10 @@ import img4 from "../images/gen4.png";
 import img5 from "../images/gen5.png";
 import img6 from "../images/gen6.png";
 import img7 from "../images/gen7.png";
+import dayjs from "dayjs";
+import { shortTimeUntil } from '../utils/shortTimeUntil';
 
-function Party({Name, Description, Categories, Count, id, Members, Status, CreatorId, refresh, refreshCurrent, Time}) {
+function Party({Name, Description, Categories, Count, id, Members, Status, CreatorId, refresh, refreshCurrent, Time, Timer, TimerEndsAt}) {
     const token = localStorage.getItem("token");
     const userId = localStorage.getItem("userId");
     const [error, setError] = useState("");
@@ -23,7 +25,7 @@ function Party({Name, Description, Categories, Count, id, Members, Status, Creat
     const isMember = Members.includes(userId);
     const [isOpen, setIsOpen] = useState(false);
     const [isOpen2, setIsOpen2] = useState(false);
-    const [image, setImage] = useState('');
+    const [timeLeft, setTimeLeft] = useState(Timer);
     const num = Math.floor(Math.random()*(7-1 +1)) +1;
     const img = num==1?img1:num===2?img2:num===3?img3:num===4?img4:num===5?img5:num===6?img6:img7;
     const cats = categories.map((category,index) =>(
@@ -57,6 +59,7 @@ function Party({Name, Description, Categories, Count, id, Members, Status, Creat
         }
     };
 
+
     const handleDeleteParty = async () => {
         try {
             await axios.delete(
@@ -85,6 +88,26 @@ function Party({Name, Description, Categories, Count, id, Members, Status, Creat
             setError({ text: error.response?.data, id: Date.now() });
         }
     }
+
+    useEffect(() => {
+        if (!TimerEndsAt || Status === 'ACTIVE') return;
+
+        const msLeft = dayjs(TimerEndsAt).diff(dayjs());
+        if (msLeft <= 0) return;
+
+        const timeout = setTimeout(async () => {
+            await axios.put(
+                `${API_URL}/parties/${id}/activate`,
+                {},
+                { headers: { Authorization: `Bearer ${token}` } }
+            );
+            refresh();
+            refreshCurrent();
+        }, msLeft);
+
+        return () => clearTimeout(timeout);
+    }, [TimerEndsAt, Status]);
+
     return ( 
         <>
             <ErrorMessage Message={error} />
@@ -102,6 +125,7 @@ function Party({Name, Description, Categories, Count, id, Members, Status, Creat
                 </div>
                 <div className='right'>
                     <div className="right-right">
+                        <p>{timeLeft}</p>
                         <p className='active'>{transformString(Status)}</p>
                         <p className="time-ago">{Time}</p>
                     </div>

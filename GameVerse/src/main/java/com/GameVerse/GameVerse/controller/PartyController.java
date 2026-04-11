@@ -1,5 +1,6 @@
 package com.GameVerse.GameVerse.controller;
 
+import java.time.Instant;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -22,6 +23,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.GameVerse.GameVerse.model.Category;
 import com.GameVerse.GameVerse.model.PartyFinder;
+import com.GameVerse.GameVerse.model.Status;
 import com.GameVerse.GameVerse.model.User;
 import com.GameVerse.GameVerse.repository.PartyFinderRepository;
 import com.GameVerse.GameVerse.repository.UserRepository;
@@ -71,6 +73,7 @@ public class PartyController {
             return ResponseEntity.badRequest().body("Party needs a name");
         }
         PartyFinder party = new PartyFinder(userId, req.name, req.description, req.maxMembers, req.categories);
+        party.startTimer(req.time);
         partyRepository.save(party);
         return ResponseEntity.ok().body(party.getId());   
     }
@@ -205,8 +208,19 @@ public class PartyController {
         party.setDescription(req.description);
         party.setCategories(req.categories);
         party.setMaxMembers(req.maxMembers);
+        party.setTime(Instant.now());
+        party.startTimer(req.time);
+        party.setStatus(Status.WAITING);
         partyRepository.save(party);
         return ResponseEntity.ok().body(party.getId());   
+    }
+
+    @PutMapping("/{id}/activate")
+    public ResponseEntity<?> activateParty(@PathVariable String id) {
+        PartyFinder party = partyRepository.findById(id).orElseThrow();
+        party.setStatus(Status.ACTIVE);
+        partyRepository.save(party);
+        return ResponseEntity.ok("Party is now active");
     }
 
 
@@ -221,6 +235,7 @@ public class PartyController {
         public String description;
         public int maxMembers;
         public List<Category> categories;
+        public int time;
 
     }
 

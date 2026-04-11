@@ -62,10 +62,10 @@ function CommunityDisplay({Name, Members, Refresh, PFP, Banner}) {
     return(
         <div className='mycomblock'>
             <div className='emptybox'>
-                <img src={Banner} alt='combanner'/>
+                {Banner!==null && <img src={Banner} alt='combanner'/>}
             </div>
             <div className='emptybox2'>
-                <img src={PFP} alt='combanner'/>
+                {PFP!==null && <img src={PFP} alt='combanner'/>}
             </div>
             <h2 className='mytitle'>{Name}</h2>
             <p>{Members} Members</p>

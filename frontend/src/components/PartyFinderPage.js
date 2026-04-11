@@ -9,6 +9,7 @@ import API_URL from '../config/api';
 import axios from 'axios';
 import Party from '../components/Party';
 import { shortTimeAgo } from '../utils/shortTimeAgo'
+import { shortTimeUntil } from '../utils/shortTimeUntil';
 
 function PartyFinderPage() {
     const username = localStorage.getItem('username');
@@ -70,7 +71,7 @@ function PartyFinderPage() {
     const ReadParties = () => {
         const filtered = currParty ? parties.filter(p => p.id !== currParty.id):parties;
         const items = filtered.map((party, ind) => (
-            <Party key={ind} Name={party.name} Description={party.description} Categories={party.categories} Count={party.maxMembers} Members={party.members} Status={party.status} CreatorId={party.creatorId} id={party.id} refresh={getParties} refreshCurrent={GetCurrentParty} Time={shortTimeAgo(party.createdAt)}/>
+            <Party key={ind} Name={party.name} Description={party.description} Categories={party.categories} Count={party.maxMembers} Members={party.members} Status={party.status} CreatorId={party.creatorId} id={party.id} refresh={getParties} refreshCurrent={GetCurrentParty} Time={shortTimeAgo(party.createdAt)} Timer={shortTimeUntil(party.timeEndsAt)} TimerEndsAt={party.timeEndsAt}/>
         ));
         return(
             <div>{items}</div>
@@ -116,7 +117,9 @@ function PartyFinderPage() {
                     id={currParty.id}
                     refresh={getParties}
                     refreshCurrent={GetCurrentParty}
-                    Time={shortTimeAgo(currParty.createdAt)}/>
+                    Time={shortTimeAgo(currParty.createdAt)}
+                    Timer={shortTimeUntil(currParty.timeEndsAt)}
+                    TimerEndsAt={currParty.timeEndsAt}/>
             </div>
         );
     }

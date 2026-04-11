@@ -22,6 +22,7 @@ public class PartyFinder {
     private Status status;
     private List<Category> categories;
     private Instant createdAt;
+    private Instant timeEndsAt;
 
     public PartyFinder() {
 
@@ -122,11 +123,12 @@ public class PartyFinder {
         this.createdAt = time;
     }
 
+    public void startTimer(int durationSeconds) {
+        this.timeEndsAt = Instant.now().plusSeconds(durationSeconds);
+    }
 
-
-    
-    
-
-    
+    public Instant getTimeEndsAt() { 
+        return timeEndsAt; 
+    } 
 }
 

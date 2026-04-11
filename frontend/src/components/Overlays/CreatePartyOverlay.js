@@ -20,6 +20,7 @@ function CreatePartyOverlay({isOpen, onClose, onPartyCreated}) {
     const [partyDescription, setDescription] = useState("");
     const [number, setNumber] = useState('');
     const [error, setError] = useState("");
+    const [time, setTime] = useState('');
     
 
     
@@ -59,11 +60,15 @@ function CreatePartyOverlay({isOpen, onClose, onPartyCreated}) {
         setNumber(e.target.value);
     }
 
+    const handleTimeChange = (e) => {
+        setTime(e.target.value);
+    }
+
 
     const handleCreate = async() => {
         try {
             const result = await axios.post(
-            `${API_URL}/parties/createParty`,{name: partyName, description: partyDescription, maxMembers: parseInt(number), categories: items},
+            `${API_URL}/parties/createParty`,{name: partyName, description: partyDescription, maxMembers: parseInt(number), categories: items, time: parseInt(time)},
             { headers: { Authorization: `Bearer ${token}` } }
             );
             setPartyName('');
@@ -73,7 +78,7 @@ function CreatePartyOverlay({isOpen, onClose, onPartyCreated}) {
             onPartyCreated();
             
         } catch (error) {
-            console.error("Party Creating failed:", error.response?.data || error.message);
+            console.error("Party Creation failed:", error.response?.data || error.message);
             setError({ text: error.response?.data, id: Date.now() });
         }
     };
@@ -123,9 +128,11 @@ function CreatePartyOverlay({isOpen, onClose, onPartyCreated}) {
                         <h2 className='headers'>Party Name</h2>
                         <input className='inputs' placeholder='Enter Party Name' onChange={handleNameChange}></input>
                         <h2 className='headers'>Description</h2>
-                        <input className='inputs' placeholder='Enter Party Description' onChange={handleDescriptionChange}></input>
+                        <input className='inputs' placeholder='Enter Party Description' onChange={handleDescriptionChange} maxLength={200}></input>
                         <h2 className='headers' type="number">Number of Members</h2>
-                        <input className='inputs' placeholder='Enter Number of Members' onChange={handleNumberChange}></input>
+                        <input type='number' className='inputs' placeholder='Enter Number of Members' onChange={handleNumberChange}></input>
+                        <h2 className='headers' type="number">Timer(Seconds)</h2>
+                        <input type='number' className='inputs' placeholder='Enter time until party is active' onChange={handleTimeChange}></input>
                         <h2 className='headers'>Select Categories</h2>
                         <div className='modes'>
                             <p className='subs'>Genre</p>

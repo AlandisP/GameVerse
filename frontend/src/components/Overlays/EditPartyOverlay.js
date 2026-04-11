@@ -19,6 +19,7 @@ function EditPartyOverlay({isOpen, onClose, Name, Description, Categories, Count
     const [partyDescription, setDescription] = useState(Description);
     const [number, setNumber] = useState(Count);
     const [error, setError] = useState("");
+    const [time, setTime] = useState('');
 
     const handleSelectCategory = (category) => {
         if (items.includes(category)) {
@@ -28,7 +29,6 @@ function EditPartyOverlay({isOpen, onClose, Name, Description, Categories, Count
         }
     };
     useEffect(() => {
-        console.log("categories prop:",Categories);
         const getCategories = async () => {
             const result = await axios.get(
                 `${API_URL}/parties/categories`,
@@ -56,11 +56,16 @@ function EditPartyOverlay({isOpen, onClose, Name, Description, Categories, Count
         setNumber(e.target.value);
     }
 
+    const handleTimeChange = (e) => {
+        setTime(e.target.value);
+    }
+
+
 
     const handleEdit = async() => {
         try {
             const result = await axios.post(
-            `${API_URL}/parties/${Name}/editParty`,{name: partyName, description: partyDescription, maxMembers: parseInt(number), categories: items},
+            `${API_URL}/parties/${Name}/editParty`,{name: partyName, description: partyDescription, maxMembers: parseInt(number), categories: items, time: parseInt(time)},
             { headers: { Authorization: `Bearer ${token}` } }
             );
             setPartyName('');
@@ -123,6 +128,8 @@ function EditPartyOverlay({isOpen, onClose, Name, Description, Categories, Count
                         <input className='inputs' value={partyDescription} placeholder='Enter Party Description' onChange={handleDescriptionChange}></input>
                         <h2 className='headers' type="number" placeholder='Enter Number of Members'>Number of Members</h2>
                         <input className='inputs' value={number} onChange={handleNumberChange}></input>
+                         <h2 className='headers' type="number">Timer(Seconds)</h2>
+                        <input type='number' className='inputs' placeholder='Enter time until party is active' onChange={handleTimeChange}></input>
                         <h2 className='headers'>Select Categories</h2>
                         <div className='modes'>
                             <p className='subs'>Genre</p>
