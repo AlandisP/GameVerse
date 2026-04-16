@@ -1,0 +1,41 @@
+.splash-screen {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(circle at top, #1f2937, #0b0f19 70%);
+  color: white;
+  text-align: center;
+}
+
+.splash-logo {
+  width: 180px;
+  height: auto;
+  margin-bottom: 20px;
+  animation: float 1.8s ease-in-out infinite;
+}
+
+.splash-title {
+  font-size: 3rem;
+  margin: 0;
+  letter-spacing: 1px;
+}
+
+.splash-subtitle {
+  margin-top: 10px;
+  color: #cbd5e1;
+  font-size: 1rem;
+}
+
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  50% {
+    transform: translateY(-10px);
+    opacity: 0.9;
+  }
+}
