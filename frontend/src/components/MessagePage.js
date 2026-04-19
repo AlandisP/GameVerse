@@ -1,5 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
-import { useParams } from "react-router-dom";
+import React, { useEffect, useMemo, useState } from "react";
 import axios from "axios";
 import NavBar from "./NavBar";
 import logo from "../images/search.png";
@@ -38,6 +37,15 @@ function getConversationDisplayName(convo, me) {
   if (!convo) return "";
   if (convo.type === "GROUP") return convo.title || "Untitled Group";
   return getOtherUser(convo.participants, me);
+}
+
+function getConversationHeaderText(convo, me) {
+  if (!convo) return "No conversation selected";
+  if (convo.type === "GROUP") {
+    return `Group: ${convo.title || "Untitled Group"}`;
+  }
+  const otherUser = getOtherUser(convo.participants, me);
+  return otherUser ? `Chatting with: ${otherUser}` : "Direct message";
 }
 
 function getGroupMembers(convo) {
@@ -138,21 +146,12 @@ async function ensureConversationDoc({
       participants,
       type,
       title: type === "GROUP" ? title : "",
-      updatedAt: serverTimestamp(),
-      lastMessageText: "",
-      lastMessageAt: null,
-      lastMessageSender: "",
-      lastMessageId: "",
-      lastMessage: "",
-      lastSender: "",
     },
     { merge: true }
   );
 }
 
 function MessagePage() {
-  const { receiverUsername } = useParams();
-
   const sender = localStorage.getItem("username");
 
   const [messageInput, setMessageInput] = useState("");
@@ -178,10 +177,6 @@ function MessagePage() {
 
   const [showMembers, setShowMembers] = useState(false);
 
-  const messagesUnsubRef = useRef(null);
-  const inboxUnsubRef = useRef(null);
-  const openingRef = useRef(false);
-
   const activeConversation = useMemo(() => {
     return conversations.find((c) => c.id === activeConversationId) || null;
   }, [conversations, activeConversationId]);
@@ -190,12 +185,35 @@ function MessagePage() {
     setShowMembers(false);
   }, [activeConversationId]);
 
+  // Startup sync: make sure backend conversations exist in Firestore,
+  // so the Firestore inbox listener can rebuild the sidebar on refresh/startup.
   useEffect(() => {
-    if (!sender || typeof sender !== "string" || !sender.trim()) return;
+    async function syncBackendConversationsToFirestore() {
+      if (!sender || typeof sender !== "string" || !sender.trim()) return;
 
-    if (inboxUnsubRef.current) {
-      inboxUnsubRef.current();
-      inboxUnsubRef.current = null;
+      try {
+        const backendConversations = await fetchBackendConversations(sender);
+
+        for (const convo of backendConversations) {
+          await ensureConversationDoc({
+            convoId: convo.id,
+            participants: convo.participants || [],
+            type: convo.type || "DIRECT",
+            title: convo.title || "",
+          });
+        }
+      } catch (err) {
+        console.error("Failed to sync backend conversations:", err);
+      }
+    }
+
+    syncBackendConversationsToFirestore();
+  }, [sender]);
+
+  useEffect(() => {
+    if (!sender || typeof sender !== "string" || !sender.trim()) {
+      setConversations([]);
+      return undefined;
     }
 
     const inboxQuery = query(
@@ -204,25 +222,22 @@ function MessagePage() {
       orderBy("updatedAt", "desc")
     );
 
-    inboxUnsubRef.current = onSnapshot(
+    const unsubscribe = onSnapshot(
       inboxQuery,
       (snapshot) => {
         const list = snapshot.docs.map((d) => ({
           id: d.id,
           ...d.data(),
         }));
-
         setConversations(list);
       },
-      (err) => console.error("onSnapshot inbox error:", err)
+      (err) => {
+        console.error("onSnapshot inbox error:", err);
+        setConversations([]);
+      }
     );
 
-    return () => {
-      if (inboxUnsubRef.current) {
-        inboxUnsubRef.current();
-        inboxUnsubRef.current = null;
-      }
-    };
+    return () => unsubscribe();
   }, [sender]);
 
   const filteredConversations = useMemo(() => {
@@ -236,18 +251,13 @@ function MessagePage() {
   }, [conversations, search, sender]);
 
   useEffect(() => {
-    if (messagesUnsubRef.current) {
-      messagesUnsubRef.current();
-      messagesUnsubRef.current = null;
-    }
-
     if (
       !activeConversationId ||
       typeof activeConversationId !== "string" ||
       !activeConversationId.trim()
     ) {
       setMessages([]);
-      return;
+      return undefined;
     }
 
     const convId = activeConversationId.trim();
@@ -257,31 +267,22 @@ function MessagePage() {
       orderBy("timestamp", "asc")
     );
 
-    const timeout = setTimeout(() => {
-      messagesUnsubRef.current = onSnapshot(
-        q,
-        (snapshot) => {
-          const list = snapshot.docs.map((d) => ({
-            id: d.id,
-            ...d.data(),
-          }));
-          setMessages(list);
-        },
-        (err) => {
-          console.error("onSnapshot messages error:", err);
-          setMessages([]);
-        }
-      );
-    }, 0);
-
-    return () => {
-      clearTimeout(timeout);
-
-      if (messagesUnsubRef.current) {
-        messagesUnsubRef.current();
-        messagesUnsubRef.current = null;
+    const unsubscribe = onSnapshot(
+      q,
+      (snapshot) => {
+        const list = snapshot.docs.map((d) => ({
+          id: d.id,
+          ...d.data(),
+        }));
+        setMessages(list);
+      },
+      (err) => {
+        console.error("onSnapshot messages error:", err);
+        setMessages([]);
       }
-    };
+    );
+
+    return () => unsubscribe();
   }, [activeConversationId]);
 
   async function recomputeConversationLastMessage(convoId) {
@@ -550,6 +551,7 @@ function MessagePage() {
         lastMessageId: "",
         lastMessage: "",
         lastSender: "",
+        updatedAt: null,
       };
 
       await ensureConversationDoc({
@@ -862,11 +864,13 @@ function MessagePage() {
           <div style={{ padding: "20px" }}>
             <div
               style={{
-                backgroundColor: "white",
-                borderRadius: "25px",
+                backgroundColor: "#f5f5f5",
+                borderRadius: "14px",
                 padding: "10px 15px",
                 display: "flex",
                 alignItems: "center",
+                border: "2px solid #cfcfcf",
+                boxShadow: "0 1px 4px rgba(0,0,0,0.15)",
               }}
             >
               <img
@@ -876,51 +880,70 @@ function MessagePage() {
               />
               <input
                 type="text"
-                placeholder="Search"
+                placeholder="Search conversations"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                style={{ border: "none", outline: "none", width: "100%" }}
+                style={{
+                  border: "none",
+                  outline: "none",
+                  width: "100%",
+                  backgroundColor: "transparent",
+                  color: "#111",
+                  fontWeight: 500,
+                }}
               />
             </div>
           </div>
 
           <div style={{ overflowY: "auto", padding: "0 10px 20px 10px" }}>
-            {filteredConversations.map((c) => {
-              const displayName = getConversationDisplayName(c, sender);
-              const isActive = c.id === activeConversationId;
-              const preview = getConversationPreviewText(c);
+            {filteredConversations.length === 0 ? (
+              <div
+                style={{
+                  color: "#bdbdbd",
+                  padding: "0 16px",
+                  fontSize: "0.95rem",
+                }}
+              >
+                No conversations yet.
+              </div>
+            ) : (
+              filteredConversations.map((c) => {
+                const displayName = getConversationDisplayName(c, sender);
+                const isActive = c.id === activeConversationId;
+                const preview = getConversationPreviewText(c);
 
-              return (
-                <button
-                  key={c.id}
-                  onClick={() => openConversation(c)}
-                  style={{
-                    width: "100%",
-                    textAlign: "left",
-                    padding: "12px 14px",
-                    marginBottom: "8px",
-                    borderRadius: "12px",
-                    border: isActive ? "1px solid #058BFE" : "1px solid #444",
-                    backgroundColor: isActive ? "#2b3a4a" : "#2f2f2f",
-                    color: "white",
-                    cursor: "pointer",
-                  }}
-                >
-                  <div style={{ fontWeight: 700 }}>{displayName}</div>
-                  <div
+                return (
+                  <button
+                    key={c.id}
+                    onClick={() => openConversation(c)}
                     style={{
-                      color: "#bdbdbd",
-                      fontSize: "0.9rem",
-                      overflow: "hidden",
-                      textOverflow: "ellipsis",
-                      whiteSpace: "nowrap",
+                      width: "100%",
+                      textAlign: "left",
+                      padding: "12px 14px",
+                      marginBottom: "8px",
+                      borderRadius: "12px",
+                      border: isActive ? "1px solid #058BFE" : "1px solid #444",
+                      backgroundColor: isActive ? "#2b3a4a" : "#2f2f2f",
+                      color: "white",
+                      cursor: "pointer",
                     }}
                   >
-                    {preview || "No messages yet."}
-                  </div>
-                </button>
-              );
-            })}
+                    <div style={{ fontWeight: 700 }}>{displayName}</div>
+                    <div
+                      style={{
+                        color: "#bdbdbd",
+                        fontSize: "0.9rem",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      {preview || "No messages yet."}
+                    </div>
+                  </button>
+                );
+              })
+            )}
           </div>
         </div>
 
@@ -944,10 +967,21 @@ function MessagePage() {
               position: "relative",
             }}
           >
-            <div style={{ fontWeight: 700 }}>
-              {activeConversation
-                ? getConversationDisplayName(activeConversation, sender)
-                : "Select a conversation"}
+            <div>
+              <div style={{ fontWeight: 700, fontSize: "1rem" }}>
+                {getConversationHeaderText(activeConversation, sender)}
+              </div>
+              {!activeConversation ? (
+                <div
+                  style={{
+                    color: "#bdbdbd",
+                    fontSize: "0.9rem",
+                    marginTop: "4px",
+                  }}
+                >
+                  Choose a chat from the left to start messaging.
+                </div>
+              ) : null}
             </div>
 
             {activeConversation?.type === "GROUP" ? (
@@ -1223,7 +1257,7 @@ function MessagePage() {
               placeholder={
                 activeConversationId
                   ? "Type a message..."
-                  : "Select a conversation..."
+                  : "Choose a chat to start messaging..."
               }
               disabled={!activeConversationId}
               onKeyDown={(e) => {
