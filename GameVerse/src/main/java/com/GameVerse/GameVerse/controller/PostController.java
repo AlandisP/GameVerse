@@ -138,6 +138,9 @@ public class PostController {
                     s3serv.deleteMedia(post.getmedia());
                 postRepo.delete(post);
             }
+            if(post.getmedia()!=null){
+                s3serv.deleteMedia(post.getmedia());
+            }
         return ResponseEntity.ok().body("");
         }
         catch (Exception e) {
