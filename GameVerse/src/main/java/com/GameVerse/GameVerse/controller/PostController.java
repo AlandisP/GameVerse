@@ -154,19 +154,18 @@ public class PostController {
     public ResponseEntity<List<Post>> getapost(Authentication auth){
         String userId = (String) auth.getPrincipal();
         // users that the auth has blocked
-        List<String> blockedIds = getBlockedIds(userId);
+        //List<String> blockedIds = getBlockedIds(userId);
         // list of users that auth is blocked by
-        List<String> nopes = blockedService.getBlockedListIds(userId);
+        //List<String> nopes = blockedService.getBlockedListIds(userId);
         //New method attempt
-        HashSet<String> blockedIdmap = new HashSet<String>(blockedIds);
-        HashSet<String> nopesmap = new HashSet<String>(nopes);
+        HashSet<String> blocks = new HashSet<String>(getBlockedIds(userId));
+        blocks.addAll(blockedService.getBlockedListIds(userId));
         List<Post> result = postRepo.findAll()
             .stream()
             .filter(post -> {
                 User poster = userRep.findByUsernameIgnoreCase(post.getUser());
                 return poster != null 
-                    && !blockedIdmap.contains(poster.getId())
-                    && !nopesmap.contains(poster.getId());
+                    && !blocks.contains(poster.getId());
             })
             .collect(Collectors.toList());
 
