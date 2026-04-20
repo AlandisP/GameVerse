@@ -74,7 +74,7 @@ function HomePage() {
             { headers: { Authorization: `Bearer ${token}` } });
         setbooks(bookmarks.data);
         setposts(result.data);
-        console.log(result.data);
+        //console.log(result.data);
         //setbooks(bookmarks.data);
     }
 

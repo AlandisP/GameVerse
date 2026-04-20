@@ -91,6 +91,7 @@ function CommunitiesPage() {
     const handleCreateCommunity = () => {
         setIsOpen(!isOpen);
         getCommunities();
+        getUserCommunities();
     }
 
     const handleCloseCommunity = () => {
@@ -114,20 +115,28 @@ function CommunitiesPage() {
         setMyComsIsOpen(false);
     }
 
-    const ReadFeaturedCommunities = () => {
-        const filtered = (selectedCategory? communities.filter(c=>c.communityCategory === selectedCategory):communities );
-        const top3 = [...filtered].sort((a,b) => b.memberCount - a.memberCount).slice(0,3);
-        const items = top3.map((community) =>(
-            <FeaturedBlock key={community.id} Name={community.name} Description={community.description} MemberCount={community.memberCount} />
-        ))
-        return <div className='communities-box'>{items}</div>
+    const handleRefresh = async() => {
+        getAllUserCommunities();
+        getUserCommunities();
+        getCommunities();
     }
+
+    // const ReadFeaturedCommunities = () => {
+    //     const filtered = (selectedCategory? communities.filter(c=>c.communityCategory === selectedCategory):communities );
+    //     const top3 = [...filtered].sort((a,b) => b.memberCount - a.memberCount).slice(0,3);
+    //     const items = top3.map((community) =>(
+    //         <FeaturedBlock key={community.id} Name={community.name} Description={community.description} MemberCount={community.memberCount}  OnJoin={handleRefresh}/>
+    //     ))
+    //     return <div className='communities-box'>{items}</div>
+    // }
 
     
 
     return(
         <div className="page-container">
             <NavBar/>
+            <ExploreCommunities isOpen={exploreIsOpen} onClose={handleCloseExplore} communities={communities}/>
+            <UserCommunities isOpen={myComsIsOpen} onClose={handleCloseMyComs} communities={allUserCommunities} Refresh={handleRefresh}/>
             <div className="main-content">
                 <div style={{ top:0,zIndex:10,borderBottom: "1px solid #000000ff", paddingBottom: "10px",marginLeft: "-20px", paddingLeft: "20px", position:"fixed", left:"250px", right:"0" }}>
                     <h1 style={{ color: "white", textAlign: "left",marginTop: "11px",marginLeft: "20px",marginBottom: "0"}}>Communities</h1>
@@ -136,8 +145,7 @@ function CommunitiesPage() {
                 <div>
                 </div>
                 <CreateCommunityOverLay isOpen={isOpen} onClose={handleCloseCommunity} onCommunityCreated={handleCreateCommunity}/>
-                <ExploreCommunities isOpen={exploreIsOpen} onClose={handleCloseExplore} communities={communities}/>
-                <UserCommunities isOpen={myComsIsOpen} onClose={handleCloseMyComs} communities={allUserCommunities} Refresh={getUserCommunities}/>
+    
                 <div className='comm-top'>
                     <p className='join-txt'>Join the Ultimate Gaming Communities</p>
                     <p className='explain-txt'>Connect with fellow gamers, share experiences, and participate in exclusive events within your favorite communities.</p>
@@ -152,7 +160,12 @@ function CommunitiesPage() {
                         {cats}
                     </div>
                 </div>
-                <ReadFeaturedCommunities/>
+                <ReadFeaturedCommunities 
+                    communities={communities} 
+                    selectedCategory={selectedCategory} 
+                    handleRefresh={handleRefresh}
+                    userCommunities={userCommunities}  
+                />
                 <div className='mycommunities'>
                     <div className='mycom-top'>
                         <h2>My Communities</h2>
@@ -178,7 +191,28 @@ function CommunitiesPage() {
     );
 }
 
-function FeaturedBlock({Name, Description, MemberCount}) {
+
+function ReadFeaturedCommunities({ communities, selectedCategory, handleRefresh, userCommunities }) {
+    const filtered = selectedCategory ? communities.filter(c => c.communityCategory === selectedCategory) : communities;
+    const top3 = [...filtered].sort((a, b) => b.memberCount - a.memberCount).slice(0, 3);
+    
+    return (
+        <div className='communities-box'>
+            {top3.map((community) => (
+                <FeaturedBlock 
+                    key={community.id} 
+                    Name={community.name} 
+                    Description={community.description} 
+                    MemberCount={community.memberCount}  
+                    OnJoin={handleRefresh}
+                    isJoined={userCommunities.some(uc => uc.name === community.name)}
+                />
+            ))}
+        </div>
+    );
+}
+
+function FeaturedBlock({Name, Description, MemberCount , OnJoin, isJoined}) {
     const userId = localStorage.getItem("userId");
     const token  = localStorage.getItem('token');
     const navigate = useNavigate();
@@ -198,28 +232,11 @@ function FeaturedBlock({Name, Description, MemberCount}) {
             );
             setMemberCount(prev => prev + 1);
             setJoined(true);
+            OnJoin();
         } catch (error) {
             console.error("failed to join community: ", error.response?.data || error.message);
         }
     }
-
-    useEffect(() => {
-        const GetMembers = async() => {
-            try {
-                const res = await axios.get(
-                    `${API_URL}/communities/${Name}/AllMembers`,
-                    { headers: { Authorization: `Bearer ${token}` } }
-                );
-                setMembers(res.data);
-                const alreadyMember = res.data.some(member => member.id === userId);
-                setJoined(alreadyMember);
-            } catch (error) {
-                console.error("Couldn't fetch the members")
-            }
-        }
-        GetMembers();
-        
-    }, [token])
 
     return (
         <div className='fcommunity' onClick={() => navigate(`/communities/${Name}`)}>
@@ -234,7 +251,7 @@ function FeaturedBlock({Name, Description, MemberCount}) {
             </div>
             <p className='description'>{Description}</p>
             {
-                !joined?(
+                !isJoined?(
                     <button className='joinbtnf' onClick={handleJoinClick}>Join</button>
                 ):<button className='joinedbtnf'>Joined</button>
             }

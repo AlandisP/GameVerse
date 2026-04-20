@@ -6,7 +6,7 @@ import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import Pfp from '../../images/Profile.png'
 import dots from '../../images/dots.png'
-function FollowersAndFollowingOverlay({isOpen, Username, onClose, Tab}) {
+function FollowersAndFollowingOverlay({isOpen, Username, onClose, Tab, GetCounts}) {
     const token  = localStorage.getItem('token');
     const username = localStorage.getItem('username');
     const [activeTab, setActiveTab] = useState(Tab);
@@ -40,7 +40,7 @@ function FollowersAndFollowingOverlay({isOpen, Username, onClose, Tab}) {
                 { headers: { Authorization: `Bearer ${token}` } }
             );
             setLoggedFollowers(res.data.map(u=>u.id));  
-            console.log(res.data);
+           // console.log(res.data);
         } catch (error) {
             console.error("failed to get users: ", error.response?.data || error.message);
         }
@@ -63,7 +63,7 @@ function FollowersAndFollowingOverlay({isOpen, Username, onClose, Tab}) {
                 { headers: { Authorization: `Bearer ${token}` } }
             );
             setFollowing(res.data);  
-            console.log(res.data);
+            //console.log(res.data);
         } catch (error) {
             console.error("failed to get users: ", error.response?.data || error.message);
         }
@@ -75,7 +75,7 @@ function FollowersAndFollowingOverlay({isOpen, Username, onClose, Tab}) {
                 { headers: { Authorization: `Bearer ${token}` } }
             );
             setLoggedFollowing(res.data.map(u=>u.id));  
-            console.log(res.data);
+           // console.log(res.data);
         } catch (error) {
             console.error("failed to get users: ", error.response?.data || error.message);
         }
@@ -88,6 +88,7 @@ function FollowersAndFollowingOverlay({isOpen, Username, onClose, Tab}) {
                 { headers: { Authorization: `Bearer ${token}` } }
             );
             getFollowing();
+            GetCounts();
         } catch (error) {
             console.error("failed to unfollow user: ", error.response?.data || error.message);
         }   
@@ -100,6 +101,7 @@ function FollowersAndFollowingOverlay({isOpen, Username, onClose, Tab}) {
                 { headers: { Authorization: `Bearer ${token}` } }
             );
             getFollowing();
+            GetCounts();
         } catch (error) {
             console.error("failed to follow user: ", error.response?.data || error.message);
         }  
@@ -140,7 +142,7 @@ function FollowersAndFollowingOverlay({isOpen, Username, onClose, Tab}) {
     const GetFollowersUsers = () => {
         const items = followers.map((user, ind)=>
             <div key={ind} className='follower' onClick={() => {navigate(`/profile/${user.username}`); onClose();}}>
-                {isPopupOpen && <PopUpMenu top={coor.top} left={coor.left} user={selectedUser} setPopUpMenu={setIsPopupOpen} getFollowers={getFollowers}/>}
+                {isPopupOpen && <PopUpMenu top={coor.top} left={coor.left} user={selectedUser} setPopUpMenu={setIsPopupOpen} getFollowers={getFollowers} GetCounts={GetCounts}/>}
                 <div className='circle'>
                     <img src={user.pfp?(user.pfp):Pfp} alt='userpfp'/>
                 </div>
@@ -148,15 +150,18 @@ function FollowersAndFollowingOverlay({isOpen, Username, onClose, Tab}) {
                     <h3>{user.username}</h3>
                     <p>{user.bio}</p>
                 </div>
-                {username===user.username?(<></>):
-                loggedFollowing.includes(user.id)?(
-                    <button className='pfpbutton2' onClick={(e) => {handleUnfollow(user.username); e.stopPropagation();}}><span>Following</span></button>
-                    ):loggedFollowers.includes(user.id)?(
-                        <button className='pfpbutton' onClick={(e) => {handleFollow(user.username); e.stopPropagation();}}>Follow Back</button>
-                    ):<button className='pfpbutton' onClick={(e) => {handleFollow(user.username);e.stopPropagation();}}>Follow</button>
-                }
-                {username===Username?(<img src={dots} alt='dots' className='dotsimg' onClick={(e) => handleOptionsClick(e, user)}/>):""}
+                <div className='dotsw'>
+                    {username===user.username?(<></>):
+                    loggedFollowing.includes(user.id)?(
+                        <button className='pfpbutton2' onClick={(e) => {handleUnfollow(user.username); e.stopPropagation();}}><span>Following</span></button>
+                        ):loggedFollowers.includes(user.id)?(
+                            <button className='pfpbutton' onClick={(e) => {handleFollow(user.username); e.stopPropagation();}}>Follow Back</button>
+                        ):<button className='pfpbutton' onClick={(e) => {handleFollow(user.username);e.stopPropagation();}}>Follow</button>
+                    }
+                    {username===Username?(<img src={dots} alt='dots' className='dotsimg' onClick={(e) => handleOptionsClick(e, user)}/>):""}
+                </div>
             </div>
+
         );
         return(
             <div>
@@ -211,7 +216,7 @@ function FollowersAndFollowingOverlay({isOpen, Username, onClose, Tab}) {
                             <div className='followers-holder'>
                                 <GetFollowedUsers/>
                             </div>
-                        ):<GetFollowersUsers/>
+                        ):<div className='followers-holder'><GetFollowersUsers/></div>
                     }
                 </div>
 
@@ -222,7 +227,7 @@ function FollowersAndFollowingOverlay({isOpen, Username, onClose, Tab}) {
 
 }
 
-function PopUpMenu({ top, left, user, setPopUpMenu, getFollowers}) {
+function PopUpMenu({ top, left, user, setPopUpMenu, getFollowers, GetCounts}) {
     const token = localStorage.getItem("token");
 
     const handleRemove = async() => {
@@ -232,6 +237,7 @@ function PopUpMenu({ top, left, user, setPopUpMenu, getFollowers}) {
                 { headers: { Authorization: `Bearer ${token}` } }
             );
             getFollowers();
+            GetCounts();
         } catch (error) {
             console.error("failed to unfollow user: ", error.response?.data || error.message);
         }   

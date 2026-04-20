@@ -22,17 +22,20 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.GameVerse.GameVerse.model.Community;
 import com.GameVerse.GameVerse.model.CommunityMembership;
+import com.GameVerse.GameVerse.model.FollowRequest;
 import com.GameVerse.GameVerse.model.PartyFinder;
 import com.GameVerse.GameVerse.model.Relationship;
 import com.GameVerse.GameVerse.model.User;
 import com.GameVerse.GameVerse.repository.BlockedRelationshipRepository;
 import com.GameVerse.GameVerse.repository.CommunityMembershipRepository;
 import com.GameVerse.GameVerse.repository.CommunityRepository;
+import com.GameVerse.GameVerse.repository.FollowRequestRepository;
 import com.GameVerse.GameVerse.repository.PartyFinderRepository;
 import com.GameVerse.GameVerse.repository.PostRepository;
 import com.GameVerse.GameVerse.repository.RelationshipRepository;
 import com.GameVerse.GameVerse.repository.UserRepository;
 import com.GameVerse.GameVerse.security.S3Service;
+import com.GameVerse.GameVerse.services.FollowRequestService;
 import com.GameVerse.GameVerse.services.RecommendationService;
 import com.GameVerse.GameVerse.services.RelationshipServices;
 
@@ -65,6 +68,10 @@ public class UsersController {
     private PostRepository postRepository;
     @Autowired
     private UserRepository repository;
+    @Autowired 
+    private FollowRequestRepository frRepository;
+    @Autowired
+    private FollowRequestService frService;
 
     @Autowired
     private S3Service s3serv;
@@ -119,6 +126,19 @@ public class UsersController {
         return ResponseEntity.ok("Successfully followed the user");
     }
 
+    @PostMapping("/request/{username}")
+    public ResponseEntity<?> respondtoRequest(@PathVariable String username, @RequestParam boolean choice, Authentication auth) {
+        String userId = (String) auth.getPrincipal();
+        User user = repository.findById(userId).orElse(null);
+        User userF = repository.findByUsernameIgnoreCase(username);
+        FollowRequest req = frRepository.findBySenderIdAndReceiverId(userF.getId(), userId).orElse(null);
+        if(req == null) {
+            return ResponseEntity.badRequest().body("Request not found");
+        }
+        frService.requestChoice(req.getId(), choice);
+        return ResponseEntity.ok("Success");
+    }
+
     @DeleteMapping("/unfollow/{username}")
     public ResponseEntity<?> unfollowUser(@PathVariable String username, Authentication auth) {
         String userId = (String) auth.getPrincipal();
@@ -164,7 +184,14 @@ public class UsersController {
             .map(userId -> repository.findById(userId).map(User::getUsername).orElse(null))
             .toList();
         return ResponseEntity.ok(usernames);
+    }
 
+    @GetMapping("/followRequest/{username}")
+    public ResponseEntity<?> getFollowRequest(Authentication auth, @PathVariable String username) {
+        String userId = (String) auth.getPrincipal();
+        User user = repository.findByUsernameIgnoreCase(username);
+        List<String> requests = frRepository.findByReceiverId(user.getId()).stream().map(FollowRequest::getSenderId).collect(Collectors.toList());
+        return ResponseEntity.ok(requests.stream().map(id -> repository.findById(id).orElse(null).getUsername()).collect(Collectors.toList()));
     }
 
 

@@ -1,0 +1,44 @@
+.row-slide {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+}
+
+.row-slide p {
+    margin: 0;
+}
+.toggle-btn {
+    background-color: #b7b9ba;
+    border: 1px solid #aaa;
+    border-radius: 99px;
+    width: 60px;
+    height: 25px;
+    transition: background-color 0.1s ease, border-color 0.2s ease;
+    cursor: pointer;
+    position: relative;
+}
+
+.toggle-btn .thumb{
+    height: 20px;
+    width: 20px;
+    background-color: white;
+    border-radius: 99px;
+    transform: translateX(0);
+    transition: left 0.15s ease;
+    position:absolute;
+    left: 3px;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+.toggle-btn.toggled {
+    background-color: #3b82f6;
+}
+
+.toggled-btn:hover {
+    border-color: #6f6f6f;
+}
+
+.toggle-btn.toggled .thumb {
+    left:calc(35px);
+}

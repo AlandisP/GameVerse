@@ -55,7 +55,7 @@ function CommunityBlock({Name, Description, Members, Category, id, OwnerId, PFP}
                     { headers: { Authorization: `Bearer ${token}` } }
                 );
                 setMembers(res.data);
-                console.log(res.data);
+                //console.log(res.data);
                 
             } catch (error) {
                 console.error("Couldn't fetch the members")

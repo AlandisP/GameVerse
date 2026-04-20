@@ -47,7 +47,7 @@ export default function ProfilePage() {
         const postsUrl = `${API_URL || "http://localhost:8080"}/post/getposts`;
         const booksUrl = `${API_URL || "http://localhost:8080"}/post/getbooks`;
 
-        console.log("[ProfilePage] fetching posts from:", postsUrl);
+        //console.log("[ProfilePage] fetching posts from:", postsUrl);
         const [postsRes, booksRes] = await Promise.all([
           axios
             .get(postsUrl, headers ? { headers: headers.headers } : undefined)
