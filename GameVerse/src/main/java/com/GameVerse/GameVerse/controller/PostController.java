@@ -2,6 +2,7 @@ package com.GameVerse.GameVerse.controller;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -153,16 +154,18 @@ public class PostController {
     public ResponseEntity<List<Post>> getapost(Authentication auth){
         String userId = (String) auth.getPrincipal();
         // users that the auth has blocked
-        List<String> blockedIds = getBlockedIds(userId);
+        //List<String> blockedIds = getBlockedIds(userId);
         // list of users that auth is blocked by
-        List<String> nopes = blockedService.getBlockedListIds(userId);
+        //List<String> nopes = blockedService.getBlockedListIds(userId);
+        //New method attempt
+        HashSet<String> blocks = new HashSet<String>(getBlockedIds(userId));
+        blocks.addAll(blockedService.getBlockedListIds(userId));
         List<Post> result = postRepo.findAll()
             .stream()
             .filter(post -> {
                 User poster = userRep.findByUsernameIgnoreCase(post.getUser());
                 return poster != null 
-                    && !blockedIds.contains(poster.getId())
-                    && !nopes.contains(poster.getId());
+                    && !blocks.contains(poster.getId());
             })
             .collect(Collectors.toList());
 
