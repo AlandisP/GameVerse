@@ -177,7 +177,7 @@ function CommunityPage() {
                     { headers: { Authorization: `Bearer ${token}` } }
                 );
                 setMods(res.data);
-                console.log(res.data);
+                //console.log(res.data);
 
             } catch(error) {
                 

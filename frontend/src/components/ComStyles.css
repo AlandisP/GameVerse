@@ -265,6 +265,7 @@
     height: 100%;
     object-fit: cover;
     border-radius: 8px;
+    display: block;
 }
 
 .minicombox:hover {
@@ -272,6 +273,7 @@
 }
 
 .placeholderbox {
+    height: auto;
     width: 4.6rem;
     aspect-ratio: 1 / 1;
     background-color: grey;
@@ -341,9 +343,12 @@
 }
 
 .mycom-top {
+    margin-top: 1.5rem;
     background-color: transparent;
     display: flex;
     flex-direction: row;
+    align-items: center;
+    width:100%;
 }
 
 .viewAll{

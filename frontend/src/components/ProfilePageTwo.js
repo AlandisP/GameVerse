@@ -9,6 +9,7 @@ import UploadBox from './MediaUpload';
 import dots from "./../images/dots.png";
 import "./Overlay.css";
 import SignIn from "./../images/sits_01.png";
+import lock from "./../images/lock-128.png";
 import "./ProfilePage.css";
 import FFOverlay from "./Overlays/FollowersAndFollowingOverlay";
 function ProfilePageTwo() {
@@ -34,6 +35,8 @@ function ProfilePageTwo() {
     const [mode, setMode] = useState("");
     const [isOverlayOpen, setIsOverlayOpen] = useState(false);
     const [selectedTab, setSelectedTab] = useState("");
+    const [followers, setFollowers] = useState([]);
+    const [requests, setRequest] = useState([]);
 
 
     //Profile pictures code
@@ -52,7 +55,7 @@ function ProfilePageTwo() {
         { headers: { Authorization: `Bearer ${token}` } }
       );
       setCurrUser(res.data);
-      console.log(res.data);
+
     }
 
     useEffect(() =>{
@@ -96,7 +99,7 @@ function ProfilePageTwo() {
 
     const parselike = (postinf)=>{
         const array = postinf["liked"];
-        const like = array[username ?? loggedInUsername];
+        const like = array[loggedInUsername];
         return like;
     }
 
@@ -178,12 +181,6 @@ function ProfilePageTwo() {
     }
 
     const ReadUserLikes = () => {
-      var liked = false;
-        if(username) {
-          liked = false;
-        } else {
-          liked = true
-        }
         const items = likedposts.map((post, index)=>{
              return <PostObj key={index} User={post["user"]} Content={post["text"]} Likes={post["likes"]} Liked={parselike(post)} id={post["id"]} commcount={post["comments"].length} books={false} CreatedAt={post["createdAt"]} CommunityName={post["communityName"]} media={post["media"]} type={post["mediaType"]}/>
         });
@@ -401,6 +398,26 @@ function ProfilePageTwo() {
         }
       }
       GetUserSteamInfo();
+      const getFollowers = async() => {
+        try {
+            const res = await axios.get(
+                `${API_URL}/users/followers/${profile.username}`,
+                { headers: { Authorization: `Bearer ${token}` } }
+            );
+            setFollowers(res.data.map(u=>u.id));  
+        } catch (error) {
+            console.error("failed to get users: ", error.response?.data || error.message);
+        }
+      }
+      getFollowers();
+      const getFollowRequest = async() => {
+            const res = await axios.get(
+                `${API_URL}/users/followRequest/${profile.username}`,
+                { headers: { Authorization: `Bearer ${token}` } }
+            );
+            setRequest(res.data);
+        }
+        getFollowRequest();
 
     },[profile]);
 
@@ -456,10 +473,27 @@ function ProfilePageTwo() {
     });
   };
 
+
+  const refreshCounts = async () => {
+      try {
+          const res = await axios.get(
+              `${API_URL}/profile/${profile.username}`,
+              { headers: { Authorization: `Bearer ${token}` } }
+          );
+          setProfile(prev => ({
+              ...prev,
+              followerCount: res.data.followerCount,
+              followingCount: res.data.followingCount
+          }));
+      } catch (error) {
+          console.error("failed to refresh counts: ", error);
+      }
+  }
+
   return (
     <div className="page-container">
       <Sidebar />
-      <FFOverlay isOpen={isOverlayOpen} Username={profile.username} onClose={() => setIsOverlayOpen(false)} Tab={selectedTab}/>
+      <FFOverlay isOpen={isOverlayOpen} Username={profile.username} onClose={() => setIsOverlayOpen(false)} Tab={selectedTab} GetCounts={refreshCounts}/>
       <div className="main-content" style={{ color: "white" }}>
         {/* HEADER */}
         <div className="pfheader">
@@ -517,7 +551,10 @@ function ProfilePageTwo() {
               }}
             >
               <div>
-                <h1 style={{ marginBottom: "5px" }}>{profile.username}</h1>
+                <div className="username-row">
+                  <h1 style={{ marginBottom: "5px" }}>{profile.username}</h1>
+                  {profile.isPrivate && <img src={lock} alt="private img"/>}
+                </div>
                 <p style={{ marginTop: 0, color: "#aaaaaa" }}>
                   @{profile.username}
                 </p>
@@ -576,7 +613,7 @@ function ProfilePageTwo() {
                       minWidth: "100px",
                     }}
                   >
-                    {isFollowing ? "Unfollow" : "Follow"}
+                    {isFollowing ? "Unfollow" : requests.includes(loggedInUsername)? "Requested":"Follow"}
                   </button>
 
                   <button
@@ -657,7 +694,7 @@ function ProfilePageTwo() {
           </div>
         </div>
         {/* TABS */}
-        {userBlockIds.includes(profile.id)?
+        {userBlockIds.includes(profile?.id)?
           <div className="blankarea">
             <h1>You've blocked @{profile.username}</h1>
             <p>You will have to unblock this user to view their posts</p>
@@ -665,7 +702,12 @@ function ProfilePageTwo() {
             <div className="blankarea">
               <h1>You've been blocked</h1>
               <p>You can't follow or see @{profile.username}'s posts 😔</p>
-              </div>:( 
+              </div>:profile.isPrivate && (!followers.includes(currUser?.id) && profile.username !== currUser?.username)?
+                <div className="blankarea">
+                  <h1>Account is Private</h1>
+                  <p>You must request to follow the user to see their posts.</p>
+                </div>
+              :( 
             <div> 
             <div
               style={{

@@ -403,6 +403,8 @@
 .followers-holder {
     display: flex;
     flex-direction: column;
+    overflow-y: auto;
+    border-radius: 40px;
 }
 
 .follower {
@@ -434,8 +436,9 @@
 }
 
 .info-holders p{
-    text-overflow: ellipsis;
+    text-overflow: clip;
 }
+
 
 .pfpbutton {
     margin-left: auto;
@@ -484,4 +487,12 @@
     width: 35px;
     height: 10px;
     cursor: pointer;
+}
+
+.dotsw{
+    margin-left: auto;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 5px;
 }

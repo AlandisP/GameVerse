@@ -18,10 +18,12 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.GameVerse.GameVerse.model.User;
+import com.GameVerse.GameVerse.repository.FollowRequestRepository;
 import com.GameVerse.GameVerse.repository.PostRepository;
 import com.GameVerse.GameVerse.repository.UserRepository;
 import com.GameVerse.GameVerse.security.S3Service;
 import com.GameVerse.GameVerse.services.BlockedService;
+import com.GameVerse.GameVerse.services.FollowRequestService;
 import com.GameVerse.GameVerse.services.NotificationService;
 import com.GameVerse.GameVerse.services.RelationshipServices;
 
@@ -50,6 +52,13 @@ public class UserProfileController {
 
     @Autowired
     private BlockedService blockedService;
+
+    @Autowired 
+    private FollowRequestRepository frRepository;
+
+    @Autowired
+    private FollowRequestService frService;
+
 
     private static final String type = "Profile";
 
@@ -167,6 +176,12 @@ public class UserProfileController {
         if (target.getId().equals(followerId)) {
             return ResponseEntity.badRequest().body("You cannot follow yourself");
         }
+        if(target.getIsPrivate()) {
+            frService.sendARequest(followerId, target.getId());
+            String message = repository.findById(followerId).orElse(null).getUsername() + " has requested to follow you!";
+            notificationService.createNotification(type, message, target.getId());
+            return ResponseEntity.ok("request sent");
+        }
         String message = repository.findById(followerId).orElse(null).getUsername() + " has followed you!";
         notificationService.createNotification(type, message, target.getId());
         relationshipServices.followUser(followerId, target.getId());
@@ -265,6 +280,18 @@ public class UserProfileController {
         User user = repository.findByUsernameIgnoreCase(username);
         return ResponseEntity.ok(blockedService.getBlockListIds(user.getId()));
     }
+
+    @PostMapping("/TogglePrivate")
+    public ResponseEntity<?> setAccountToPrivate(Authentication auth) {
+        String userId = (String) auth.getPrincipal();
+        User user = repository.findById(userId).orElseThrow();
+        user.setIsPrivate(!user.getIsPrivate());
+        repository.save(user);
+        return ResponseEntity.ok(user.getIsPrivate());
+    }
+
+
+
 
 
 

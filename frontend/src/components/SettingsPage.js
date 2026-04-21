@@ -1,15 +1,16 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import API_URL from '../config/api';
 import './Home.css';
 import NavBar from "./NavBar";
 import PostObj from './Post';
-
+import "./Settings.css";
 function SettingsPage() {
     const navigate = useNavigate();
     const username = localStorage.getItem('username');
     const token = localStorage.getItem('token');
+    const [user, setUser] = useState(null);
 
     const [showUsernameModal, setShowUsernameModal] = useState(false);
     const [showPasswordModal, setShowPasswordModal] = useState(false);
@@ -29,6 +30,24 @@ function SettingsPage() {
 
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
+    const [toggled, setToggled] = useState(false);
+
+    const getUser = async() => {
+        const res = await axios.get(
+            `${API_URL}/profile/${username}`,
+            { headers: { Authorization: `Bearer ${token}` } }
+        );
+        setUser(res.data);
+        setToggled(res.data.isPrivate);
+        //console.log(res.data);
+    }
+
+    const privateAccount = async() => {
+        const res = await axios.post(
+            `${API_URL}/profile/TogglePrivate`,{},
+            { headers: { Authorization: `Bearer ${token}` } }
+        );
+    }
 
     const resetStates = () => {
         setNewUsername('');
@@ -205,6 +224,10 @@ function SettingsPage() {
     const errorTextStyle = { color: 'red', margin: '10px 0' };
     const successTextStyle = { color: 'green', margin: '10px 0' };
 
+    useEffect(() => {
+        getUser();
+    },[])
+
     return (
         <div className="page-container">
             <NavBar />
@@ -233,6 +256,16 @@ function SettingsPage() {
                             {label}
                         </div>
                     ))}
+                    <div className='row-slide'>
+                        <p style={settingsOptionStyle}>Private Account</p>
+                        <button
+                            className={`toggle-btn ${toggled ? "toggled": ""}`}
+                            onClick={() => {setToggled(!toggled); privateAccount();}}
+                        >
+                            <div className='thumb'></div>
+
+                        </button>
+                    </div>
                 </div>
 
                 {/* Change Username Modal */}

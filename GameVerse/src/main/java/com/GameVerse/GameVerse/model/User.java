@@ -20,6 +20,7 @@ public class User {
     private String platform;
     private Role role;
     private String steamId;
+    private boolean isPrivate;
     
     private String pfp;
     private String banner;
@@ -44,6 +45,7 @@ public class User {
         this.blockedCount = 0;
         bookMarks = new ArrayList<>();
         this.steamId=null;
+        isPrivate = false;
     }
 
     // ---- Getters ----
@@ -78,6 +80,10 @@ public class User {
 
     public int getFollowingCount() {
         return followingCount;
+    }
+
+    public boolean getIsPrivate() {
+        return isPrivate;
     }
 
     // ---- Setters ----
@@ -164,5 +170,9 @@ public class User {
 
     public void setSteamId(String steamId) {
         this.steamId = steamId;
+    }
+
+    public void setIsPrivate(boolean isPrivate) {
+        this.isPrivate = isPrivate;
     }
 }

@@ -1,0 +1,54 @@
+package com.GameVerse.GameVerse.services;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import com.GameVerse.GameVerse.model.FollowRequest;
+import com.GameVerse.GameVerse.model.User;
+import com.GameVerse.GameVerse.repository.FollowRequestRepository;
+import com.GameVerse.GameVerse.repository.RelationshipRepository;
+import com.GameVerse.GameVerse.repository.UserRepository;
+
+@Service
+public class FollowRequestService {
+    @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
+    private FollowRequestRepository frRepository;
+
+    @Autowired
+    private RelationshipRepository relationshipRepository;
+
+    @Autowired
+    private RelationshipServices service;
+    
+
+    public void sendARequest(String userId, String acctId) {
+        User user = userRepository.findById(userId).orElse(null);
+        User privUser = userRepository.findById(acctId).orElse(null);
+
+        if(user == null || privUser == null) {
+            throw new RuntimeException("User doesnt exist");
+        }
+        if(relationshipRepository.existsByFollowerIdAndFollowingId(userId, acctId)) {
+            throw new RuntimeException("Relationship already exist");
+        }
+
+        FollowRequest newReq = new FollowRequest(userId, acctId);
+        frRepository.save(newReq);
+    }
+
+    public void requestChoice(String reqId, boolean choice) {
+        FollowRequest req = frRepository.findById(reqId).orElse(null);
+        if(req == null) {
+            throw new RuntimeException("Relationship doesnt exist.");
+        }
+        if(choice) {
+            service.followUser(req.getSenderId(), req.getReceiverId());
+            frRepository.delete(req);
+        } else {
+            frRepository.delete(req);
+        }
+    }
+}

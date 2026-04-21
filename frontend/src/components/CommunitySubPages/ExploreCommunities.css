@@ -3,9 +3,10 @@
     top: 65px;
     left: 256px; /* Account for navbar */
     right: 0;
+    bottom: 0;
     z-index: 999;
-    height: calc(100% - 65px);
-    width: calc(100% - 16rem); /* Full width minus navbar */
+    height: calc(100vh - 65px);
+    width: calc(100vw - 256px); /* Full width minus navbar */
     position: fixed;
     overflow-y: auto;
     box-sizing: border-box;
@@ -103,11 +104,12 @@
 
 .communityBlock {
     display: flex;
-    align-items: stretch;
-    flex-wrap: wrap;
+    align-items: center;
+    flex-wrap: nowrap;
     margin-top: 1rem;
     margin-right: 1rem;
-    height: 7.1rem;
+    min-height: 7.1rem;
+    height: auto;
     border-radius: 30px;
     padding: 10px;
     background-color: rgb(44, 42, 42);
@@ -132,6 +134,7 @@
 .text-container {
     display: flex;
     flex-direction: column;
+    text-overflow: ellipsis;
 }
 
 .text-container .comName{
@@ -156,8 +159,9 @@
     background-color: #3b82f6;
     color: white;
     margin: 0%;
-    height: 50px;
-    width: 100px;
+    min-height: 50px;
+    height: auto;
+    min-width: 100px;
     font-size: 15px;
     font-weight: bold;
     border: none;
@@ -228,17 +232,17 @@
     margin-top: 1rem;
     display: flex;
     flex-direction: row;
+    flex-wrap: wrap;
     gap: 25px;
     justify-content: center;
 }
 
 .mycomblock {
     position: relative;
-    min-width: auto;
-    min-height: auto;
     max-width: 25%;
     max-height: 25%;
     min-height: 250px;
+    min-width: 300px;
     background-color: rgb(48, 45, 45);
     padding: .5rem;
     border-radius: 20px;
@@ -325,6 +329,14 @@
 .newbtn2:hover{
     cursor: pointer;
     background-color: darkred;
+}
+
+@media (max-width: 768px) {
+    .exploreMain {
+        left: 0;
+        top: 65px;
+        width: 100vw;
+    }
 }
 
 

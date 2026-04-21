@@ -21,6 +21,8 @@ function NotificationPage() {
     const [loggedFollowers, setLoggedFollowers] = useState([]);
     const [loggedFollowing, setLoggedFollowing] = useState([]);
     const navigate = useNavigate();
+    const [currUser, setCurrUser] = useState(null);
+    const [requests, setRequest] = useState([]);
 
     const handleFollow = async(userName)=>{
         try {
@@ -54,7 +56,7 @@ function NotificationPage() {
                 { headers: { Authorization: `Bearer ${token}` } }
             );
             setLoggedFollowers(res.data.map(u=>u.id));  
-            console.log(res.data);
+            //console.log(res.data);
         } catch (error) {
             console.error("failed to get users: ", error.response?.data || error.message);
         }
@@ -68,7 +70,7 @@ function NotificationPage() {
                 { headers: { Authorization: `Bearer ${token}` } }
             );
             setLoggedFollowing(res.data.map(u=>u.id));  
-            console.log(res.data);
+            //console.log(res.data);
         } catch (error) {
             console.error("failed to get users: ", error.response?.data || error.message);
         }
@@ -90,11 +92,28 @@ function NotificationPage() {
                 { headers: { Authorization: `Bearer ${token}` } }
             );
             setRecommendations(res.data);
-            console.log(res.data);
+            //console.log(res.data);
         }
         getRecommendations();
         getFollowers();
         getFollowing();
+        const getCurrentLoggedUser = async() => {
+            const res = await axios.get(
+                `${API_URL}/profile/${username}`,
+                { headers: { Authorization: `Bearer ${token}` } }
+            );
+            setCurrUser(res.data);
+        }
+        getCurrentLoggedUser();
+
+        const getFollowRequest = async() => {
+            const res = await axios.get(
+                `${API_URL}/users/followRequest/${username}`,
+                { headers: { Authorization: `Bearer ${token}` } }
+            );
+            setRequest(res.data);
+        }
+        getFollowRequest();
     },[token]);
 
     const ReadNotis = () => {
@@ -154,6 +173,7 @@ function NotificationPage() {
                         <div className="rec-holder">
                             <ReadRecs/>
                         </div>
+                        { currUser?.isPrivate  && <h2>Follow Request</h2>}
                     </div>
 
                  </div>

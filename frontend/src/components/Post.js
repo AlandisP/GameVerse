@@ -74,7 +74,7 @@ function PostObj ({User, Content, Likes, Liked, id, books, commcount, CreatedAt,
         }
 
         const deletePost = async()=>{
-            console.log(media);
+            //console.log(media);
             await axios.post(
                 `${API_URL}/post/deletepost`,{id},
                 { headers: { Authorization: `Bearer ${token}` } }
@@ -108,7 +108,7 @@ function PostObj ({User, Content, Likes, Liked, id, books, commcount, CreatedAt,
             }
         },[pop]);
         const PopUp = ({item})=>{
-            console.log(IsMod);
+            //console.log(IsMod);
             return(
                 <div className='Popup' style={{left:`${item.current.offsetLeft-70}px`,top:`${item.current.offsetTop+20}px`}}>
                     <button onClick={bookinteract}>{didBook?"Bookmarked":"Bookmark"}</button>
