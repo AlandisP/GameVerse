@@ -13,6 +13,7 @@ import Signup from "./components/Signup";
 import NotificationPage from "./components/NotificationPage";
 import CommunityPage from "./components/CommunitySubPages/CommunityPage";
 import SettingsPage from "./components/SettingsPage";
+import AboutPage from "./components/AboutPage";
 
 function App() {
   return (
@@ -20,6 +21,7 @@ function App() {
       <Router>
         <Routes>
           <Route path="/" element={<SplashScreen />} />
+          <Route path="/about" element={<AboutPage />} />
           <Route path="/login" element={<LoginScreen />} />
           <Route path="/signup" element={<Signup />} />
           <Route path="/home" element={<HomePage />} />
