@@ -60,13 +60,10 @@ function LoginScreen() {
     <div className="App">
       <div className="bg">
         <div className="Header">
-          <div>
-            <img className="logo" src={logo} />
-          </div>
-          <div>
-            <h1 className="HeaderE">GameVerse</h1>
-          </div>
-          <div className="spacer"></div>
+          <img className="logo" src={logo} />
+          <h1 className="HeaderE">GameVerse</h1>
+          {/* <div className="spacer"></div> */}
+          <button className="backbutton" onClick={() => history("/")}>Back</button>
         </div>
         <div className="LoginScreen">
           <h1>Welcome Back!</h1>
@@ -110,7 +107,7 @@ function LoginScreen() {
           <p className="Create-Account">
             Don't have an account?{" "}
             <a href="/signup" className="CA-Link">
-              Create One!
+               Create One!
             </a>
           </p>
           <p className="error-text">{error}</p>

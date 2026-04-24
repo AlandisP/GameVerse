@@ -51,13 +51,10 @@ function Signup() {
     <div className="App">
       <div className="bg">
         <div className="Header">
-          <div>
-            <img className="logo" src={logo} />
-          </div>
-          <div>
-            <h1 className="HeaderE">GameVerse</h1>
-          </div>
-          <div className="spacer"></div>
+          <img className="logo" src={logo} />
+          <h1 className="HeaderE">GameVerse</h1>
+          {/* <div className="spacer"></div> */}
+          <button className="backbutton" onClick={() => history("/")}>Back</button>
         </div>
         <div className="LoginScreen">
           <h1>Create Account</h1>
