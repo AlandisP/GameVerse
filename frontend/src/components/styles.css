@@ -25,6 +25,7 @@ div {
 
 .logo {
     width: 60px;
+    height: auto;
     margin-left: 10px;
     margin-right: auto;
 }
@@ -153,6 +154,7 @@ div {
 
 .CA-Link{
     color: darkgray;
+    text-decoration: underline;
 }
 
 .CA-Link:hover{
@@ -679,4 +681,20 @@ nav.sidebar div,
 .remember-me {
     background-color: transparent;
     margin-top: 10px;
+}
+
+.top-row {
+    display: flex;
+    flex-direction: row;
+}
+.backbutton {
+    margin-left: auto;
+    background-color: #3b82f6;
+    border-radius: 10px;
+    color:white;
+    outline: none;
+    font-weight: bold;
+    font-size: 1rem;
+    padding: 10px;
+    cursor: pointer;
 }
