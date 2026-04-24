@@ -102,6 +102,9 @@ public class CommunityService {
         if(com == null || user == null) {
             throw new RuntimeException("Community or User doesn't exist");
         }
+        if(com.getOwnerId().equals(userId)) {
+            throw new RuntimeException("You must transfer ownership of the community before you leave.");
+        }
         CommunityMembership cm = cr.findByCommunityIdAndUserId(communityId, userId);
         cr.delete(cm);
         com.setMemberCount((int) cr.countByCommunityId(communityId));

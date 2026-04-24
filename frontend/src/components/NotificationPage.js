@@ -9,7 +9,9 @@ import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import { useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import Pfp from '../images/Profile.png'
+import Pfp from '../images/Profile.png';
+import check from '../images/checksym.png';
+import xsym from '../images/exsym.png';
 dayjs.extend(relativeTime);
 
 function NotificationPage() {
@@ -23,23 +25,27 @@ function NotificationPage() {
     const navigate = useNavigate();
     const [currUser, setCurrUser] = useState(null);
     const [requests, setRequest] = useState([]);
+    const [myRequest, setMyRequest] = useState([]);
 
-    const handleFollow = async(userName)=>{
+    const handleFollow = async(user)=>{
         try {
             const res = await axios.post(
-                `${API_URL}/profile/${userName}/follow`,{},
+                `${API_URL}/profile/${user.username}/follow`,{},
                 { headers: { Authorization: `Bearer ${token}` } }
             );
             getFollowing();
+            if(user.isPrivate) {
+                setRequest((prev) => [...prev, user.username])
+            }
         } catch (error) {
             console.error("failed to follow user: ", error.response?.data || error.message);
         }  
     }
 
-    const handleUnfollow = async(userName) => {
+    const handleUnfollow = async(user) => {
         try {
             const res = await axios.post(
-                `${API_URL}/profile/${userName}/unfollow`,{},
+                `${API_URL}/profile/${user.username}/unfollow`,{},
                 { headers: { Authorization: `Bearer ${token}` } }
             );
             getFollowing();
@@ -76,6 +82,31 @@ function NotificationPage() {
         }
     }
 
+    const handleRequestResponse = async(user, status) => {
+        try{
+            const res = await axios.post(
+                `${API_URL}/users/request/${user.username}`, null,
+                {
+                params:{choice: status}, headers: { Authorization: `Bearer ${token}` } 
+                }
+            );
+            setMyRequest((prev) => prev.filter((u) => u.username !== user.username))
+        } catch(error) {
+            console.error("Error:", error.response.data);
+        }
+    }
+
+    const handleCancelRequest = async(user) => {
+        try{
+            const res = await axios.post(
+            `${API_URL}/users/cancelRequest/${user.username}`, {},
+            { headers: { Authorization: `Bearer ${token}` } }
+            );
+            setRequest((prev) => prev.filter((u) => u !== user.username));
+        }catch(Error) {
+            console.error("Error canceling request:", Error);
+        }
+    }
 
     useEffect(() => {
         const getNotis = async() => {
@@ -106,14 +137,34 @@ function NotificationPage() {
         }
         getCurrentLoggedUser();
 
-        const getFollowRequest = async() => {
-            const res = await axios.get(
-                `${API_URL}/users/followRequest/${username}`,
-                { headers: { Authorization: `Bearer ${token}` } }
-            );
-            setRequest(res.data);
+        const getFollowRequests = async () => {
+            try {
+                const res = await axios.get(
+                    `${API_URL}/users/requestSent`,
+                    { headers: { Authorization: `Bearer ${token}` } }
+                );
+                setRequest(res.data);
+                console.log(res.data);
+            } catch (error) {
+                console.error("failed to get follow requests: ", error.response?.data || error.message);
+            }
+        };
+        getFollowRequests();
+
+        const getMyRequest = async () => {
+            try {
+                const res = await axios.get(
+                    `${API_URL}/users/followRequest/${username}`, 
+                    { headers: { Authorization: `Bearer ${token}` } }
+                );
+                setMyRequest(res.data);
+                console.log(res.data);
+
+            } catch(error) {
+                console.error("Failed to get your request:" , error.response.data || error.message);
+            }
         }
-        getFollowRequest();
+        getMyRequest();
     },[token]);
 
     const ReadNotis = () => {
@@ -141,10 +192,10 @@ function NotificationPage() {
                 </div>
                 {
                     loggedFollowing.includes(user.id)?(
-                    <button className='pfpbutton2' onClick={(e) => {handleUnfollow(user.username); e.stopPropagation();}}><span>Following</span></button>
-                    ):loggedFollowers.includes(user.id)?(
-                        <button className='pfpbutton' onClick={(e) => {handleFollow(user.username); e.stopPropagation();}}>Follow Back</button>
-                    ):<button className='pfpbutton' onClick={(e) => {handleFollow(user.username); e.stopPropagation();}}>Follow</button>
+                    <button className='pfpbutton2' onClick={(e) => {handleUnfollow(user); e.stopPropagation();}}><span>Following</span></button>
+                    ):requests.includes(user.username)?<button className="pfpbutton" onClick={(e) =>{e.stopPropagation(); handleCancelRequest(user)}}>Requested</button>:loggedFollowers.includes(user.id)?(
+                        <button className='pfpbutton' onClick={(e) => {handleFollow(user); e.stopPropagation();}}>Follow Back</button>
+                    ):<button className='pfpbutton' onClick={(e) => {handleFollow(user); e.stopPropagation();}}>Follow</button>
                 }
             </div>
         ));
@@ -153,6 +204,31 @@ function NotificationPage() {
                 {items}
             </div>
         );
+    }
+
+    const ReadReqs = () => {
+        const items = myRequest.map((user, ind) => (
+            <div  key={ind} className="user-holderreq" onClick={() => navigate(`/profile/${user.username}`)}>
+                <div className="pfp-holder"><img src={user.pfp?(user.pfp):Pfp} alt='userpfp' className="reqimg"/></div>
+                <div className="desc-col">
+                    <h3>{user.username}</h3>
+                    <p>{user.bio}</p>
+                </div>
+                <div className="btn-section">
+                    <button className="circbutton"><img  className='symbol' src={check} alt="check" onClick={(e) => {handleRequestResponse(user, true); e.stopPropagation()}}/></button>
+                    <button className="circbutton2"><img  className='symbol' src={xsym} alt="x"  onClick={(e) => {handleRequestResponse(user, false); e.stopPropagation()}}/></button>
+                </div>
+            </div>
+        ));
+        return(
+            <div>
+                {items}
+            </div>
+        )
+    }
+
+    const ReadRequests = () => {
+
     }
 
     return (
@@ -174,6 +250,21 @@ function NotificationPage() {
                             <ReadRecs/>
                         </div>
                         { currUser?.isPrivate  && <h2>Follow Request</h2>}
+                        <div className="req-holder">
+                            {/* <div className="user-holderreq">
+                                <div className="pfp-holder"></div>
+                                <div className="desc-col">
+                                    <h3>Test text</h3>
+                                    <p>descriptionfeshgoFHKhjKf</p>
+                                </div>
+                                <div className="btn-section">
+                                    <button className="circbutton"><img  className='symbol' src={check} alt="check"/></button>
+                                    <button className="circbutton2"><img  className='symbol' src={xsym} alt="x"/></button>
+                                </div>
+                            </div> */}
+                            <ReadReqs/>
+
+                        </div>
                     </div>
 
                  </div>
