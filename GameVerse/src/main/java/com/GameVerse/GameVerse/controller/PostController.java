@@ -81,6 +81,11 @@ public class PostController {
         public String id;
         public String content;
     }
+    static class commentinf2{
+        public String id;
+        public String content;
+        public String user;
+    }
 
     static class idinf{
         public String id;
@@ -223,6 +228,14 @@ public class PostController {
              String message = username + " has commented on your post.";
             notificationService.createNotification(type, message, userRep.findByUsernameIgnoreCase(current.getUser()).getId());
         }
+        return ResponseEntity.ok().body(true);
+    }
+    @PostMapping("/deletecomment")
+    public ResponseEntity<Boolean> deletecomment(@RequestBody commentinf2 content, Authentication auth){
+        String username = content.user;
+        Post current = postRepo.findById(content.id).get();
+        current.delcomment(username,content.content);
+        postRepo.save(current);
         return ResponseEntity.ok().body(true);
     }
 

@@ -149,7 +149,7 @@ function PostObj ({User, Content, Likes, Liked, id, books, commcount, CreatedAt,
                 <img src={commentico} onClick={viewComs}/>
                 <p>{comments}</p>
             </div>
-            {viewComments ? <CommentSection pid={postid} func={setComments}/> : ''}
+            {viewComments ? <CommentSection pid={postid} func={setComments} poster={User}/> : ''}
             </div>
             :""}
             </div>

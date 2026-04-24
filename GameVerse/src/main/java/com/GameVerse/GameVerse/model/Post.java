@@ -110,7 +110,13 @@ public class Post {
         // if(comments == null)
         //     comments = new ArrayList<>();
         comments.add(newcom);
-        System.out.println(comments.size());
+    }
+    public void delcomment(String poster, String comment){
+        for(int i=0;i<comments.size();i++){
+            if(comments.get(i).poster.equals(poster)&&comments.get(i).content.equals(comment)){
+                comments.remove(i);
+            }
+        }
     }
     public ArrayList<comment> getcomments(){
         if(comments == null)
