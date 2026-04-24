@@ -24,7 +24,7 @@ function SplashScreen() {
       title: "Explore Communities",
     },
     {
-      src: "/screenshots/messages.png",
+      src: "/screenshots/parties.png",
       alt: "Messages screenshot",
       title: "Party Finder",
     },

@@ -36,16 +36,16 @@ function AppRoutes() {
   }, []);
 
   useEffect(() => {
-    const handleUnload = () => {
-      if (localStorage.getItem("sessionOnly") === "true") {
-        localStorage.removeItem("token");
-        localStorage.removeItem("username");
-        localStorage.removeItem("userId");
-        localStorage.removeItem("sessionOnly");
-      }
-    };
-    window.addEventListener("beforeunload", handleUnload);
-    return () => window.removeEventListener("beforeunload", handleUnload);
+    const isReload = sessionStorage.getItem("tabOpen");
+
+    if (!isReload && localStorage.getItem("sessionOnly") === "true") {
+      localStorage.removeItem("token");
+      localStorage.removeItem("username");
+      localStorage.removeItem("userId");
+      localStorage.removeItem("sessionOnly");
+    }
+
+    sessionStorage.setItem("tabOpen", "true");
   }, []);
 
   return (
