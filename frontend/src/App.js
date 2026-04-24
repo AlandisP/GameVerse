@@ -1,5 +1,5 @@
 import "./App.css";
-import React from "react";
+import React, { useEffect } from "react";
 import { BrowserRouter as Router, Route, Routes, useNavigate } from "react-router-dom";
 import HomePage from "./components/HomePage";
 import LoginScreen from "./components/LoginScreen";
@@ -15,16 +15,14 @@ import CommunityPage from "./components/CommunitySubPages/CommunityPage";
 import SettingsPage from "./components/SettingsPage";
 import AboutPage from "./components/AboutPage";
 
-function App() {
+function AppRoutes() {
   const navigate = useNavigate();
 
   useEffect(() => {
     const token = localStorage.getItem("token");
     const currentPath = window.location.pathname;
     const publicPaths = ["/", "/login", "/signup", "/about"];
-
     if (token && publicPaths.includes(currentPath)) {
-      // Has token and is on a public/auth page → send to home
       navigate("/home");
     }
   }, []);
@@ -42,41 +40,32 @@ function App() {
     return () => window.removeEventListener("beforeunload", handleUnload);
   }, []);
 
-  useEffect(() => {
-    const handleUnload = () => {
-      if (localStorage.getItem("sessionOnly") === "true") {
-        localStorage.removeItem("token");
-        localStorage.removeItem("username");
-        localStorage.removeItem("userId");
-        localStorage.removeItem("sessionOnly");
-      }
-    };
+  return (
+    <Routes>
+      <Route path="/" element={<SplashScreen />} />
+      <Route path="/about" element={<AboutPage />} />
+      <Route path="/login" element={<LoginScreen />} />
+      <Route path="/signup" element={<Signup />} />
+      <Route path="/home" element={<HomePage />} />
+      <Route path="/explore" element={<ExplorePage />} />
+      <Route path="/messages" element={<MessagePage />} />
+      <Route path="/messages/:receiverUsername" element={<MessagePage />} />
+      <Route path="/partyfinder" element={<PartyFinderPage />} />
+      <Route path="/communities" element={<CommunitiesPage />} />
+      <Route path="/notifications" element={<NotificationPage />} />
+      <Route path="/profile" element={<ProfilePageTwo />} />
+      <Route path="/profile/:username" element={<ProfilePageTwo />} />
+      <Route path="/communities/:community" element={<CommunityPage />} />
+      <Route path="/settings" element={<SettingsPage />} />
+    </Routes>
+  );
+}
 
-    window.addEventListener("beforeunload", handleUnload);
-    return () => window.removeEventListener("beforeunload", handleUnload);
-  }, []);
-
-
+function App() {
   return (
     <div className="App">
       <Router>
-        <Routes>
-          <Route path="/" element={<SplashScreen />} />
-          <Route path="/about" element={<AboutPage />} />
-          <Route path="/login" element={<LoginScreen />} />
-          <Route path="/signup" element={<Signup />} />
-          <Route path="/home" element={<HomePage />} />
-          <Route path="/explore" element={<ExplorePage />} />
-          <Route path="/messages" element={<MessagePage />} />
-          <Route path="/messages/:receiverUsername" element={<MessagePage />} />
-          <Route path="/partyfinder" element={<PartyFinderPage />} />
-          <Route path="/communities" element={<CommunitiesPage />} />
-          <Route path="/notifications" element={<NotificationPage />} />
-          <Route path="/profile" element={<ProfilePageTwo />} />
-          <Route path="/profile/:username" element={<ProfilePageTwo />} />
-          <Route path="/communities/:community" element={<CommunityPage />} />
-          <Route path="/settings" element={<SettingsPage />} />
-        </Routes>
+        <AppRoutes />
       </Router>
     </div>
   );
