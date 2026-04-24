@@ -5,17 +5,51 @@ import Pfp from '../images/Profile.png'
 import Add from '../images/AddButton.png'
 import msg from '../images/Message.png'
 import API_URL from '../config/api';
+import dots from "./../images/dots.png";
 
 const urlprefab = "https://gameverse-media-026955879175-us-east-2-an.s3.us-east-2.amazonaws.com/";
 
-function Comment({User, body}){
+function Comment({User, body, postdat, poster}){
     const token  = localStorage.getItem('token');
     const [imgsrc, setimgsrc] = useState(urlprefab+User+"/Profile/ProfilePic");
+    const [pop, setpop] = useState(false);
+    const dotsbar = useRef();
+    const username = localStorage.getItem('username');
+    useEffect(()=>{
+        if(!pop)
+            return;
+        const clickevent = (e)=>{
+            const target = e.target;
+            if(!target.closest(".Comment-Popup")){
+                setpop(false);
+            }
+        }
+        document.addEventListener("click", clickevent,true);
+        return()=>{
+            document.removeEventListener("click", clickevent);
+        }
+    },[pop]);
+    const delcom = async () =>{
+        const pid = await axios.post(
+            `${API_URL}/post/deletecomment`,{content:body,id:postdat,user:User},
+            { headers: { Authorization: `Bearer ${token}` } }
+        );
+        
+    }
+    const PopUp = ({item})=>{
+            return(
+                <div className='Comment-Popup' style={{left:`${item.current.offsetLeft+25}px`,top:`${item.current.offsetTop-15}px`}}>
+                    <button onClick={delcom}>Delete</button>
+                </div>
+            );
+        }
     return(
         <div className='comment'>
             <img src={imgsrc} style={{borderRadius:"50%"}} onError={()=>{setimgsrc(Pfp)}}/>
             <p>{User}: </p>
             <p>{body}</p>
+            {User==username||username==poster?<img className='comment-popup' src={dots} ref={dotsbar} onClick={()=>{setpop(true)}}/>:""}
+            {pop?<PopUp item={dotsbar}/>:""}
         </div>
     )
 }
@@ -31,7 +65,7 @@ function Messagebar({poid,func,commmnmum, size}){
     }
     const autoresize = (e) =>{
         text.current.style.height = "fit-content";
-        text.current.style.height = `${text.current.scrollHeight-20}px`;
+        text.current.style.height = `${text.current.scrollHeight-0}px`;
         setpostbod(e.target.value);
     }
     const text = useRef(null);
@@ -43,14 +77,14 @@ function Messagebar({poid,func,commmnmum, size}){
         </div>
     )
 }
-function CommentSection({pid,func}){
+function CommentSection({pid,func,poster}){
     const token  = localStorage.getItem('token');
     const [msgenabled, setmsg] = useState(true);
     const [commentlist, setcoms] = useState([]);
     const [updatecomments, setupdate] = useState(false);
     const Comms = ()=>{
         const items = commentlist.map((thecom,index)=>{
-            return(<Comment key={index} User={thecom.poster} body={thecom.content}/>)
+            return(<Comment key={index} User={thecom.poster} body={thecom.content} postdat={pid} poster={poster}/>)
         });
         return(
             <div className='Comment-Container'>
