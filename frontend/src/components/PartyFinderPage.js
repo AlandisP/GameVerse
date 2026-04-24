@@ -39,6 +39,7 @@ function PartyFinderPage() {
             { headers: { Authorization: `Bearer ${token}` } }
         )
         setParties(result.data);
+        console.log(result.data);
     };
 
     const searchParties = async(q) => {
@@ -71,7 +72,7 @@ function PartyFinderPage() {
     const ReadParties = () => {
         const filtered = currParty ? parties.filter(p => p.id !== currParty.id):parties;
         const items = filtered.map((party, ind) => (
-            <Party key={ind} Name={party.name} Description={party.description} Categories={party.categories} Count={party.maxMembers} Members={party.members} Status={party.status} CreatorId={party.creatorId} id={party.id} refresh={getParties} refreshCurrent={GetCurrentParty} Time={shortTimeAgo(party.createdAt)} Timer={shortTimeUntil(party.timeEndsAt)} TimerEndsAt={party.timeEndsAt}/>
+            <Party key={ind} Name={party.name} Description={party.description} Categories={party.categories} Count={party.maxMembers} Members={party.members} Status={party.status} CreatorId={party.creatorId} id={party.id} refresh={getParties} refreshCurrent={GetCurrentParty} Time={shortTimeAgo(party.createdAt)} Timer={shortTimeUntil(party.timeEndsAt)} TimerEndsAt={party.timeEndsAt} Img={party.partyImg}/>
         ));
         return(
             <div>{items}</div>
@@ -119,7 +120,8 @@ function PartyFinderPage() {
                     refreshCurrent={GetCurrentParty}
                     Time={shortTimeAgo(currParty.createdAt)}
                     Timer={shortTimeUntil(currParty.timeEndsAt)}
-                    TimerEndsAt={currParty.timeEndsAt}/>
+                    TimerEndsAt={currParty.timeEndsAt}
+                    Img={currParty.partyImg}/>
             </div>
         );
     }

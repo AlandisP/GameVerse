@@ -16,7 +16,7 @@ import img7 from "../images/gen7.png";
 import dayjs from "dayjs";
 import { shortTimeUntil } from '../utils/shortTimeUntil';
 
-function Party({Name, Description, Categories, Count, id, Members, Status, CreatorId, refresh, refreshCurrent, Time, Timer, TimerEndsAt}) {
+function Party({Name, Description, Categories, Count, id, Members, Status, CreatorId, refresh, refreshCurrent, Time, Timer, TimerEndsAt, Img}) {
     const token = localStorage.getItem("token");
     const userId = localStorage.getItem("userId");
     const [error, setError] = useState("");
@@ -114,7 +114,7 @@ function Party({Name, Description, Categories, Count, id, Members, Status, Creat
             <MembersOverlay isOpen={isOpen} onClose={handleCloseMembers} members={Members} CreatorId={CreatorId} partyName={Name} refresh={refresh} refreshCurrent={refreshCurrent}/>
             <EditPartyOverlay isOpen={isOpen2} onClose={handleCloseEdit} Name={Name} Description={Description} Count={Count} refresh={refresh} refreshCurrent={refreshCurrent} Categories={Categories}/>
             <div className='partyInfo'>
-                <img src={img} alt="randomimg" className='party-img'></img>
+                <img src={Img} alt="randomimg" className='party-img'></img>
                 <div className='text-container'>
                     <h3>{Name}</h3>
                     <p>{Description}</p>

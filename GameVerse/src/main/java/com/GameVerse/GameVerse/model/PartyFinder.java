@@ -3,6 +3,7 @@ package com.GameVerse.GameVerse.model;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.Indexed;
@@ -23,6 +24,15 @@ public class PartyFinder {
     private List<Category> categories;
     private Instant createdAt;
     private Instant timeEndsAt;
+    private String partyImg;
+
+    private static final String img1 = "/images/img1.png";
+    private static final String img2 = "/images/img2.png";
+    private static final String img3 = "/images/img3.png";
+    private static final String img4 = "/images/img4.png";
+    private static final String img5 = "/images/img5.png";
+    private static final String img6 = "/images/img6.png";
+    private static final String img7 = "/images/img7.png";
 
     public PartyFinder() {
 
@@ -38,11 +48,17 @@ public class PartyFinder {
         members.add(creatorId);
         this.status = Status.WAITING;
         createdAt = Instant.now();
-
+        Random rand = new Random();
+        int num = rand.nextInt(8);
+        this.partyImg = num==0?img1:num==1?img2:num==2?img3:num==3?img4:num==4?img5:num==5?img6:img7;
     }
 
     public Status getStatus() {
         return status;
+    }
+
+    public String getPartyImg() {
+        return partyImg;
     }
 
     public String getId() {
