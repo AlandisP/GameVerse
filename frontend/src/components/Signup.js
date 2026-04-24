@@ -1,89 +1,100 @@
-import './styles.css';
-import { useNavigate } from 'react-router-dom';
-import logo from '../images/GameVerse_LogoV2.png';
-import React, { useState } from 'react';
-import axios from 'axios';
-import API_URL from '../config/api';
+import "./styles.css";
+import { useNavigate } from "react-router-dom";
+import logo from "../images/GameVerse_LogoV2.png";
+import React, { useState } from "react";
+import axios from "axios";
+import API_URL from "../config/api";
 function Signup() {
+  const history = useNavigate();
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setVerify] = useState("");
+  const [error, setError] = useState("");
+  const [platform, setSelectedValue] = useState("Null");
 
-    const history = useNavigate();
-    const [username, setUsername] = useState('');
-    const [password, setPassword] = useState('');
-    const [confirmPassword, setVerify] = useState('');
-    const [error, setError] = useState('');
-    const [platform, setSelectedValue] = useState('Null');
+  // const numbers = Array.from({ length: 77 }, (x, i) => i + 1950);
+  // const days = Array.from({ length: 31 }, (x, i) => i + 1);
 
-    // const numbers = Array.from({ length: 77 }, (x, i) => i + 1950);
-    // const days = Array.from({ length: 31 }, (x, i) => i + 1);
+  const HandleChange = (e) => {
+    setSelectedValue(e.target.value);
+  };
 
-    const HandleChange = (e) => {
-        setSelectedValue(e.target.value);
+  const HandleSignUp = async () => {
+    try {
+      if (!username || !password || !confirmPassword) {
+        setError("Please fill in the fields");
+        return;
+      }
+      const response = await axios.post(`${API_URL}/auth/signup`, {
+        username,
+        password,
+        confirmPassword,
+        platform,
+      });
+      setError("Account Created!");
+      console.log("Create Account Successful:", response.data);
+      localStorage.setItem("token", response.data.token);
+      localStorage.setItem("username", response.data.username);
+      localStorage.setItem("page", "/");
+      localStorage.setItem("userId", response.data.userId);
+      history("/home");
+    } catch (error) {
+      console.error(
+        "Account Creation failed:",
+        error.response ? error.response.data : error.message,
+      );
+      setError(error.response.data);
     }
+  };
 
-    const HandleSignUp = async () => {
-        try {
-            if(!username || !password || !confirmPassword) {
-                setError('Please fill in the fields');
-                return;
-            }
-            const response = await axios.post(`${API_URL}/auth/signup`, {username, password, confirmPassword, platform});
-            setError("Account Created!");
-            console.log('Create Account Successful:', response.data);
-            localStorage.setItem('token', response.data.token);
-            localStorage.setItem('username', response.data.username);
-            localStorage.setItem('page', '/');
-            localStorage.setItem('userId', response.data.userId);
-            history('/home');
-        } catch(error) {
-            console.error('Account Creation failed:', error.response ? error.response.data: error.message);
-            setError(error.response.data);  
-        }
-        
-    } 
-
-
-    return (
-        <div className='App'>
-            <div className='bg'>
-        <div className='Header'>
-            <div><img className='logo' src={logo}/></div>
-            <div><h1 className="HeaderE" >GameVerse</h1></div>
-            <div className='spacer'></div>
+  return (
+    <div className="App">
+      <div className="bg">
+        <div className="Header">
+          <div>
+            <img className="logo" src={logo} />
+          </div>
+          <div>
+            <h1 className="HeaderE">GameVerse</h1>
+          </div>
+          <div className="spacer"></div>
         </div>
         <div className="LoginScreen">
-            <h1>Create Account</h1>
-            <p className='intro-text'>Create an account to start connecting with other gamers!</p>
-            <div className="Username">
-                <h3>Username</h3>
-                <input 
-                className="InputBox" 
-                type='text'
-                id= 'userinput'
-                placeholder='Username'
-                onChange={(e) => setUsername(e.target.value)}
-                />
-            </div>
-            <div className="Password">
-                <h3>Password</h3>
-                <input 
-                className="InputBox" 
-                type='password'
-                id='passinput'
-                placeholder='Password'
-                onChange={(e) => setPassword(e.target.value)}
-                />
-            </div>
-            <div className="VerPassword">
-                <h3>Confirm Password</h3>
-                <input 
-                className="InputBox" 
-                type='password'
-                id='passinput'
-                placeholder='Password'
-                onChange={(e) => setVerify(e.target.value)}
-                />
-            </div>
-            {/* <div className="Bday">
+          <h1>Create Account</h1>
+          <p className="intro-text">
+            Create an account to start connecting with other gamers!
+          </p>
+          <div className="Username">
+            <h3>Username</h3>
+            <input
+              className="InputBox"
+              type="text"
+              id="userinput"
+              placeholder="Username"
+              onChange={(e) => setUsername(e.target.value)}
+            />
+          </div>
+          <div className="Password">
+            <h3>Password</h3>
+            <input
+              className="InputBox"
+              type="password"
+              id="passinput"
+              placeholder="Password"
+              onChange={(e) => setPassword(e.target.value)}
+            />
+          </div>
+          <div className="VerPassword">
+            <h3>Confirm Password</h3>
+            <input
+              className="InputBox"
+              type="password"
+              id="passinput"
+              placeholder="Password"
+              onChange={(e) => setVerify(e.target.value)}
+            />
+          </div>
+          {/* <div className="Bday">
                 <h3>Birthday</h3>
                 <div className='BdayInput'>
                     <select name='Month' required>
@@ -115,33 +126,39 @@ function Signup() {
                     </select>
                 </div>
             </div> */}
-            <div className='Platform'>
-                <div className='Plat'>
-                    <h3>Platform</h3>
-                </div>
-                <select name='Platform' required value={platform} onChange={HandleChange}>
-                    <option selected disabled hidden value="Null">Select Platform</option>
-                    <option value='PS'>Playstation</option>
-                    <option value='PC'>PC</option>
-                    <option value='XB'>Xbox</option>
-                    <option value='NI'>Nintendo</option>
-                </select>
+          <div className="Platform">
+            <div className="Plat">
+              <h3>Platform</h3>
             </div>
-            <button className = "LoginButton" onClick={HandleSignUp}>
-                Create Account
-            </button>
-            <p className='Create-Account'>
-                Already have an Account? <a  href = "/" className='CA-Link'>Log In!</a>
-            </p>
-            <p className='error-text'>
-                {error}
-            </p>
-
+            <select
+              name="Platform"
+              required
+              value={platform}
+              onChange={HandleChange}
+            >
+              <option selected disabled hidden value="Null">
+                Select Platform
+              </option>
+              <option value="PS">Playstation</option>
+              <option value="PC">PC</option>
+              <option value="XB">Xbox</option>
+              <option value="NI">Nintendo</option>
+            </select>
+          </div>
+          <button className="LoginButton" onClick={HandleSignUp}>
+            Create Account
+          </button>
+          <p className="Create-Account">
+            Already have an Account?{" "}
+            <a href="/login" className="CA-Link">
+              Log In!
+            </a>
+          </p>
+          <p className="error-text">{error}</p>
         </div>
-        </div>
-        </div>
-    )
-
+      </div>
+    </div>
+  );
 }
 
 export default Signup;
