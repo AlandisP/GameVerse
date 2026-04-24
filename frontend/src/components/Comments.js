@@ -65,7 +65,7 @@ function Messagebar({poid,func,commmnmum, size}){
     }
     const autoresize = (e) =>{
         text.current.style.height = "fit-content";
-        text.current.style.height = `${text.current.scrollHeight-0}px`;
+        text.current.style.height = `${text.current.scrollHeight-20}px`;
         setpostbod(e.target.value);
     }
     const text = useRef(null);
