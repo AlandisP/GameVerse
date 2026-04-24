@@ -289,7 +289,8 @@
 
 .Content {
     display: flex;
-    justify-content: center;
+    flex-direction: column;
+    align-items: center;
 }
 
 .clip.hasfile{
@@ -358,4 +359,26 @@
 .Posting {
     background-color: slategray !important;
     width: auto !important;
+}
+
+.Loading-Notification{
+    margin-top: 20px;
+    display: flex;
+    justify-content: center;
+}
+
+.Load-More{
+    width: 100px;
+    height: 40px;
+    background-color: #3b82f6;
+    color:white;
+    margin-bottom: 80px;
+    margin-top: 20px;
+    border-radius: 20px;
+    padding:0 5px 0 5px;
+    border-style: none;
+}
+
+.Load-More:hover{
+    background-color: #1055c4;;
 }

@@ -33,6 +33,8 @@ function HomePage() {
     urlprefab + username + "/Profile/ProfilePic",
   );
   const [posting, makingpost] = useState(false);
+  const [hasloaded, finishloading] = useState(false);
+  const [displaying, setdisplay] = useState(10);
 
   const authHeaders = hasValidToken ? { Authorization: `Bearer ${token}` } : {};
 
@@ -120,9 +122,10 @@ function HomePage() {
       const bookmarks = await axios.get(`${API_URL}/post/getbooks`, {
         headers: authHeaders,
       });
-
+      
       setbooks(bookmarks.data);
       setposts(result.data);
+      finishloading(true);
     } catch (error) {
       handleAuthFailure(error);
     }
@@ -156,24 +159,26 @@ function HomePage() {
     ? followingPosts.filter((p) => p.tag === platform)
     : followingPosts;
 
-  const GetAllPosts = filtered.map((post) => {
+  const GetAllPosts = filtered.map((post, index) => {
     const isbookd = bookarray.includes(post["id"]) ? true : false;
-    return (
-      <PostObj
-        key={post["id"]}
-        User={post["user"]}
-        Content={post["text"]}
-        Likes={post["likes"]}
-        Liked={parselike(post)}
-        id={post["id"]}
-        commcount={post["comments"].length}
-        books={isbookd}
-        CreatedAt={post["createdAt"]}
-        CommunityName={post["communityName"]}
-        media={post["media"]}
-        type={post["mediaType"]}
-      />
-    );
+    if(index<displaying){
+      return (
+        <PostObj
+          key={post["id"]}
+          User={post["user"]}
+          Content={post["text"]}
+          Likes={post["likes"]}
+          Liked={parselike(post)}
+          id={post["id"]}
+          commcount={post["comments"].length}
+          books={isbookd}
+          CreatedAt={post["createdAt"]}
+          CommunityName={post["communityName"]}
+          media={post["media"]}
+          type={post["mediaType"]}
+        />
+      );
+    }
   });
 
   const GetAllFollowingPosts = filteredfollow.map((post) => {
@@ -206,6 +211,22 @@ function HomePage() {
     getFollowingPosts();
   }, [hasValidToken, navigate]);
 
+  const loadMore = (type)=>{
+    if(type==1){
+      if(displaying+10<filtered.length){
+        setdisplay(displaying+10);
+      }else{
+        setdisplay(filtered.length);
+      }
+    }else{
+      if(displaying+10<filteredfollow.length){
+        setdisplay(displaying+10);
+      }else{
+        setdisplay(filteredfollow.length);
+      }
+    }
+  }
+
   return (
     <div className="page-container">
       <NavBar GetPosts={getposts} />
@@ -237,6 +258,7 @@ function HomePage() {
                 key={tab}
                 onClick={() => {
                   setActiveTab(tab);
+                  setdisplay(10);
                 }}
                 className={activeTab === tab ? "tabs-sa" : "tabs-s"}
               >
@@ -293,9 +315,11 @@ function HomePage() {
               <option value="NI">Nintendo</option>
             </select>
           </div>
-          {activeTab === "General" ? (
+          {hasloaded?
+          activeTab === "General" ? (
             <div className="Content">
               <div>{GetAllPosts}</div>
+              {displaying<filtered.length?<button className="Load-More" onClick={()=>{loadMore(1)}}>Load More</button>:""}
             </div>
           ) : (
             <div className="Content">
@@ -308,8 +332,9 @@ function HomePage() {
                   </p>
                 )}
               </div>
+              {displaying<filtered.length?<button className="Load-More" onClick={()=>{loadMore(1)}}>Load More</button>:""}
             </div>
-          )}
+          ):<div className="Loading-Notification"><h1>Loading Posts...</h1></div>}
         </div>
       </div>
       {uploadbox ? (
