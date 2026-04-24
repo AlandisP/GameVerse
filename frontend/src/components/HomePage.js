@@ -181,24 +181,26 @@ function HomePage() {
     }
   });
 
-  const GetAllFollowingPosts = filteredfollow.map((post) => {
+  const GetAllFollowingPosts = filteredfollow.map((post, index) => {
     const isbookd = bookarray.includes(post["id"]) ? true : false;
-    return (
-      <PostObj
-        key={post["id"]}
-        User={post["user"]}
-        Content={post["text"]}
-        Likes={post["likes"]}
-        Liked={parselike(post)}
-        id={post["id"]}
-        commcount={post["comments"].length}
-        books={isbookd}
-        CreatedAt={post["createdAt"]}
-        CommunityName={post["communityName"]}
-        media={post["media"]}
-        type={post["mediaType"]}
-      />
-    );
+    if(index<displaying){
+      return (
+        <PostObj
+          key={post["id"]}
+          User={post["user"]}
+          Content={post["text"]}
+          Likes={post["likes"]}
+          Liked={parselike(post)}
+          id={post["id"]}
+          commcount={post["comments"].length}
+          books={isbookd}
+          CreatedAt={post["createdAt"]}
+          CommunityName={post["communityName"]}
+          media={post["media"]}
+          type={post["mediaType"]}
+        />
+      );
+    }
   });
 
   useEffect(() => {
@@ -332,7 +334,7 @@ function HomePage() {
                   </p>
                 )}
               </div>
-              {displaying<filtered.length?<button className="Load-More" onClick={()=>{loadMore(1)}}>Load More</button>:""}
+              {displaying<filteredfollow.length?<button className="Load-More" onClick={()=>{loadMore(2)}}>Load More</button>:""}
             </div>
           ):<div className="Loading-Notification"><h1>Loading Posts...</h1></div>}
         </div>
