@@ -28,11 +28,11 @@ function LoginScreen() {
       localStorage.setItem("username", response.data.username);
       localStorage.setItem("userId", response.data.userId);
       if (!rememberMe) {
-        sessionStorage.setItem("sessionOnly", "true");
+        localStorage.setItem("sessionOnly", "true");
       } else {
-        sessionStorage.removeItem("sessionOnly");
+        localStorage.removeItem("sessionOnly");
       }
-      history("/home");
+            history("/home");
     } catch (error) {
       console.error(
         "Login failed:",
@@ -42,18 +42,19 @@ function LoginScreen() {
     }
   };
 
-  useEffect(() => {
-    const handleUnload = () => {
-      if (sessionStorage.getItem("sessionOnly") === "true") {
-        localStorage.removeItem("token");
-        localStorage.removeItem("username");
-        localStorage.removeItem("userId");
-      }
-    };
+  // useEffect(() => {
+  //   const handleUnload = () => {
+  //     if (localStorage.getItem("sessionOnly") === "true") {
+  //       localStorage.removeItem("token");
+  //       localStorage.removeItem("username");
+  //       localStorage.removeItem("userId");
+  //       localStorage.removeItem("sessionOnly");
+  //     }
+  //   };
 
-    window.addEventListener("beforeunload", handleUnload);
-    return () => window.removeEventListener("beforeunload", handleUnload);
-}, []);
+  //   window.addEventListener("beforeunload", handleUnload);
+  //   return () => window.removeEventListener("beforeunload", handleUnload);
+  // }, []);
 
   return (
     <div className="App">

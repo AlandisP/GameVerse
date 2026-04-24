@@ -1,6 +1,6 @@
 import "./App.css";
 import React from "react";
-import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
+import { BrowserRouter as Router, Route, Routes, useNavigate } from "react-router-dom";
 import HomePage from "./components/HomePage";
 import LoginScreen from "./components/LoginScreen";
 import SplashScreen from "./components/SplashScreen";
@@ -16,6 +16,47 @@ import SettingsPage from "./components/SettingsPage";
 import AboutPage from "./components/AboutPage";
 
 function App() {
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    const currentPath = window.location.pathname;
+    const publicPaths = ["/", "/login", "/signup", "/about"];
+
+    if (token && publicPaths.includes(currentPath)) {
+      // Has token and is on a public/auth page → send to home
+      navigate("/home");
+    }
+  }, []);
+
+  useEffect(() => {
+    const handleUnload = () => {
+      if (localStorage.getItem("sessionOnly") === "true") {
+        localStorage.removeItem("token");
+        localStorage.removeItem("username");
+        localStorage.removeItem("userId");
+        localStorage.removeItem("sessionOnly");
+      }
+    };
+    window.addEventListener("beforeunload", handleUnload);
+    return () => window.removeEventListener("beforeunload", handleUnload);
+  }, []);
+
+  useEffect(() => {
+    const handleUnload = () => {
+      if (localStorage.getItem("sessionOnly") === "true") {
+        localStorage.removeItem("token");
+        localStorage.removeItem("username");
+        localStorage.removeItem("userId");
+        localStorage.removeItem("sessionOnly");
+      }
+    };
+
+    window.addEventListener("beforeunload", handleUnload);
+    return () => window.removeEventListener("beforeunload", handleUnload);
+  }, []);
+
+
   return (
     <div className="App">
       <Router>
