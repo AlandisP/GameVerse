@@ -675,3 +675,8 @@ nav.sidebar div,
     text-decoration: underline;
     cursor: pointer;
 }
+
+.remember-me {
+    background-color: transparent;
+    margin-top: 10px;
+}

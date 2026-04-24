@@ -1,6 +1,6 @@
 .about-page {
   min-height: 100vh;
-  background: linear-gradient(180deg, #0b1020 0%, #050816 100%);
+  background: rgb(44, 42, 42);
   color: white;
   display: flex;
   justify-content: center;
@@ -10,7 +10,7 @@
 
 .about-card {
   width: min(900px, 100%);
-  background: rgba(8, 12, 30, 0.55);
+  background: rgb(31, 29, 29);
   border: 1px solid rgba(122, 141, 255, 0.18);
   border-radius: 24px;
   padding: 32px;

@@ -9,16 +9,20 @@ function AboutPage() {
       linkedin: "https://www.linkedin.com/in/joshua-cook-220a4b290/",
     },
     {
-      name: "Allandis Patterson",
+      name: "Alandis Patterson",
+      linkedin: "https://www.linkedin.com/in/alandis-patterson/",
     },
     {
       name: "Gage Hulbert",
+      linkedin: "https://www.linkedin.com/in/gage-hulbert-070b27353/",
     },
     {
       name: "Jamius Cheatham",
+      linkedin: "https://www.linkedin.com/in/jamius-cheatham-5743b9215/",
     },
     {
       name: "Quintarius Floyd",
+      linkedin: "https://www.linkedin.com/in/quintariusfloyd2/",
     },
   ];
 

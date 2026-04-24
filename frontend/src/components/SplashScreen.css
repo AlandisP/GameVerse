@@ -1,5 +1,5 @@
 :root {
-  --bg: #050816;
+  --bg: rgb(44, 42, 42);
   --text: #f8fafc;
   --muted: rgba(226, 232, 240, 0.72);
   --muted-strong: rgba(226, 232, 240, 0.9);

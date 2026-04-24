@@ -1,6 +1,6 @@
 import "./styles.css";
 import logo from "../images/GameVerse_LogoV2.png";
-import React, { useState } from "react";
+import React, { useState,useEffect } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import API_URL from "../config/api";
@@ -8,6 +8,7 @@ function LoginScreen() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [rememberMe, setRememberMe] = useState(false);
   const history = useNavigate();
 
   const HandleLogin = async () => {
@@ -19,12 +20,18 @@ function LoginScreen() {
       const response = await axios.post(`${API_URL}/auth/login`, {
         username,
         password,
+        rememberMe,
       });
       setError("Logged in!");
-      console.log("Login Successful:", response.data);
+      //console.log("Login Successful:", response.data);
       localStorage.setItem("token", response.data.token);
       localStorage.setItem("username", response.data.username);
       localStorage.setItem("userId", response.data.userId);
+      if (!rememberMe) {
+        sessionStorage.setItem("sessionOnly", "true");
+      } else {
+        sessionStorage.removeItem("sessionOnly");
+      }
       history("/home");
     } catch (error) {
       console.error(
@@ -34,6 +41,19 @@ function LoginScreen() {
       setError("Invalid Username or Password");
     }
   };
+
+  useEffect(() => {
+    const handleUnload = () => {
+      if (sessionStorage.getItem("sessionOnly") === "true") {
+        localStorage.removeItem("token");
+        localStorage.removeItem("username");
+        localStorage.removeItem("userId");
+      }
+    };
+
+    window.addEventListener("beforeunload", handleUnload);
+    return () => window.removeEventListener("beforeunload", handleUnload);
+}, []);
 
   return (
     <div className="App">
@@ -71,6 +91,17 @@ function LoginScreen() {
               placeholder="Password"
               onChange={(e) => setPassword(e.target.value)}
             />
+          </div>
+          <div className="remember-me">
+            <label>
+              <input
+                type="checkbox"
+                checked={rememberMe}
+                onChange={(e) => setRememberMe(e.target.checked)}
+                style={{ accentColor: '#3b82f6' }}
+              />
+              {" "}Remember Me
+            </label>
           </div>
           <button className="LoginButton" onClick={HandleLogin}>
             Login

@@ -23,15 +23,23 @@ public class JwtService {
     @Value("${security.jwt.expiration-time}")
     private long jwtExpiration;
 
-        // Generate token with userId AND role
+    @Value("${security.jwt.expiration-time2:2592000000}")
+    private long jwtExpiration2;
+
     public String generateToken(String userId, Role role) {
+        return generateToken(userId, role, false);
+    }   
+
+        // Generate token with userId AND role
+    public String generateToken(String userId, Role role, boolean rememberMe) {
         SecretKey key = Keys.hmacShaKeyFor(secretKey.getBytes());
+        long expiry = rememberMe ? jwtExpiration2 : jwtExpiration;
         
         return Jwts.builder()
                 .setSubject(userId)
                 .claim("role", role.name())  // ADD ROLE TO TOKEN
                 .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + jwtExpiration))
+                .setExpiration(new Date(System.currentTimeMillis() + expiry))
                 .signWith(key, SignatureAlgorithm.HS512)
                 .compact();
     }

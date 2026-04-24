@@ -70,7 +70,7 @@ public class AuthController {
         }
         
     
-        String token = jwtService.generateToken(user.getId(), user.getRole());
+        String token = jwtService.generateToken(user.getId(), user.getRole(), request.rememberMe);
         
         return ResponseEntity.ok(new AuthResponse(token, user.getId(), user.getUsername(), user.getRole()));
     }
@@ -79,6 +79,7 @@ public class AuthController {
     static class LoginRequest {
         public String username;
         public String password;
+        public boolean rememberMe;
     }
     
     static class RegisterRequest {
