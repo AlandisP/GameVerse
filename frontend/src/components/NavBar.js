@@ -40,7 +40,7 @@ function NavBar() {
         localStorage.removeItem('token');
         localStorage.removeItem('username');
         localStorage.removeItem('userId');
-        navigate('/');
+        navigate('/login');
     };
 
     useEffect(() => {

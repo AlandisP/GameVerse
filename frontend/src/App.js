@@ -1,6 +1,6 @@
 import "./App.css";
 import React, { useEffect } from "react";
-import { BrowserRouter as Router, Route, Routes, useNavigate } from "react-router-dom";
+import { BrowserRouter as Router, Route, Routes, useNavigate, Navigate } from "react-router-dom";
 import HomePage from "./components/HomePage";
 import LoginScreen from "./components/LoginScreen";
 import SplashScreen from "./components/SplashScreen";
@@ -14,6 +14,14 @@ import NotificationPage from "./components/NotificationPage";
 import CommunityPage from "./components/CommunitySubPages/CommunityPage";
 import SettingsPage from "./components/SettingsPage";
 import AboutPage from "./components/AboutPage";
+
+function ProtectedRoute({ children }) {
+  const token = localStorage.getItem("token");
+  if (!token) {
+    return <Navigate to="/login" replace />;
+  }
+  return children;
+}
 
 function AppRoutes() {
   const navigate = useNavigate();
@@ -42,21 +50,24 @@ function AppRoutes() {
 
   return (
     <Routes>
+      {/* Public routes */}
       <Route path="/" element={<SplashScreen />} />
       <Route path="/about" element={<AboutPage />} />
       <Route path="/login" element={<LoginScreen />} />
       <Route path="/signup" element={<Signup />} />
-      <Route path="/home" element={<HomePage />} />
-      <Route path="/explore" element={<ExplorePage />} />
-      <Route path="/messages" element={<MessagePage />} />
-      <Route path="/messages/:receiverUsername" element={<MessagePage />} />
-      <Route path="/partyfinder" element={<PartyFinderPage />} />
-      <Route path="/communities" element={<CommunitiesPage />} />
-      <Route path="/notifications" element={<NotificationPage />} />
-      <Route path="/profile" element={<ProfilePageTwo />} />
-      <Route path="/profile/:username" element={<ProfilePageTwo />} />
-      <Route path="/communities/:community" element={<CommunityPage />} />
-      <Route path="/settings" element={<SettingsPage />} />
+
+      {/* Protected routes */}
+      <Route path="/home" element={<ProtectedRoute><HomePage /></ProtectedRoute>} />
+      <Route path="/explore" element={<ProtectedRoute><ExplorePage /></ProtectedRoute>} />
+      <Route path="/messages" element={<ProtectedRoute><MessagePage /></ProtectedRoute>} />
+      <Route path="/messages/:receiverUsername" element={<ProtectedRoute><MessagePage /></ProtectedRoute>} />
+      <Route path="/partyfinder" element={<ProtectedRoute><PartyFinderPage /></ProtectedRoute>} />
+      <Route path="/communities" element={<ProtectedRoute><CommunitiesPage /></ProtectedRoute>} />
+      <Route path="/notifications" element={<ProtectedRoute><NotificationPage /></ProtectedRoute>} />
+      <Route path="/profile" element={<ProtectedRoute><ProfilePageTwo /></ProtectedRoute>} />
+      <Route path="/profile/:username" element={<ProtectedRoute><ProfilePageTwo /></ProtectedRoute>} />
+      <Route path="/communities/:community" element={<ProtectedRoute><CommunityPage /></ProtectedRoute>} />
+      <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
     </Routes>
   );
 }
