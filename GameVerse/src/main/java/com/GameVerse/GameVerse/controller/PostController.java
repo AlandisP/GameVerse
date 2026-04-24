@@ -169,8 +169,12 @@ public class PostController {
             .stream()
             .filter(post -> {
                 User poster = userRep.findByUsernameIgnoreCase(post.getUser());
+                Boolean following = true;
+                if(poster!=null && poster.getIsPrivate()){
+                    following = relationshipRepository.existsByFollowerIdAndFollowingId(userId, poster.getId());
+                }
                 return poster != null 
-                    && !blocks.contains(poster.getId());
+                    && !blocks.contains(poster.getId()) && (following);
             })
             .collect(Collectors.toList());
 
