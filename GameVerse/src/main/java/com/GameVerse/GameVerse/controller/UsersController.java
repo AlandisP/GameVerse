@@ -108,7 +108,6 @@ public class UsersController {
     public List<User> getUsernameMatches(@RequestParam String text) {
 
         return repository.findByUsernameContainingIgnoreCase(text);
-
     }
 
     @PostMapping("/follow/{username}")
@@ -136,6 +135,19 @@ public class UsersController {
             return ResponseEntity.badRequest().body("Request not found");
         }
         frService.requestChoice(req.getId(), choice);
+        return ResponseEntity.ok("Success");
+    }
+
+    @PostMapping("/cancelRequest/{username}")
+    public ResponseEntity<?> cancelRequest(@PathVariable String username, Authentication auth) {
+        String userId = (String) auth.getPrincipal();
+        User user = repository.findByUsernameIgnoreCase(username);
+        try {
+            frService.cancelRequest(userId, user.getId());
+            
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
         return ResponseEntity.ok("Success");
     }
 
@@ -191,7 +203,15 @@ public class UsersController {
         String userId = (String) auth.getPrincipal();
         User user = repository.findByUsernameIgnoreCase(username);
         List<String> requests = frRepository.findByReceiverId(user.getId()).stream().map(FollowRequest::getSenderId).collect(Collectors.toList());
-        return ResponseEntity.ok(requests.stream().map(id -> repository.findById(id).orElse(null).getUsername()).collect(Collectors.toList()));
+        return ResponseEntity.ok(requests.stream().map(id -> repository.findById(id).orElse(null)).collect(Collectors.toList()));
+    }
+
+    @GetMapping("/requestSent")
+    public ResponseEntity<?> getUserSentRequest(Authentication auth) {
+        String userId = (String) auth.getPrincipal();
+        User user = repository.findById(userId).orElse(null);
+        List<String> sentRequest = frRepository.findBySenderId(userId).stream().map(FollowRequest::getReceiverId).collect(Collectors.toList());
+        return ResponseEntity.ok(sentRequest.stream().map(id -> repository.findById(id).orElse(null).getUsername()).collect(Collectors.toList()));
     }
 
 

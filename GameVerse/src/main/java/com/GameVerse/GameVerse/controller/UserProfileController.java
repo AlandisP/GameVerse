@@ -1,6 +1,8 @@
 package com.GameVerse.GameVerse.controller;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -17,6 +19,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.GameVerse.GameVerse.model.FollowRequest;
 import com.GameVerse.GameVerse.model.User;
 import com.GameVerse.GameVerse.repository.FollowRequestRepository;
 import com.GameVerse.GameVerse.repository.PostRepository;
@@ -285,6 +288,12 @@ public class UserProfileController {
     public ResponseEntity<?> setAccountToPrivate(Authentication auth) {
         String userId = (String) auth.getPrincipal();
         User user = repository.findById(userId).orElseThrow();
+        if(user.getIsPrivate()) {
+            List<FollowRequest> requests = frRepository.findByReceiverId(userId);
+            for(FollowRequest req: requests) {
+                frService.requestChoice(req.getId(), true);
+            }
+        }
         user.setIsPrivate(!user.getIsPrivate());
         repository.save(user);
         return ResponseEntity.ok(user.getIsPrivate());

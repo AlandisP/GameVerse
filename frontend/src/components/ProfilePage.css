@@ -48,3 +48,9 @@
     margin: 0;
     margin-top: 7px;
 }
+
+.follow-actions:hover{
+    background-color: rgba(255, 0, 0, 0.548);
+    border: 1px solid red;
+
+}

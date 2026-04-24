@@ -39,6 +39,16 @@ public class FollowRequestService {
         frRepository.save(newReq);
     }
 
+    public void cancelRequest(String userId, String acctId) {
+        // User user = userRepository.findById(userId).orElse(null);
+        // User privUser = userRepository.findById(acctId).orElse(null);
+        FollowRequest req = frRepository.findBySenderIdAndReceiverId(userId, acctId).orElse(null);
+        if(req == null) {
+            throw new RuntimeException("Request doesn't exist");
+        }
+        frRepository.delete(req);
+    }
+
     public void requestChoice(String reqId, boolean choice) {
         FollowRequest req = frRepository.findById(reqId).orElse(null);
         if(req == null) {

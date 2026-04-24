@@ -18,6 +18,7 @@ function FollowersAndFollowingOverlay({isOpen, Username, onClose, Tab, GetCounts
     const[isPopupOpen, setIsPopupOpen] = useState(false);
     const [selectedUser, setSelectedUser] = useState(null);
     const navigate = useNavigate();
+    const [sentRequest, setSentRequest] = useState([]);
 
     
 
@@ -81,10 +82,10 @@ function FollowersAndFollowingOverlay({isOpen, Username, onClose, Tab, GetCounts
         }
     }
 
-    const handleUnfollow = async(userName) => {
+    const handleUnfollow = async(user) => {
         try {
             const res = await axios.post(
-                `${API_URL}/profile/${userName}/unfollow`,{},
+                `${API_URL}/profile/${user.username}/unfollow`,{},
                 { headers: { Authorization: `Bearer ${token}` } }
             );
             getFollowing();
@@ -94,17 +95,32 @@ function FollowersAndFollowingOverlay({isOpen, Username, onClose, Tab, GetCounts
         }   
     }
 
-    const handleFollow = async(userName)=>{
+    const handleFollow = async(user)=>{
         try {
             const res = await axios.post(
-                `${API_URL}/profile/${userName}/follow`,{},
+                `${API_URL}/profile/${user.username}/follow`,{},
                 { headers: { Authorization: `Bearer ${token}` } }
             );
             getFollowing();
             GetCounts();
+            if(user.isPrivate) {
+                setSentRequest((prev) => [...prev, user.username])
+            }
         } catch (error) {
             console.error("failed to follow user: ", error.response?.data || error.message);
         }  
+    }
+
+    const handleCancelRequest = async(user) => {
+        try{
+            const res = await axios.post(
+            `${API_URL}/users/cancelRequest/${user.username}`, {},
+            { headers: { Authorization: `Bearer ${token}` } }
+            );
+            setSentRequest((prev) => prev.filter((u) => u !== user.username));
+        }catch(Error) {
+            console.error("Error canceling request:", Error);
+        }
     }
 
 
@@ -120,10 +136,10 @@ function FollowersAndFollowingOverlay({isOpen, Username, onClose, Tab, GetCounts
                 </div>
                 {username===user.username?(<></>):
                 loggedFollowing.includes(user.id)?(
-                    <button className='pfpbutton2' onClick={(e) => {handleUnfollow(user.username); e.stopPropagation();}}><span>Following</span></button>
-                    ):loggedFollowers.includes(user.id)?(
-                        <button className='pfpbutton' onClick={(e) => {handleFollow(user.username); e.stopPropagation();}}>Follow Back</button>
-                    ):<button className='pfpbutton' onClick={(e) => {handleFollow(user.username); e.stopPropagation();}}>Follow</button>
+                    <button className='pfpbutton2' onClick={(e) => {handleUnfollow(user); e.stopPropagation();}}><span>Following</span></button>
+                    ):sentRequest.includes(user.username)?<button className='pfpbutton' onClick={(e) => {handleCancelRequest(user); e.stopPropagation();}}>Requested</button>:loggedFollowers.includes(user.id)?(
+                        <button className='pfpbutton' onClick={(e) => {handleFollow(user); e.stopPropagation();}}>Follow Back</button>
+                    ):<button className='pfpbutton' onClick={(e) => {handleFollow(user); e.stopPropagation();}}>Follow</button>
                 }
             </div>
         );
@@ -153,10 +169,10 @@ function FollowersAndFollowingOverlay({isOpen, Username, onClose, Tab, GetCounts
                 <div className='dotsw'>
                     {username===user.username?(<></>):
                     loggedFollowing.includes(user.id)?(
-                        <button className='pfpbutton2' onClick={(e) => {handleUnfollow(user.username); e.stopPropagation();}}><span>Following</span></button>
-                        ):loggedFollowers.includes(user.id)?(
-                            <button className='pfpbutton' onClick={(e) => {handleFollow(user.username); e.stopPropagation();}}>Follow Back</button>
-                        ):<button className='pfpbutton' onClick={(e) => {handleFollow(user.username);e.stopPropagation();}}>Follow</button>
+                        <button className='pfpbutton2' onClick={(e) => {handleUnfollow(user); e.stopPropagation();}}><span>Following</span></button>
+                        ):sentRequest.includes(user.username)?<button className='pfpbutton' onClick={(e) => {handleCancelRequest(user); e.stopPropagation();}}>Requested</button>:loggedFollowers.includes(user.id)?(
+                            <button className='pfpbutton' onClick={(e) => {handleFollow(user); e.stopPropagation();}}>Follow Back</button>
+                        ):<button className='pfpbutton' onClick={(e) => {handleFollow(user);e.stopPropagation();}}>Follow</button>
                     }
                     {username===Username?(<img src={dots} alt='dots' className='dotsimg' onClick={(e) => handleOptionsClick(e, user)}/>):""}
                 </div>
@@ -175,6 +191,19 @@ function FollowersAndFollowingOverlay({isOpen, Username, onClose, Tab, GetCounts
     }
 
     useEffect(() => {
+
+    const getSentRequest = async() => {
+        try {
+            const res = await axios.get(`${API_URL}/users/requestSent`,
+                { headers: { Authorization: `Bearer ${token}` } }
+            );
+            setSentRequest(res.data);
+            console.log(res.data);
+        } catch (error) {
+            console.error("failed to get user data: ", error.response?.data || error.message);
+        }
+    }
+    getSentRequest();
             const handleOutsideClick = () => {setIsPopupOpen(false);}
             document.addEventListener("click", handleOutsideClick);
             return () => document.removeEventListener("click", handleOutsideClick);
@@ -230,7 +259,8 @@ function FollowersAndFollowingOverlay({isOpen, Username, onClose, Tab, GetCounts
 function PopUpMenu({ top, left, user, setPopUpMenu, getFollowers, GetCounts}) {
     const token = localStorage.getItem("token");
 
-    const handleRemove = async() => {
+    const handleRemove = async(e) => {
+        e.stopPropagation();
         try {
             const res = await axios.post(
                 `${API_URL}/profile/removeFollower/${user.username}`,{},
@@ -238,18 +268,21 @@ function PopUpMenu({ top, left, user, setPopUpMenu, getFollowers, GetCounts}) {
             );
             getFollowers();
             GetCounts();
+            setPopUpMenu(false);
         } catch (error) {
             console.error("failed to unfollow user: ", error.response?.data || error.message);
         }   
     }
 
-    const blockUser = async() => {
+    const blockUser = async(e) => {
+        e.stopPropagation();
         try {
             const res = await axios.post (
                 `${API_URL}/profile/block/${user.username}`,
                 {}, { headers: { Authorization: `Bearer ${token}` } }
             );
             getFollowers();
+            setPopUpMenu(false);
         } catch (error) {
             console.error("failed to Block user: ", error.response?.data || error.message);
         }
@@ -260,8 +293,8 @@ function PopUpMenu({ top, left, user, setPopUpMenu, getFollowers, GetCounts}) {
         <div className="popmenu-container" style={{ top, left, position: "fixed" }}>
             <ul className="popmenu">
                 <p>{user.username}</p>
-                <li className="kick" onClick={handleRemove}>Remove Follower</li>
-                <li className="kick" onClick={blockUser}>Block</li>
+                <li className="kick" onClick={(e) => handleRemove(e)}>Remove Follower</li>
+                <li className="kick" onClick={(e) => blockUser(e)}>Block</li>
                 
             </ul>
         </div>

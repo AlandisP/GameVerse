@@ -325,12 +325,17 @@ function ProfilePageTwo() {
         {},
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      setIsFollowing(true);
-      setProfile((prev) =>
-        prev
-          ? { ...prev, followerCount: (prev.followerCount || 0) + 1 }
-          : prev
-      );
+
+      if (profile.isPrivate) {
+        setRequest((prev) => [...prev, loggedInUsername]); // adds to requests so button shows "Requested"
+      } else {
+        setIsFollowing(true);
+        setProfile((prev) =>
+          prev
+            ? { ...prev, followerCount: (prev.followerCount || 0) + 1 }
+            : prev
+        );
+      }
     } catch (err) {
       console.error("Error following user:", err);
     }
@@ -361,6 +366,18 @@ function ProfilePageTwo() {
       console.error("Error unfollowing user:", err);
     }
   };
+
+  const handleCancelRequest = async() => {
+    try{
+      const res = await axios.post(
+        `${API_URL}/users/cancelRequest/${profile.username}`, {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setRequest((prev) => prev.filter((u) => u !== loggedInUsername));
+    }catch(Error) {
+      console.error("Error canceling request:", Error);
+    }
+  }
 
   const handleUnblock = async() => {
     try {
@@ -418,7 +435,6 @@ function ProfilePageTwo() {
             setRequest(res.data);
         }
         getFollowRequest();
-
     },[profile]);
 
     const ReadUserGames = () => {
@@ -601,16 +617,17 @@ function ProfilePageTwo() {
                   {!userBlockIds.includes(profile.id) && !blockIds.includes(currUser?.id)?(
                   <div>
                   <button
-                    onClick={isFollowing ? handleUnfollow : handleFollow}
+                    onClick={isFollowing?handleUnfollow :requests.includes(loggedInUsername)?handleCancelRequest:handleFollow}
                     style={{
                       marginTop: "10px",
                       padding: "8px 16px",
                       backgroundColor: isFollowing ? "#444" : "#058BFE",
                       color: "white",
-                      border: "none",
+                      border: "1px solid none",
                       borderRadius: "999px",
                       cursor: "pointer",
                       minWidth: "100px",
+                      outline:"none",
                     }}
                   >
                     {isFollowing ? "Unfollow" : requests.includes(loggedInUsername)? "Requested":"Follow"}
@@ -644,6 +661,7 @@ function ProfilePageTwo() {
                 <button onClick={()=>{enableUpload(2)}}>Edit Banner</button>
               </div>
                 <textarea
+                  maxLength={160}
                   value={bio}
                   onChange={(e) => setBio(e.target.value)}
                   className="Bio-Edit"
