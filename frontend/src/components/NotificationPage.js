@@ -12,6 +12,7 @@ import { useNavigate } from "react-router-dom";
 import Pfp from '../images/Profile.png';
 import check from '../images/checksym.png';
 import xsym from '../images/exsym.png';
+import trashcan from '../images/trashcan.png';
 dayjs.extend(relativeTime);
 
 function NotificationPage() {
@@ -169,7 +170,7 @@ function NotificationPage() {
 
     const ReadNotis = () => {
         const items = notifications.map((noti, ind) => (
-            <Notification key={ind} Type={noti.type} Message={noti.message} CreatedAt={noti.createdAt} id={noti.id}/>
+            <Notification key={ind} Type={noti.type} Message={noti.message} CreatedAt={noti.createdAt} id={noti.id} setNotifications={setNotifications}/>
         ));
         return (
             notifications.length !== 0?(
@@ -239,7 +240,6 @@ function NotificationPage() {
                     <h1 style={{ color: "white", textAlign: "left",marginTop: "11px",marginLeft: "20px",marginBottom: "0"}}>Notifications</h1>
                 </div>
                  <div style={{ height: "60px" }}></div>
-
                  <div className="notifications">
                     <div className="container">
                         <ReadNotis/>
@@ -274,12 +274,13 @@ function NotificationPage() {
 
 }
 
-function Notification({Type, Message, CreatedAt, id}) {
+function Notification({Type, Message, CreatedAt, id, setNotifications}) {
     const ref = useRef();
     const token = localStorage.getItem("token");
     const navigate = useNavigate();
     const user = Message.split(" ")[0];
     const img = Type==='Profile' ? followed: bell;
+    const deleted = useRef(false);
 
     const HandleConditionalClick = () => {
         if(Type === 'Party') {
@@ -289,10 +290,19 @@ function Notification({Type, Message, CreatedAt, id}) {
         }
     }
 
+    const handleDelete = async(e) => {
+        const res = await axios.delete(
+            `${API_URL}/notifications/deleteNoti/${id}`,
+            { headers: { Authorization: `Bearer ${token}` } }
+        );
+        setNotifications(prev => prev.filter(n => n.id !== id));
+
+    }
+
     // This logic is called whenever the page is view(will research later)
     useEffect(() => {
         const observer = new IntersectionObserver(([entry]) => {
-            if (entry.isIntersecting) {
+            if (entry.isIntersecting && !deleted.current) {
                 axios.post(
                     `${API_URL}/notifications/markRead/${id}`, {},
                     { headers: { Authorization: `Bearer ${token}` } }
@@ -316,6 +326,7 @@ function Notification({Type, Message, CreatedAt, id}) {
                 </div>
                 <div className="right-side">
                     <p>{dayjs(CreatedAt).fromNow()}</p>
+                    <img src={trashcan} alt="trashcan" className="trashcan" onClick={(e) => {e.stopPropagation(); handleDelete();}}/>
                 </div>
             </div>
         </div>

@@ -1,6 +1,7 @@
 package com.GameVerse.GameVerse.services;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
@@ -32,13 +33,13 @@ public class RecommendationService {
     public List<User> followRecommendations(String userId) {
         User currentUser = userRepository.findById(userId).orElseThrow();
 
-        // I have the research further with these
         Set<String> exclude = relationshipRepository.findAllByFollowerId(userId)
             .stream()
             .map(Relationship::getFollowingId)
             .collect(Collectors.toSet());
         exclude.add(userId);
 
+        Set<String> addedIds = new HashSet<>();
         List<User> results = new ArrayList<>();
 
         // 1. Mutuals' follows
@@ -64,13 +65,19 @@ public class RecommendationService {
                     ),
                     Relationship.class
                 ).stream()
-                 .map(r -> userRepository.findById(r.getFollowingId()).orElse(null))
-                 .filter(Objects::nonNull)
-                 .distinct()
-                 .limit(7 - results.size())
-                 .toList();
+                .map(Relationship::getFollowingId)
+                .distinct()
+                .filter(id -> !addedIds.contains(id))
+                .limit(7 - results.size())
+                .map(id -> userRepository.findById(id).orElse(null))
+                .filter(Objects::nonNull)
+                .toList();
+
                 results.addAll(mutualRecs);
-                mutualRecs.forEach(u -> exclude.add(u.getId()));
+                mutualRecs.forEach(u -> {
+                    exclude.add(u.getId());
+                    addedIds.add(u.getId());
+                });
             }
         }
 
@@ -79,10 +86,14 @@ public class RecommendationService {
             List<User> samePlatform = userRepository.findAllByPlatform(currentUser.getPlatform())
                 .stream()
                 .filter(u -> !exclude.contains(u.getId()))
+                .filter(u -> !addedIds.contains(u.getId()))
                 .limit(7 - results.size())
                 .toList();
             results.addAll(samePlatform);
-            samePlatform.forEach(u -> exclude.add(u.getId()));
+            samePlatform.forEach(u -> {
+                exclude.add(u.getId());
+                addedIds.add(u.getId());
+            });
         }
 
         // 3. Popular users as filler

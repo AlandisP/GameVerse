@@ -34,6 +34,9 @@ public class FollowRequestService {
         if(relationshipRepository.existsByFollowerIdAndFollowingId(userId, acctId)) {
             throw new RuntimeException("Relationship already exist");
         }
+        if(frRepository.existsBySenderIdAndReceiverId(userId, acctId)) {
+            throw new RuntimeException("Request already exists");
+        }
 
         FollowRequest newReq = new FollowRequest(userId, acctId);
         frRepository.save(newReq);

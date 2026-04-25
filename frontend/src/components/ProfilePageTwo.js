@@ -150,12 +150,15 @@ function ProfilePageTwo() {
           setLikedPosts(res.data);
       }
     }
-
+    const handleDeletePost = (postId) => {
+      setPosts(prev => prev.filter(p => p.id !== postId));
+      setLikedPosts(prev => prev.filter(p => p.id !== postId));
+  }
     
 
     const ReadUserPosts = () => {
         const items = posts.map((post, index)=>{
-             return <PostObj key={index} User={post["user"]} Content={post["text"]} Likes={post["likes"]} Liked={parselike(post)} id={post["id"]} commcount={post["comments"].length} books={false} CreatedAt={post["createdAt"]} CommunityName={post["communityName"]} media={post["media"]} type={post["mediaType"]}/>
+             return <PostObj key={index} User={post["user"]} Content={post["text"]} Likes={post["likes"]} Liked={parselike(post)} id={post["id"]} commcount={post["comments"].length} books={false} CreatedAt={post["createdAt"]} CommunityName={post["communityName"]} media={post["media"]} type={post["mediaType"]} onDelete={handleDeletePost}/>
         });
         return(
             <div className="com-posts">
@@ -166,7 +169,7 @@ function ProfilePageTwo() {
     const ReadUserMedia = () => {
       const items = posts.filter(post => post.media).map((post,index) => {
         if(post.media) {
-          return <PostObj key={index} User={post["user"]} Content={post["text"]} Likes={post["likes"]} Liked={parselike(post)} id={post["id"]} commcount={post["comments"].length} books={false} CreatedAt={post["createdAt"]} CommunityName={post["communityName"]} media={post["media"]} type={post["mediaType"]}/>
+          return <PostObj key={index} User={post["user"]} Content={post["text"]} Likes={post["likes"]} Liked={parselike(post)} id={post["id"]} commcount={post["comments"].length} books={false} CreatedAt={post["createdAt"]} CommunityName={post["communityName"]} media={post["media"]} type={post["mediaType"]} onDelete={handleDeletePost}/>
         }
       });
       return(
@@ -182,7 +185,7 @@ function ProfilePageTwo() {
 
     const ReadUserLikes = () => {
         const items = likedposts.map((post, index)=>{
-             return <PostObj key={index} User={post["user"]} Content={post["text"]} Likes={post["likes"]} Liked={parselike(post)} id={post["id"]} commcount={post["comments"].length} books={false} CreatedAt={post["createdAt"]} CommunityName={post["communityName"]} media={post["media"]} type={post["mediaType"]}/>
+             return <PostObj key={index} User={post["user"]} Content={post["text"]} Likes={post["likes"]} Liked={parselike(post)} id={post["id"]} commcount={post["comments"].length} books={false} CreatedAt={post["createdAt"]} CommunityName={post["communityName"]} media={post["media"]} type={post["mediaType"]} onDelete={handleDeletePost}/>
         });
         return(
             <div className="com-posts">

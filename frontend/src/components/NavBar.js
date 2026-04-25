@@ -5,6 +5,7 @@ import axios from 'axios';
 import './Home.css';
 import Pfp from '../images/Profile.png';
 import imgicon from '../images/uploadimg.png';
+import userpfp from '../images/Profile.png';
 import UploadBox from './MediaUpload';
 const urlprefab = "https://gameverse-media-026955879175-us-east-2-an.s3.us-east-2.amazonaws.com/";
 
@@ -164,7 +165,8 @@ function MakePostOverlay({isClosed, setIsClosed, GetPosts}) {
     const [file, setfile] = useState(null);
     const [isopen, setopen] = useState(false);
     const username = localStorage.getItem("username");
-    const [imgsrc, setimgsrc] = useState(urlprefab+username+"/Profile/ProfilePic");
+    const [imgsrc, setimgsrc] = useState(null);
+    const s3url = urlprefab + username + "/Profile/ProfilePic";
     const [posting, makingpost] = useState(false);
 
     const getAllUserCommunities = async() => {
@@ -200,6 +202,8 @@ function MakePostOverlay({isClosed, setIsClosed, GetPosts}) {
                 // GetPosts();
                     setIsClosed(true);
                     makingpost(false);
+                    if(GetPosts) GetPosts();
+                    console.log("GetPosts:", typeof GetPosts);
                 } else if(text!=""&&selectedValue===""){
                     // const res = await axios.post(
                     //     `${API_URL}/post/makepost`, {body: text},
@@ -215,7 +219,8 @@ function MakePostOverlay({isClosed, setIsClosed, GetPosts}) {
                 //  GetPosts();
                     setIsClosed(true);
                     makingpost(false);
-                    GetPosts();
+                    if(GetPosts) GetPosts();
+                    console.log("GetPosts:", typeof GetPosts);
                 }
             }
         } catch (error) {
@@ -230,6 +235,13 @@ function MakePostOverlay({isClosed, setIsClosed, GetPosts}) {
     useEffect(() => {
         getAllUserCommunities();
     },[]);
+
+    useEffect(() => {
+        const img = new Image();
+        img.src = s3url;
+        img.onload = () => setimgsrc(s3url);  // only set if it actually loads
+        img.onerror = () => setimgsrc(userpfp); // fallback if it doesn't
+    }, []);
 
     return(
         <>
@@ -249,7 +261,7 @@ function MakePostOverlay({isClosed, setIsClosed, GetPosts}) {
                         ))}
                     </select>
                     <div className='postingbod'>
-                        <img src={imgsrc} alt='pfp' className='pfp'/>
+                        <img src={imgsrc || userpfp} alt='pfp' className='pfp'/>
                         <div className='column-box'>
                             <textarea  className= 'postarea' placeholder='What are you thinking?' maxLength="280" onChange={(e) => setText(e.target.value)}/>
                             <div className='image-upload'>

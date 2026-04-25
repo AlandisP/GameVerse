@@ -15,7 +15,7 @@ import dots from "./../images/dots.png";
 import { shortTimeAgo } from '../utils/shortTimeAgo'
 import API_URL from '../config/api'
 const urlprefab = "https://gameverse-media-026955879175-us-east-2-an.s3.us-east-2.amazonaws.com/";
-function PostObj ({User, Content, Likes, Liked, id, books, commcount, CreatedAt, CommunityName, media, type, popup, IsMod}){
+function PostObj ({User, Content, Likes, Liked, id, books, commcount, CreatedAt, CommunityName, media, type, popup, IsMod, onDelete}){
         const postid = id;
         const username = localStorage.getItem('username');
         const [didLike, setdidLike]= useState(Liked);
@@ -80,7 +80,7 @@ function PostObj ({User, Content, Likes, Liked, id, books, commcount, CreatedAt,
                 `${API_URL}/post/deletepost`,{id},
                 { headers: { Authorization: `Bearer ${token}` } }
             );
-            deleter(true);
+            if(onDelete) onDelete(id);
         }
 
         const blockUser = async() => {

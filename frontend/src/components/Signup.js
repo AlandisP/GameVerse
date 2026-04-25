@@ -69,6 +69,7 @@ function Signup() {
               id="userinput"
               placeholder="Username"
               onChange={(e) => setUsername(e.target.value)}
+              maxLength={15}
             />
           </div>
           <div className="Password">

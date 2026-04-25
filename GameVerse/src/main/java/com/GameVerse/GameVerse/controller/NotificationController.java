@@ -6,12 +6,14 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.GameVerse.GameVerse.model.Notification;
 import com.GameVerse.GameVerse.model.User;
 import com.GameVerse.GameVerse.repository.NotificationRepository;
 import com.GameVerse.GameVerse.repository.UserRepository;
@@ -69,6 +71,20 @@ public class NotificationController {
     public ResponseEntity<?> getRecommendations(Authentication auth) {
         String userId = (String) auth.getPrincipal();
         return ResponseEntity.ok(recService.followRecommendations(userId));
+    }
+
+    @DeleteMapping("/deleteNoti/{id}")
+    public ResponseEntity<?> deleteNotification(@PathVariable String id) {
+        Notification noti = notificationRepository.findById(id).orElse(null);
+        notificationRepository.delete(noti);
+        return ResponseEntity.ok("deleted");
+    }
+
+    @DeleteMapping("/deleteAllNotis")
+    public ResponseEntity<?> deleteAllNotis(Authentication auth) {
+        String userId = (String) auth.getPrincipal();
+        notificationRepository.deleteAllByUserId(userId);
+        return ResponseEntity.ok("All Deleted");
     }
 
 

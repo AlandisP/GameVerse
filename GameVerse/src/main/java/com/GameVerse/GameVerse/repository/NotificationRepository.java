@@ -10,4 +10,5 @@ import com.GameVerse.GameVerse.model.Notification;
 public interface NotificationRepository extends MongoRepository<Notification, Object> {
     List<Notification> findByUserIdOrderByCreatedAtDesc(String userId);
     long countByUserIdAndReadFalse(String userId);
+    void deleteAllByUserId(String userId);
 }
