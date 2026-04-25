@@ -170,7 +170,7 @@ public class PostController {
             .filter(post -> {
                 User poster = userRep.findByUsernameIgnoreCase(post.getUser());
                 Boolean following = true;
-                if(poster!=null && poster.getIsPrivate()){
+                if(poster!=null && poster.getIsPrivate() && !poster.getId().equals(userId)){
                     following = relationshipRepository.existsByFollowerIdAndFollowingId(userId, poster.getId());
                 }
                 return poster != null 

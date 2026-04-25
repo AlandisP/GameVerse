@@ -9,7 +9,7 @@ import dots from "./../images/dots.png";
 
 const urlprefab = "https://gameverse-media-026955879175-us-east-2-an.s3.us-east-2.amazonaws.com/";
 
-function Comment({User, body, postdat, poster, refresh}){
+function Comment({User, body, postdat, poster, refresh, num, size}){
     const token  = localStorage.getItem('token');
     const [imgsrc, setimgsrc] = useState(urlprefab+User+"/Profile/ProfilePic");
     const [pop, setpop] = useState(false);
@@ -35,6 +35,7 @@ function Comment({User, body, postdat, poster, refresh}){
             { headers: { Authorization: `Bearer ${token}` } }
         );
         refresh();
+        num(size-1);
         
     }
     const PopUp = ({item})=>{
@@ -85,7 +86,7 @@ function CommentSection({pid,func,poster}){
     const [updatecomments, setupdate] = useState(false);
     const Comms = ()=>{
         const items = commentlist.map((thecom,index)=>{
-            return(<Comment key={index} User={thecom.poster} body={thecom.content} postdat={pid} poster={poster} refresh={getcomms}/>)
+            return(<Comment key={index} User={thecom.poster} body={thecom.content} postdat={pid} poster={poster} refresh={getcomms} num={func} size={commentlist.length}/>)
         });
         return(
             <div className='Comment-Container'>
