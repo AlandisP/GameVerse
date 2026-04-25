@@ -8,7 +8,7 @@ import imgicon from '../images/uploadimg.png';
 import UploadBox from './MediaUpload';
 const urlprefab = "https://gameverse-media-026955879175-us-east-2-an.s3.us-east-2.amazonaws.com/";
 
-function NavBar() {
+function NavBar({GetPosts}) {
     const [activeTab, setActiveTab] = useState('');
     const [menuOpen, setMenuOpen] = useState(false);
     const navigate = useNavigate();
@@ -58,7 +58,7 @@ function NavBar() {
 
     return (
         <>
-            <MakePostOverlay isClosed={isClosed} setIsClosed={setIsClosed}/>
+            <MakePostOverlay isClosed={isClosed} setIsClosed={setIsClosed} GetPosts={GetPosts}/>
             <button className="hamburger" onClick={() => setMenuOpen(!menuOpen)}>
                 <span></span>
                 <span></span>
@@ -215,6 +215,7 @@ function MakePostOverlay({isClosed, setIsClosed, GetPosts}) {
                 //  GetPosts();
                     setIsClosed(true);
                     makingpost(false);
+                    GetPosts();
                 }
             }
         } catch (error) {
