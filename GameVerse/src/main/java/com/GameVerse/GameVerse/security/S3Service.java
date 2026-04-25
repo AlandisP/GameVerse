@@ -40,12 +40,13 @@ public class S3Service {
         if(type.equals("Profile")){
             randomUID = "";
         }
-        String key = user + "/" + type + "/" + randomUID + file.getOriginalFilename();
-        String filteredkey = key.replaceAll("[^a-zA-Z0-9._/-]*","");
+        String end =  randomUID + file.getOriginalFilename();
+        String key = user + "/" + type + "/" + end.replaceAll("[^a-zA-Z0-9._/-]*","");
+        //String filteredkey = key.replaceAll("[^a-zA-Z0-9._/-]*","");
         s3Client.putObject(
             PutObjectRequest.builder()
                 .bucket(bucketName)
-                .key(filteredkey)
+                .key(key)
                 .contentType(file.getContentType())
                 .build(),
             RequestBody.fromBytes(file.getBytes())
@@ -58,12 +59,12 @@ public class S3Service {
     }
 
     public String staticMedia(MultipartFile file, String user, String type) throws IOException {
-        String key = user + "/Profile/"+type;
-        String filteredkey = key.replaceAll("[^a-zA-Z0-9._/-]*","");
+        String key = user + "/Profile/"+type.replaceAll("[^a-zA-Z0-9._/-]*","");
+        //String filteredkey = key.replaceAll("[^a-zA-Z0-9._/-]*","");
         s3Client.putObject(
             PutObjectRequest.builder()
                 .bucket(bucketName)
-                .key(filteredkey)
+                .key(key)
                 .contentType(file.getContentType())
                 .build(),
             RequestBody.fromBytes(file.getBytes())
