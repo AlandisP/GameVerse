@@ -4,7 +4,10 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
+
+import org.springframework.data.domain.Sort;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.MongoTemplate;
@@ -158,27 +161,35 @@ public class PostController {
     @GetMapping("/getposts")
     public ResponseEntity<List<Post>> getapost(Authentication auth){
         String userId = (String) auth.getPrincipal();
-        // users that the auth has blocked
-        //List<String> blockedIds = getBlockedIds(userId);
-        // list of users that auth is blocked by
-        //List<String> nopes = blockedService.getBlockedListIds(userId);
-        //New method attempt
-        HashSet<String> blocks = new HashSet<String>(getBlockedIds(userId));
-        blocks.addAll(blockedService.getBlockedListIds(userId));
-        List<Post> result = postRepo.findAll()
-            .stream()
-            .filter(post -> {
-                User poster = userRep.findByUsernameIgnoreCase(post.getUser());
-                Boolean following = true;
-                if(poster!=null && poster.getIsPrivate() && !poster.getId().equals(userId)){
-                    following = relationshipRepository.existsByFollowerIdAndFollowingId(userId, poster.getId());
-                }
-                return poster != null 
-                    && !blocks.contains(poster.getId()) && (following);
-            })
-            .collect(Collectors.toList());
 
-        Collections.reverse(result);
+        Set<String> blockedIds = new HashSet<>(getBlockedIds(userId));
+        blockedIds.addAll(blockedService.getBlockedListIds(userId));
+
+        Set<String> followingIds = relationshipRepository.findAllByFollowerId(userId)
+            .stream()
+            .map(Relationship::getFollowingId)
+            .collect(Collectors.toSet());
+
+        Set<String> excludedUsernames = new HashSet<>();
+        if (!blockedIds.isEmpty()) {
+            userRep.findAllById(blockedIds).forEach(u -> excludedUsernames.add(u.getUsername()));
+        }
+
+        List<User> privateUsers = mongoTemplate.find(
+            new Query(Criteria.where("isPrivate").is(true)), User.class);
+        for (User u : privateUsers) {
+            if (!u.getId().equals(userId) && !followingIds.contains(u.getId())) {
+                excludedUsernames.add(u.getUsername());
+            }
+        }
+
+        Query q = new Query();
+        if (!excludedUsernames.isEmpty()) {
+            q.addCriteria(Criteria.where("userId").nin(excludedUsernames));
+        }
+        q.with(Sort.by(Sort.Direction.DESC, "createdAt"));
+
+        List<Post> result = mongoTemplate.find(q, Post.class);
         return ResponseEntity.ok().body(result);
     }
 
