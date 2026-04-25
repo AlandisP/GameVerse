@@ -22,6 +22,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.GameVerse.GameVerse.controller.DTO.CommunityDTO;
 import com.GameVerse.GameVerse.model.Community;
 import com.GameVerse.GameVerse.model.CommunityCategory;
 import com.GameVerse.GameVerse.model.CommunityMembership;
@@ -60,11 +61,17 @@ public class CommunitiesController {
 
 
     @GetMapping
-    public ResponseEntity<?> getAllCommunities() {
+    public ResponseEntity<?> getAllCommunities(Authentication auth) {
+        String userId = (String) auth.getPrincipal();
         List<Community> list = communityRepository.findAll();
-        return ResponseEntity.ok().body(list);
+        
+        List<CommunityDTO> result = list.stream()
+            .map(c -> new CommunityDTO(c, cmr.existsByCommunityIdAndUserId(c.getId(), userId)))
+            .collect(Collectors.toList());
+        
+        return ResponseEntity.ok(result);
     }
-
+    
     @GetMapping("/matches")
     public ResponseEntity<?> getCommunityMatches(@RequestParam String text) {
         List<Community> byName = communityRepository.findByNameContainingIgnoreCase(text);
@@ -122,6 +129,9 @@ public class CommunitiesController {
         String id = (String) auth.getPrincipal();
         if(!communityRepository.existsByNameIgnoreCase(communityname)) {
             return ResponseEntity.badRequest().body("Community doesn't exist");
+        }
+        if(communityRepository.findByNameIgnoreCase(communityname).getOwnerId().equals(id)) {
+            return ResponseEntity.badRequest().body("You must transfer ownership of the community or delete it.");
         }
         communityService.removeMember(communityRepository.findByNameIgnoreCase(communityname).getId(), id);
         return ResponseEntity.ok().body("Successfully left community");

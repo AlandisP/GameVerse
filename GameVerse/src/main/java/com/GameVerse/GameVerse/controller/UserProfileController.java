@@ -299,6 +299,16 @@ public class UserProfileController {
         return ResponseEntity.ok(user.getIsPrivate());
     }
 
+    @PostMapping("/ChangePlat")
+    public ResponseEntity<?> changePlatform(@RequestBody String platform, Authentication auth) {
+        String userId = (String) auth.getPrincipal();
+        User user = repository.findById(userId).orElseThrow();
+        user.setPlatform(platform);
+        repository.save(user);
+        return ResponseEntity.ok("success");
+
+    }
+
 
 
 

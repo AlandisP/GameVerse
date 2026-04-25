@@ -222,7 +222,8 @@ function CommunityPage() {
                 {},
                 { headers: { Authorization: `Bearer ${token}` } }
             );
-            setMembers(prev => [...prev, { id: userId, username: username }]);
+            const pfpUrl = `https://gameverse-media-026955879175-us-east-2-an.s3.us-east-2.amazonaws.com/${username}/Profile/ProfilePic`;
+            setMembers(prev => [...prev, { id: userId, username: username, pfp: pfpUrl}]);
             // Update member count
             setCurrCommunity(prev => ({
                 ...prev,
@@ -241,6 +242,7 @@ function CommunityPage() {
             );
             // Remove the user from membersCom
             setMembers(prev => prev.filter(member => member.id !== userId));
+            setMods(prev => prev.filter(mod => mod.id !== userId));
             // Update member count
             setCurrCommunity(prev => ({
                 ...prev,

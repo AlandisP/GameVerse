@@ -573,6 +573,7 @@ function ProfilePageTwo() {
                 <div className="username-row">
                   <h1 style={{ marginBottom: "5px" }}>{profile.username}</h1>
                   {profile.isPrivate && <img src={lock} alt="private img"/>}
+                  <p className="plat-bio">{profile.platform}</p>
                 </div>
                 <p style={{ marginTop: 0, color: "#aaaaaa" }}>
                   @{profile.username}

@@ -5,16 +5,16 @@ import logo from "../../images/search.png"
 import API_URL from '../../config/api';
 import axios from 'axios';
 import { Navigate, useNavigate } from 'react-router-dom';
-function CommunityBlock({Name, Description, Members, Category, id, OwnerId, PFP}) {
+function CommunityBlock({Name, Description, Members, Category, id, OwnerId, PFP, IsMember}) {
     const navigate = useNavigate();
     const token = localStorage.getItem("token");
     const username = localStorage.getItem("username");
     const userId = localStorage.getItem("userId");
     const [memberCount, setMemberCount] = useState(Members);
-    const [joined, setJoined] = useState(false);
-    const [members, setMembers] = useState([]);
+    // const [joined, setJoined] = useState(false);
+    const [members, setMembers] = useState(null);
     const isOwner = userId===OwnerId;
-    const isMember = members?.some(member => member.id === userId);
+    const isMember = members?.some(m => m.id === userId) ?? IsMember;
 
     const handleJoinClick = async(e) => {
         e.stopPropagation();
@@ -25,8 +25,7 @@ function CommunityBlock({Name, Description, Members, Category, id, OwnerId, PFP}
                 { headers: { Authorization: `Bearer ${token}` } }
             );
             setMemberCount(prev => prev + 1);
-            setMembers(prev => [...prev, { id: userId, username: username }]);
-            setJoined(true);
+            setMembers(prev => [...(prev ?? []), { id: userId, username: username }]);
         } catch (error) {
             console.error("failed to join community: ", error.response?.data || error.message);
         }
@@ -40,30 +39,29 @@ function CommunityBlock({Name, Description, Members, Category, id, OwnerId, PFP}
                 {}, { headers: { Authorization: `Bearer ${token}` } }
             );
             setMemberCount(prev => prev - 1);
-            setMembers(prev => prev.filter(member => member.id !== userId));
-            setJoined(false);
+            setMembers(prev => (prev ?? []).filter(member => member.id !== userId));
         } catch(error) {
             console.error("failed to leave community: ", error.response?.data || error.message);
         }
     }
 
-   useEffect(() => {
-        const GetMembers = async() => {
-            try {
-                const res = await axios.get(
-                    `${API_URL}/communities/${Name}/AllMembers`,
-                    { headers: { Authorization: `Bearer ${token}` } }
-                );
-                setMembers(res.data);
-                //console.log(res.data);
+//    useEffect(() => {
+//         const GetMembers = async() => {
+//             try {
+//                 const res = await axios.get(
+//                     `${API_URL}/communities/${Name}/AllMembers`,
+//                     { headers: { Authorization: `Bearer ${token}` } }
+//                 );
+//                 setMembers(res.data);
+//                 //console.log(res.data);
                 
-            } catch (error) {
-                console.error("Couldn't fetch the members")
-            }
-        }
-        GetMembers();
+//             } catch (error) {
+//                 console.error("Couldn't fetch the members")
+//             }
+//         }
+//         GetMembers();
         
-    }, [token])
+//     }, [token])
 
 
     return (

@@ -40,14 +40,20 @@ function ExploreCommunities({isOpen, onClose, communities, Refresh}) {
         ));
     }
 
-    const ReadCommunities = () => {
-        const items = (category ? filtered.filter(c => c.communityCategory === category) : filtered).map((community, ind) => (
-            <CommunityBlock key={ind} Name={community.name} Description={community.description} Category={community.communityCategory} Members={community.memberCount} OwnerId={community.ownerId} id={community.id} PFP={community.pfp}/>
+    const communityList = (category ? filtered.filter(c => c.communityCategory === category) : filtered)
+        .map((community, ind) => (
+            <CommunityBlock
+                key={ind}
+                Name={community.name}
+                Description={community.description}
+                Category={community.communityCategory}
+                Members={community.memberCount}
+                OwnerId={community.ownerId}
+                id={community.id}
+                PFP={community.pfp}
+                IsMember={community.isMember}
+            />
         ));
-        return(
-            <div>{items}</div>
-        )
-    }
 
     useEffect(() => {
         const getCategories = async () => {
@@ -100,7 +106,7 @@ function ExploreCommunities({isOpen, onClose, communities, Refresh}) {
                     <div className='allComs'>
                         <h1 className='headertxt'>Communities</h1>
                         <div className='allContainer'>
-                            <ReadCommunities/>
+                            {communityList}
                         </div>
                     </div>
                 </div>

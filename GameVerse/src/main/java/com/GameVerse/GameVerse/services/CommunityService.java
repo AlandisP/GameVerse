@@ -107,6 +107,9 @@ public class CommunityService {
         }
         CommunityMembership cm = cr.findByCommunityIdAndUserId(communityId, userId);
         cr.delete(cm);
+        if(com.getModeratorIds().contains(userId)) {
+            com.getModeratorIds().remove(userId);
+        }
         com.setMemberCount((int) cr.countByCommunityId(communityId));
         communityRepository.save(com);
     }
