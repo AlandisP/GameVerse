@@ -7,18 +7,22 @@ import API_URL from "../config/api";
 
 import { db } from "../firebase";
 import {
+  arrayRemove,
+  arrayUnion,
   collection,
+  deleteDoc,
   doc,
+  getDocs,
+  increment,
+  limit,
   onSnapshot,
   orderBy,
   query,
   serverTimestamp,
-  updateDoc,
-  writeBatch,
-  getDocs,
-  limit,
-  where,
   setDoc,
+  updateDoc,
+  where,
+  writeBatch,
 } from "firebase/firestore";
 
 function getOtherUser(participants, me) {
@@ -41,9 +45,11 @@ function getConversationDisplayName(convo, me) {
 
 function getConversationHeaderText(convo, me) {
   if (!convo) return "No conversation selected";
+
   if (convo.type === "GROUP") {
     return `Group: ${convo.title || "Untitled Group"}`;
   }
+
   const otherUser = getOtherUser(convo.participants, me);
   return otherUser ? `Chatting with: ${otherUser}` : "Direct message";
 }
@@ -130,6 +136,7 @@ async function fetchBackendConversations(currentUsername) {
   return res.data;
 }
 
+
 async function ensureConversationDoc({
   convoId,
   participants = [],
@@ -140,12 +147,27 @@ async function ensureConversationDoc({
 
   const convoRef = doc(db, "conversations", convoId);
 
+  const snap = await getDocs(
+    query(collection(db, "conversations"), where("__name__", "==", convoId))
+  );
+
+  if (!snap.empty) return;
+
+  // ✅ Proper initialization
+  const unreadCounts = {};
+  participants.forEach((user) => {
+    unreadCounts[user] = 0;
+  });
+
   await setDoc(
     convoRef,
     {
       participants,
       type,
       title: type === "GROUP" ? title : "",
+      unreadCounts, 
+      adminIds: type === "GROUP" ? [participants[0]] : [],
+      hiddenFor: [],
     },
     { merge: true }
   );
@@ -153,6 +175,7 @@ async function ensureConversationDoc({
 
 function MessagePage() {
   const sender = localStorage.getItem("username");
+  const currentUserId = localStorage.getItem("userId");
 
   const [messageInput, setMessageInput] = useState("");
   const [messages, setMessages] = useState([]);
@@ -181,12 +204,12 @@ function MessagePage() {
     return conversations.find((c) => c.id === activeConversationId) || null;
   }, [conversations, activeConversationId]);
 
+  const isAdmin = activeConversation?.adminIds?.includes(sender);
+
   useEffect(() => {
     setShowMembers(false);
   }, [activeConversationId]);
 
-  // Startup sync: make sure backend conversations exist in Firestore,
-  // so the Firestore inbox listener can rebuild the sidebar on refresh/startup.
   useEffect(() => {
     async function syncBackendConversationsToFirestore() {
       if (!sender || typeof sender !== "string" || !sender.trim()) return;
@@ -225,10 +248,13 @@ function MessagePage() {
     const unsubscribe = onSnapshot(
       inboxQuery,
       (snapshot) => {
-        const list = snapshot.docs.map((d) => ({
-          id: d.id,
-          ...d.data(),
-        }));
+        const list = snapshot.docs
+          .map((d) => ({
+            id: d.id,
+            ...d.data(),
+          }))
+          .filter((c) => !c.hiddenFor?.includes(sender));
+
         setConversations(list);
       },
       (err) => {
@@ -274,6 +300,7 @@ function MessagePage() {
           id: d.id,
           ...d.data(),
         }));
+
         setMessages(list);
       },
       (err) => {
@@ -306,6 +333,7 @@ function MessagePage() {
         lastMessage: "",
         lastSender: "",
       });
+
       return;
     }
 
@@ -322,6 +350,7 @@ function MessagePage() {
 
   async function sendMessage() {
     const text = messageInput.trim();
+    const currentUserId = localStorage.getItem("userId");
     if (!text || !sender || !activeConversationId) return;
 
     const isGroup = activeConversation?.type === "GROUP";
@@ -329,6 +358,7 @@ function MessagePage() {
     if (!isGroup) {
       try {
         const exists = await validateUsernameExists(activeReceiver);
+
         if (!exists) {
           setComposeError(`User "${activeReceiver}" does not exist.`);
           return;
@@ -363,12 +393,41 @@ function MessagePage() {
       const convoRef = doc(db, "conversations", convoId);
       const msgRef = doc(collection(db, "conversations", convoId, "messages"));
 
+      const currentUserId = localStorage.getItem("userId");
+      
+      // TEMP: since you don’t have IDs wired everywhere yet,
+      // // we’ll map usernames → IDs later. For now, just use usernames.
+      const memberIds = participants;
+
+  
       const batch = writeBatch(db);
+      
+      const initialUnreadCounts = {};
+      participants.forEach((user) => {
+        initialUnreadCounts[user] = 0;
+      });
+
+      const unreadUpdates = {};
+      const memberIDs = activeConversation?.memberIds || [
+        currentUserId,
+        activeConversation?.otherUserID, 
+      ];
+
+      memberIDs.forEach((id) => {
+        if (id === currentUserId) {
+          unreadUpdates['unreadCounts.${id}'] = 0;
+        } else {
+          unreadUpdates['unreadCounts.${id}'] = increment(1);
+
+        }
+      });
+      
 
       batch.set(
         convoRef,
         {
           participants,
+          memberIds,
           type: activeConversation?.type || "DIRECT",
           title:
             activeConversation?.type === "GROUP"
@@ -381,6 +440,7 @@ function MessagePage() {
           lastMessageId: msgRef.id,
           lastMessage: text,
           lastSender: sender,
+          ...unreadUpdates,
         },
         { merge: true }
       );
@@ -395,6 +455,7 @@ function MessagePage() {
       });
 
       await batch.commit();
+
       setMessageInput("");
       setComposeError("");
     } catch (e) {
@@ -416,9 +477,13 @@ function MessagePage() {
         msg.id
       );
 
-      await updateDoc(msgRef, { content: text, editedAt: serverTimestamp() });
+      await updateDoc(msgRef, {
+        content: text,
+        editedAt: serverTimestamp(),
+      });
 
       const convo = conversations.find((c) => c.id === activeConversationId);
+
       if (getConversationLastMessageId(convo) === msg.id) {
         await updateDoc(doc(db, "conversations", activeConversationId), {
           lastMessageText: text,
@@ -453,6 +518,7 @@ function MessagePage() {
       });
 
       const convo = conversations.find((c) => c.id === activeConversationId);
+
       if (getConversationLastMessageId(convo) === msg.id) {
         await recomputeConversationLastMessage(activeConversationId);
       }
@@ -466,14 +532,89 @@ function MessagePage() {
     }
   }
 
+  async function deleteDMForMe(convoId) {
+    if (!convoId || !sender) return;
+
+    try {
+      await updateDoc(doc(db, "conversations", convoId), {
+        hiddenFor: arrayUnion(sender),
+      });
+
+      setActiveConversationId("");
+      setActiveReceiver("");
+      setMessages([]);
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
+  async function leaveGroupChat(convoId) {
+  if (!convoId || !sender) return;
+
+  try {
+    const convoRef = doc(db, "conversations", convoId);
+    const msgRef = doc(collection(db, "conversations", convoId, "messages"));
+
+    
+    await setDoc(msgRef, {
+      sender: "system",
+      content: `${sender} left the group.`,
+      timestamp: serverTimestamp(),
+      editedAt: null,
+      isDeleted: false,
+      isSystem: true,
+    });
+
+    
+    await updateDoc(convoRef, {
+      participants: arrayRemove(sender),
+      hiddenFor: arrayUnion(sender),
+      lastMessageText: `${sender} left the group.`,
+      lastMessage: `${sender} left the group.`,
+      lastMessageSender: "system",
+      lastMessageId: msgRef.id,
+      updatedAt: serverTimestamp(),
+    });
+
+    setActiveConversationId("");
+    setActiveReceiver("");
+    setMessages([]);
+  } catch (e) {
+    console.error(e);
+  }
+}
+
+  async function deleteGroupChatForEveryone(convoId) {
+    if (!convoId) return;
+
+    try {
+      const messagesRef = collection(db, "conversations", convoId, "messages");
+      const snap = await getDocs(messagesRef);
+
+      for (const m of snap.docs) {
+        await deleteDoc(m.ref);
+      }
+
+      await deleteDoc(doc(db, "conversations", convoId));
+
+      setActiveConversationId("");
+      setActiveReceiver("");
+      setMessages([]);
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
   async function startNewConversation() {
     const target = newDmUsername.trim();
 
     if (!sender) return;
+
     if (!target) {
       setComposeError("Enter a username.");
       return;
     }
+
     if (target.toLowerCase() === sender.toLowerCase()) {
       setComposeError("You can't message yourself.");
       return;
@@ -481,6 +622,7 @@ function MessagePage() {
 
     try {
       const exists = await validateUsernameExists(target);
+
       if (!exists) {
         setComposeError(`User "${target}" does not exist.`);
         return;
@@ -496,6 +638,24 @@ function MessagePage() {
         participants: [sender, target],
         type: "DIRECT",
         title: "",
+      });
+      
+      setConversations((prev) => {
+        const exists = prev.some((c) => c.id === convoId);
+        if (exists) return prev;
+        
+        return [
+          {
+            id: convoId,
+            participants: [sender, target],
+            type: "DIRECT",
+            title: "",
+            lastMessageText: "",
+            updatedAt: null,
+            unreadCounts: {},
+          },
+          ...prev,
+        ];
       });
 
       setActiveConversationId(convoId);
@@ -545,6 +705,8 @@ function MessagePage() {
         participants: [sender, ...uniqueMembers],
         type: "GROUP",
         title,
+        adminIds: [sender],
+        hiddenFor: [],
         lastMessageText: "",
         lastMessageAt: null,
         lastMessageSender: "",
@@ -600,6 +762,10 @@ function MessagePage() {
       setEditingId("");
       setEditingText("");
 
+      await updateDoc(doc(db, "conversations", convo.id), {
+        [`unreadCounts.${sender}`]: 0,
+      });
+
       if (isGroup) {
         setActiveReceiver("");
         return;
@@ -611,10 +777,14 @@ function MessagePage() {
       console.error(e);
     }
   }
+  const totalUnreadMessages = conversations.reduce((total, convo) => {
+    return total + (convo.unreadCounts?.[sender] || 0);
+  }, 0);
 
   return (
     <div className="page-container">
-      <NavBar />
+      <NavBar unreadMessageCount={totalUnreadMessages} />
+
       <div className="main-content" style={{ display: "flex", padding: 0 }}>
         <div
           style={{
@@ -678,7 +848,7 @@ function MessagePage() {
             </div>
           </div>
 
-          {isComposing ? (
+          {isComposing && (
             <div style={{ padding: "12px 20px" }}>
               <div
                 style={{
@@ -692,6 +862,7 @@ function MessagePage() {
                 <div style={{ fontWeight: 700, marginBottom: "8px" }}>
                   Start a DM
                 </div>
+
                 <input
                   value={newDmUsername}
                   onChange={(e) => setNewDmUsername(e.target.value)}
@@ -709,7 +880,8 @@ function MessagePage() {
                     if (e.key === "Enter") startNewConversation();
                   }}
                 />
-                {composeError ? (
+
+                {composeError && (
                   <div
                     style={{
                       color: "#ffb3b3",
@@ -719,7 +891,7 @@ function MessagePage() {
                   >
                     {composeError}
                   </div>
-                ) : null}
+                )}
 
                 <div style={{ display: "flex", gap: "10px", marginTop: "10px" }}>
                   <button
@@ -737,6 +909,7 @@ function MessagePage() {
                   >
                     Start
                   </button>
+
                   <button
                     onClick={() => {
                       setIsComposing(false);
@@ -758,9 +931,9 @@ function MessagePage() {
                 </div>
               </div>
             </div>
-          ) : null}
+          )}
 
-          {isCreatingGroup ? (
+          {isCreatingGroup && (
             <div style={{ padding: "12px 20px" }}>
               <div
                 style={{
@@ -809,7 +982,7 @@ function MessagePage() {
                   }}
                 />
 
-                {groupError ? (
+                {groupError && (
                   <div
                     style={{
                       color: "#ffb3b3",
@@ -819,7 +992,7 @@ function MessagePage() {
                   >
                     {groupError}
                   </div>
-                ) : null}
+                )}
 
                 <div style={{ display: "flex", gap: "10px", marginTop: "10px" }}>
                   <button
@@ -837,6 +1010,7 @@ function MessagePage() {
                   >
                     Create
                   </button>
+
                   <button
                     onClick={() => {
                       setIsCreatingGroup(false);
@@ -859,7 +1033,7 @@ function MessagePage() {
                 </div>
               </div>
             </div>
-          ) : null}
+          )}
 
           <div style={{ padding: "20px" }}>
             <div
@@ -878,6 +1052,7 @@ function MessagePage() {
                 alt="search"
                 style={{ width: "20px", marginRight: "10px" }}
               />
+
               <input
                 type="text"
                 placeholder="Search conversations"
@@ -911,6 +1086,7 @@ function MessagePage() {
                 const displayName = getConversationDisplayName(c, sender);
                 const isActive = c.id === activeConversationId;
                 const preview = getConversationPreviewText(c);
+                const unreadCount = c.unreadCounts?.[sender] || 0;
 
                 return (
                   <button
@@ -928,7 +1104,34 @@ function MessagePage() {
                       cursor: "pointer",
                     }}
                   >
-                    <div style={{ fontWeight: 700 }}>{displayName}</div>
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        gap: "10px",
+                      }}
+                    >
+                      <span style={{ fontWeight: 700 }}>{displayName}</span>
+
+                      {unreadCount > 0 && (
+                        <span
+                          style={{
+                            backgroundColor: "#058BFE",
+                            color: "white",
+                            borderRadius: "999px",
+                            padding: "2px 7px",
+                            fontSize: "12px",
+                            fontWeight: 700,
+                            minWidth: "20px",
+                            textAlign: "center",
+                          }}
+                        >
+                          {unreadCount}
+                        </span>
+                      )}
+                    </div>
+
                     <div
                       style={{
                         color: "#bdbdbd",
@@ -971,7 +1174,8 @@ function MessagePage() {
               <div style={{ fontWeight: 700, fontSize: "1rem" }}>
                 {getConversationHeaderText(activeConversation, sender)}
               </div>
-              {!activeConversation ? (
+
+              {!activeConversation && (
                 <div
                   style={{
                     color: "#bdbdbd",
@@ -981,11 +1185,28 @@ function MessagePage() {
                 >
                   Choose a chat from the left to start messaging.
                 </div>
-              ) : null}
+              )}
             </div>
 
-            {activeConversation?.type === "GROUP" ? (
-              <div style={{ position: "relative" }}>
+            {activeConversation?.type === "DIRECT" && (
+              <button
+                onClick={() => deleteDMForMe(activeConversation.id)}
+                style={{
+                  padding: "8px 12px",
+                  borderRadius: "10px",
+                  border: "none",
+                  backgroundColor: "#ff4d4f",
+                  color: "white",
+                  cursor: "pointer",
+                  fontWeight: 700,
+                }}
+              >
+                Delete Chat
+              </button>
+            )}
+
+            {activeConversation?.type === "GROUP" && (
+              <div style={{ position: "relative", display: "flex", gap: "10px" }}>
                 <button
                   onClick={() => setShowMembers((v) => !v)}
                   style={{
@@ -1001,7 +1222,43 @@ function MessagePage() {
                   Members ({getGroupMembers(activeConversation).length})
                 </button>
 
-                {showMembers ? (
+                {!isAdmin && (
+                  <button
+                    onClick={() => leaveGroupChat(activeConversation.id)}
+                    style={{
+                      padding: "8px 12px",
+                      borderRadius: "10px",
+                      border: "none",
+                      backgroundColor: "#ff4d4f",
+                      color: "white",
+                      cursor: "pointer",
+                      fontWeight: 700,
+                    }}
+                  >
+                    Leave Group
+                  </button>
+                )}
+
+                {isAdmin && (
+                  <button
+                    onClick={() =>
+                      deleteGroupChatForEveryone(activeConversation.id)
+                    }
+                    style={{
+                      padding: "8px 12px",
+                      borderRadius: "10px",
+                      border: "none",
+                      backgroundColor: "#ff0000",
+                      color: "white",
+                      cursor: "pointer",
+                      fontWeight: 700,
+                    }}
+                  >
+                    Delete Group
+                  </button>
+                )}
+
+                {showMembers && (
                   <div
                     style={{
                       position: "absolute",
@@ -1039,9 +1296,9 @@ function MessagePage() {
                       </div>
                     ))}
                   </div>
-                ) : null}
+                )}
               </div>
-            ) : null}
+            )}
           </div>
 
           <div
@@ -1052,6 +1309,22 @@ function MessagePage() {
               backgroundColor: "#2d2d2d",
             }}
           >
+            {messages.length === 0 && activeConversation && (
+              <div
+              style={{
+                color: "#bdbdbd",
+                textAlign: "center",
+                marginTop: "40px",
+                fontSize: "0.95rem",
+              }}
+              
+          >
+            {activeConversation.type === "DIRECT"
+            ? `Start your conversation with ${getOtherUser(activeConversation.participants, sender)}`
+            : "No messages yet. Start the conversation."}
+            
+          </div>
+        )}
             {messages.map((msg) => {
               const isMine = msg.sender === sender;
               const showSenderName = shouldShowSenderName(
@@ -1059,6 +1332,34 @@ function MessagePage() {
                 msg,
                 sender
               );
+              if (msg.isSystem) {
+                return (
+                <div
+                key={msg.id}
+                style={{
+                  width: "100%",
+                  display: "flex",
+                  justifyContent: "center",
+                  marginBottom: "14px",
+                }}
+                >
+                  <div
+                  style={{
+                    backgroundColor: "#3a3a3a",
+                    color: "#d9d9d9",
+                    padding: "8px 14px",
+                    borderRadius: "999px",
+                    fontSize: "13px",
+                    fontStyle: "italic",
+                    maxWidth: "70%",
+                    textAlign: "center",
+                  }}
+               >
+                {msg.content}
+                </div>
+                </div>
+                );
+              }
 
               return (
                 <div
@@ -1075,7 +1376,7 @@ function MessagePage() {
                     background: "transparent",
                   }}
                 >
-                  {showSenderName ? (
+                  {showSenderName && (
                     <div
                       style={{
                         fontSize: "12px",
@@ -1087,7 +1388,7 @@ function MessagePage() {
                     >
                       {msg.sender}
                     </div>
-                  ) : null}
+                  )}
 
                   {msg.isDeleted ? (
                     <div
@@ -1128,6 +1429,7 @@ function MessagePage() {
                           boxSizing: "border-box",
                         }}
                       />
+
                       <div
                         style={{
                           marginTop: "8px",
@@ -1151,6 +1453,7 @@ function MessagePage() {
                         >
                           Save
                         </button>
+
                         <button
                           onClick={() => {
                             setEditingId("");
@@ -1183,7 +1486,8 @@ function MessagePage() {
                       }}
                     >
                       {msg.content}
-                      {msg.editedAt ? (
+
+                      {msg.editedAt && (
                         <span
                           style={{
                             marginLeft: "8px",
@@ -1193,11 +1497,11 @@ function MessagePage() {
                         >
                           edited
                         </span>
-                      ) : null}
+                      )}
                     </div>
                   )}
 
-                  {isMine && !msg.isDeleted && editingId !== msg.id ? (
+                  {isMine && !msg.isDeleted && editingId !== msg.id && (
                     <div
                       style={{
                         display: "flex",
@@ -1221,6 +1525,7 @@ function MessagePage() {
                       >
                         Edit
                       </button>
+
                       <button
                         onClick={() => deleteMessage(msg)}
                         style={{
@@ -1235,7 +1540,7 @@ function MessagePage() {
                         Delete
                       </button>
                     </div>
-                  ) : null}
+                  )}
                 </div>
               );
             })}
