@@ -136,7 +136,6 @@ async function fetchBackendConversations(currentUsername) {
   return res.data;
 }
 
-
 async function ensureConversationDoc({
   convoId,
   participants = [],
@@ -153,7 +152,6 @@ async function ensureConversationDoc({
 
   if (!snap.empty) return;
 
-  // ✅ Proper initialization
   const unreadCounts = {};
   participants.forEach((user) => {
     unreadCounts[user] = 0;
@@ -165,9 +163,10 @@ async function ensureConversationDoc({
       participants,
       type,
       title: type === "GROUP" ? title : "",
-      unreadCounts, 
+      unreadCounts,
       adminIds: type === "GROUP" ? [participants[0]] : [],
       hiddenFor: [],
+      updatedAt: serverTimestamp(),
     },
     { merge: true }
   );
@@ -175,7 +174,6 @@ async function ensureConversationDoc({
 
 function MessagePage() {
   const sender = localStorage.getItem("username");
-  const currentUserId = localStorage.getItem("userId");
 
   const [messageInput, setMessageInput] = useState("");
   const [messages, setMessages] = useState([]);
@@ -199,6 +197,9 @@ function MessagePage() {
   const [groupError, setGroupError] = useState("");
 
   const [showMembers, setShowMembers] = useState(false);
+  const [showAddMember, setShowAddMember] = useState(false);
+  const [addMemberInput, setAddMemberInput] = useState("");
+  const [addMemberError, setAddMemberError] = useState("");
 
   const activeConversation = useMemo(() => {
     return conversations.find((c) => c.id === activeConversationId) || null;
@@ -208,6 +209,9 @@ function MessagePage() {
 
   useEffect(() => {
     setShowMembers(false);
+    setShowAddMember(false);
+    setAddMemberInput("");
+    setAddMemberError("");
   }, [activeConversationId]);
 
   useEffect(() => {
@@ -350,7 +354,7 @@ function MessagePage() {
 
   async function sendMessage() {
     const text = messageInput.trim();
-    const currentUserId = localStorage.getItem("userId");
+
     if (!text || !sender || !activeConversationId) return;
 
     const isGroup = activeConversation?.type === "GROUP";
@@ -393,41 +397,20 @@ function MessagePage() {
       const convoRef = doc(db, "conversations", convoId);
       const msgRef = doc(collection(db, "conversations", convoId, "messages"));
 
-      const currentUserId = localStorage.getItem("userId");
-      
-      // TEMP: since you don’t have IDs wired everywhere yet,
-      // // we’ll map usernames → IDs later. For now, just use usernames.
-      const memberIds = participants;
-
-  
-      const batch = writeBatch(db);
-      
-      const initialUnreadCounts = {};
-      participants.forEach((user) => {
-        initialUnreadCounts[user] = 0;
-      });
-
       const unreadUpdates = {};
-      const memberIDs = activeConversation?.memberIds || [
-        currentUserId,
-        activeConversation?.otherUserID, 
-      ];
 
-      memberIDs.forEach((id) => {
-        if (id === currentUserId) {
-          unreadUpdates['unreadCounts.${id}'] = 0;
-        } else {
-          unreadUpdates['unreadCounts.${id}'] = increment(1);
-
-        }
+      participants.forEach((user) => {
+        unreadUpdates[`unreadCounts.${user}`] =
+          user === sender ? 0 : increment(1);
       });
-      
+
+      const batch = writeBatch(db);
 
       batch.set(
         convoRef,
         {
           participants,
-          memberIds,
+          memberIds: participants,
           type: activeConversation?.type || "DIRECT",
           title:
             activeConversation?.type === "GROUP"
@@ -549,40 +532,38 @@ function MessagePage() {
   }
 
   async function leaveGroupChat(convoId) {
-  if (!convoId || !sender) return;
+    if (!convoId || !sender) return;
 
-  try {
-    const convoRef = doc(db, "conversations", convoId);
-    const msgRef = doc(collection(db, "conversations", convoId, "messages"));
+    try {
+      const convoRef = doc(db, "conversations", convoId);
+      const msgRef = doc(collection(db, "conversations", convoId, "messages"));
 
-    
-    await setDoc(msgRef, {
-      sender: "system",
-      content: `${sender} left the group.`,
-      timestamp: serverTimestamp(),
-      editedAt: null,
-      isDeleted: false,
-      isSystem: true,
-    });
+      await setDoc(msgRef, {
+        sender: "system",
+        content: `${sender} left the group.`,
+        timestamp: serverTimestamp(),
+        editedAt: null,
+        isDeleted: false,
+        isSystem: true,
+      });
 
-    
-    await updateDoc(convoRef, {
-      participants: arrayRemove(sender),
-      hiddenFor: arrayUnion(sender),
-      lastMessageText: `${sender} left the group.`,
-      lastMessage: `${sender} left the group.`,
-      lastMessageSender: "system",
-      lastMessageId: msgRef.id,
-      updatedAt: serverTimestamp(),
-    });
+      await updateDoc(convoRef, {
+        participants: arrayRemove(sender),
+        hiddenFor: arrayUnion(sender),
+        lastMessageText: `${sender} left the group.`,
+        lastMessage: `${sender} left the group.`,
+        lastMessageSender: "system",
+        lastMessageId: msgRef.id,
+        updatedAt: serverTimestamp(),
+      });
 
-    setActiveConversationId("");
-    setActiveReceiver("");
-    setMessages([]);
-  } catch (e) {
-    console.error(e);
+      setActiveConversationId("");
+      setActiveReceiver("");
+      setMessages([]);
+    } catch (e) {
+      console.error(e);
+    }
   }
-}
 
   async function deleteGroupChatForEveryone(convoId) {
     if (!convoId) return;
@@ -639,11 +620,11 @@ function MessagePage() {
         type: "DIRECT",
         title: "",
       });
-      
+
       setConversations((prev) => {
         const exists = prev.some((c) => c.id === convoId);
         if (exists) return prev;
-        
+
         return [
           {
             id: convoId,
@@ -744,6 +725,75 @@ function MessagePage() {
     }
   }
 
+  async function addMemberToActiveGroup() {
+    const usernameToAdd = addMemberInput.trim();
+
+    if (!activeConversationId || activeConversation?.type !== "GROUP") return;
+
+    if (!isAdmin) {
+      setAddMemberError("Only admins can add members.");
+      return;
+    }
+
+    if (!usernameToAdd) {
+      setAddMemberError("Enter a username.");
+      return;
+    }
+
+    if (activeConversation.participants?.includes(usernameToAdd)) {
+      setAddMemberError(`${usernameToAdd} is already in this group.`);
+      return;
+    }
+
+    try {
+      const exists = await validateUsernameExists(usernameToAdd);
+
+      if (!exists) {
+        setAddMemberError(`User "${usernameToAdd}" does not exist.`);
+        return;
+      }
+
+      const convoRef = doc(db, "conversations", activeConversationId);
+      const msgRef = doc(
+        collection(db, "conversations", activeConversationId, "messages")
+      );
+
+      const systemText = `${sender} added ${usernameToAdd} to the group.`;
+
+      const batch = writeBatch(db);
+
+      batch.update(convoRef, {
+        participants: arrayUnion(usernameToAdd),
+        memberIds: arrayUnion(usernameToAdd),
+        hiddenFor: arrayRemove(usernameToAdd),
+        [`unreadCounts.${usernameToAdd}`]: 0,
+        lastMessageText: systemText,
+        lastMessage: systemText,
+        lastMessageSender: "system",
+        lastMessageId: msgRef.id,
+        updatedAt: serverTimestamp(),
+      });
+
+      batch.set(msgRef, {
+        sender: "system",
+        content: systemText,
+        timestamp: serverTimestamp(),
+        editedAt: null,
+        isDeleted: false,
+        isSystem: true,
+      });
+
+      await batch.commit();
+
+      setAddMemberInput("");
+      setAddMemberError("");
+      setShowAddMember(false);
+    } catch (e) {
+      console.error(e);
+      setAddMemberError("Could not add member.");
+    }
+  }
+
   async function openConversation(convo) {
     const isGroup = convo.type === "GROUP";
 
@@ -777,6 +827,7 @@ function MessagePage() {
       console.error(e);
     }
   }
+
   const totalUnreadMessages = conversations.reduce((total, convo) => {
     return total + (convo.unreadCounts?.[sender] || 0);
   }, 0);
@@ -1208,7 +1259,10 @@ function MessagePage() {
             {activeConversation?.type === "GROUP" && (
               <div style={{ position: "relative", display: "flex", gap: "10px" }}>
                 <button
-                  onClick={() => setShowMembers((v) => !v)}
+                  onClick={() => {
+                    setShowMembers((v) => !v);
+                    setShowAddMember(false);
+                  }}
                   style={{
                     padding: "8px 12px",
                     borderRadius: "10px",
@@ -1221,6 +1275,28 @@ function MessagePage() {
                 >
                   Members ({getGroupMembers(activeConversation).length})
                 </button>
+
+                {isAdmin && (
+                  <button
+                    onClick={() => {
+                      setShowAddMember((v) => !v);
+                      setShowMembers(false);
+                      setAddMemberError("");
+                      setAddMemberInput("");
+                    }}
+                    style={{
+                      padding: "8px 12px",
+                      borderRadius: "10px",
+                      border: "1px solid #444",
+                      backgroundColor: "#058BFE",
+                      color: "white",
+                      cursor: "pointer",
+                      fontWeight: 700,
+                    }}
+                  >
+                    Add Member
+                  </button>
+                )}
 
                 {!isAdmin && (
                   <button
@@ -1269,17 +1345,10 @@ function MessagePage() {
                       border: "1px solid #444",
                       borderRadius: "12px",
                       padding: "10px",
-                      boxShadow: "0 8px 20px rgba(0,0,0,0.35)",
                       zIndex: 20,
                     }}
                   >
-                    <div
-                      style={{
-                        fontWeight: 700,
-                        marginBottom: "8px",
-                        color: "white",
-                      }}
-                    >
+                    <div style={{ fontWeight: 700, marginBottom: "8px" }}>
                       Group Members
                     </div>
 
@@ -1297,6 +1366,66 @@ function MessagePage() {
                     ))}
                   </div>
                 )}
+
+                {showAddMember && (
+                  <div
+                    style={{
+                      position: "absolute",
+                      top: "42px",
+                      right: "150px",
+                      minWidth: "260px",
+                      backgroundColor: "#2f2f2f",
+                      border: "1px solid #444",
+                      borderRadius: "12px",
+                      padding: "10px",
+                      zIndex: 25,
+                    }}
+                  >
+                    <div style={{ fontWeight: 700, marginBottom: "8px" }}>
+                      Add Member
+                    </div>
+
+                    <input
+                      value={addMemberInput}
+                      onChange={(e) => setAddMemberInput(e.target.value)}
+                      placeholder="Enter username"
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") addMemberToActiveGroup();
+                      }}
+                      style={{
+                        width: "100%",
+                        padding: "10px",
+                        borderRadius: "10px",
+                        border: "none",
+                        backgroundColor: "#1f1f1f",
+                        color: "white",
+                      }}
+                    />
+
+                    {addMemberError && (
+                      <div style={{ color: "#ffb3b3", marginTop: "8px" }}>
+                        {addMemberError}
+                      </div>
+                    )}
+
+                    <button
+                      onClick={addMemberToActiveGroup}
+                      style={{
+                        width: "100%",
+                        marginTop: "10px",
+                        padding: "10px",
+                        borderRadius: "10px",
+                        border: "none",
+                        backgroundColor: "#4A90E2",
+                        color: "white",
+                        cursor: "pointer",
+                        fontWeight: 700,
+                      }}
+                    >
+                      Add
+                    </button>
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -1311,20 +1440,22 @@ function MessagePage() {
           >
             {messages.length === 0 && activeConversation && (
               <div
-              style={{
-                color: "#bdbdbd",
-                textAlign: "center",
-                marginTop: "40px",
-                fontSize: "0.95rem",
-              }}
-              
-          >
-            {activeConversation.type === "DIRECT"
-            ? `Start your conversation with ${getOtherUser(activeConversation.participants, sender)}`
-            : "No messages yet. Start the conversation."}
-            
-          </div>
-        )}
+                style={{
+                  color: "#bdbdbd",
+                  textAlign: "center",
+                  marginTop: "40px",
+                  fontSize: "0.95rem",
+                }}
+              >
+                {activeConversation.type === "DIRECT"
+                  ? `Start your conversation with ${getOtherUser(
+                      activeConversation.participants,
+                      sender
+                    )}`
+                  : "No messages yet. Start the conversation."}
+              </div>
+            )}
+
             {messages.map((msg) => {
               const isMine = msg.sender === sender;
               const showSenderName = shouldShowSenderName(
@@ -1332,32 +1463,33 @@ function MessagePage() {
                 msg,
                 sender
               );
+
               if (msg.isSystem) {
                 return (
-                <div
-                key={msg.id}
-                style={{
-                  width: "100%",
-                  display: "flex",
-                  justifyContent: "center",
-                  marginBottom: "14px",
-                }}
-                >
                   <div
-                  style={{
-                    backgroundColor: "#3a3a3a",
-                    color: "#d9d9d9",
-                    padding: "8px 14px",
-                    borderRadius: "999px",
-                    fontSize: "13px",
-                    fontStyle: "italic",
-                    maxWidth: "70%",
-                    textAlign: "center",
-                  }}
-               >
-                {msg.content}
-                </div>
-                </div>
+                    key={msg.id}
+                    style={{
+                      width: "100%",
+                      display: "flex",
+                      justifyContent: "center",
+                      marginBottom: "14px",
+                    }}
+                  >
+                    <div
+                      style={{
+                        backgroundColor: "#3a3a3a",
+                        color: "#d9d9d9",
+                        padding: "8px 14px",
+                        borderRadius: "999px",
+                        fontSize: "13px",
+                        fontStyle: "italic",
+                        maxWidth: "70%",
+                        textAlign: "center",
+                      }}
+                    >
+                      {msg.content}
+                    </div>
+                  </div>
                 );
               }
 
