@@ -1390,6 +1390,7 @@ function MessagePage() {
                     </div>
 
                     <input
+                      className="group-input"
                       value={addMemberInput}
                       onChange={(e) => setAddMemberInput(e.target.value)}
                       placeholder="Enter username"
@@ -1397,7 +1398,7 @@ function MessagePage() {
                         if (e.key === "Enter") addMemberToActiveGroup();
                       }}
                       style={{
-                        width: "100%",
+                        width: "90%",
                         padding: "10px",
                         borderRadius: "10px",
                         border: "none",
