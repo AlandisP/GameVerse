@@ -27,6 +27,7 @@ function ExplorePage() {
   const [gameResults, setGameResults] = useState([]);
   const [searchLoading, setSearchLoading] = useState(false);
   const [searchError, setSearchError] = useState(null);
+  const [showFilters, setShowFilters] = useState(false);
 
   const searchDebounceRef = useRef(null);
 
@@ -349,6 +350,25 @@ function ExplorePage() {
 
   const hasQuery = searchQuery.trim().length > 0;
 
+  useEffect(() => {
+    if (!hasQuery) {
+      setSearchScope("all");
+    }
+  }, [hasQuery]);
+
+  useEffect(() => {
+    if (hasQuery) {
+      setShowFilters(true);
+    } else {
+      // delay hiding so fade-out can play
+      const timeout = setTimeout(() => {
+        setShowFilters(false);
+      }, 200); // match CSS duration
+
+      return () => clearTimeout(timeout);
+    }
+  }, [hasQuery]);
+
   return (
     <div className="page-container explore-page">
       <NavBar />
@@ -364,41 +384,50 @@ function ExplorePage() {
               </p>
             </div>
 
-            <div className="filter-buttons">
-              <button
-                type="button"
-                className={`filter-btn ${searchScope === "all" ? "active" : ""}`}
-                onClick={() => setSearchScope("all")}
+            {showFilters && (
+              <div
+                className={`filter-buttons ${hasQuery ? "visible" : "hidden"}`}
               >
-                All results
-              </button>
-              <button
-                type="button"
-                className={`filter-btn ${searchScope === "users" ? "active" : ""}`}
-                onClick={() => setSearchScope("users")}
-              >
-                Users only
-              </button>
-              <button
-                type="button"
-                className={`filter-btn ${searchScope === "posts" ? "active" : ""}`}
-                onClick={() => setSearchScope("posts")}
-              >
-                Posts only
-              </button>
-              <button
-                type="button"
-                className={`filter-btn ${searchScope === "games" ? "active" : ""}`}
-                onClick={() => setSearchScope("games")}
-              >
-                Games only
-              </button>
-            </div>
+                <button
+                  type="button"
+                  className={`filter-btn ${searchScope === "all" ? "active" : ""}`}
+                  onClick={() => setSearchScope("all")}
+                >
+                  All results
+                </button>
 
-            <div className="sidebar-tip">
-              <strong>Tip:</strong> Clear the search box to return to the main
-              feed.
-            </div>
+                <button
+                  type="button"
+                  className={`filter-btn ${searchScope === "users" ? "active" : ""}`}
+                  onClick={() => setSearchScope("users")}
+                >
+                  Users only
+                </button>
+
+                <button
+                  type="button"
+                  className={`filter-btn ${searchScope === "posts" ? "active" : ""}`}
+                  onClick={() => setSearchScope("posts")}
+                >
+                  Posts only
+                </button>
+
+                <button
+                  type="button"
+                  className={`filter-btn ${searchScope === "games" ? "active" : ""}`}
+                  onClick={() => setSearchScope("games")}
+                >
+                  Games only
+                </button>
+              </div>
+            )}
+
+            {hasQuery && (
+              <div className="sidebar-tip">
+                <strong>Tip:</strong> Clear the search box to return to the main
+                feed.
+              </div>
+            )}
           </aside>
 
           <section className="explore-main-column">
