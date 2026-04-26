@@ -795,7 +795,7 @@ function ProfilePageTwo() {
               {isOwnProfile&&profile.steamId==null?(
                 <>
                 <p className="none-yet">You must sign in with steam to show your achievements. Please click the link to sign into steam</p>
-                <a href={`https://ccfrontend-production.up.railway.app/auth/steam?token=${token}`}>
+                <a href={`https://codecartel-production.up.railway.app/auth/steam?token=${token}`}>
                   <img src={SignIn} alt="steamlogin"/>
                 </a> </>):profile.steamId===null?(<p className="none-yet">This user has not logged into steam</p>):<ReadUserGames/>
               }
