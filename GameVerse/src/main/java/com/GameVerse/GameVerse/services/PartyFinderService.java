@@ -46,7 +46,7 @@ public class PartyFinderService {
 
         partyFinderRepository.save(party);
     }
-
+    // Delete a party
     public void deleteParty(String partyId) {
         PartyFinder party = partyFinderRepository.findById(partyId).orElseThrow();
         if(party == null) {

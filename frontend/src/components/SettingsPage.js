@@ -22,6 +22,8 @@ function SettingsPage() {
     const [bookmarkIds, setBookmarkIds] = useState([]);
     const [loadingBlocked, setLoadingBlocked] = useState(false);
     const [loadingBookmarks, setLoadingBookmarks] = useState(false);
+    const [showPlatformModal, setShowPlatformModal] = useState(false);
+    const [selectedPlatform, setSelectedPlatform] = useState('');
 
     const [newUsername, setNewUsername] = useState('');
     const [currentPassword, setCurrentPassword] = useState('');
@@ -49,6 +51,20 @@ function SettingsPage() {
         );
     }
 
+    const handleChangePlatform = async () => {
+        try {
+            await axios.post(
+                `${API_URL}/profile/ChangePlat`,
+                selectedPlatform,
+                { headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'text/plain' } }
+            );
+            setSuccess('Platform updated successfully!');
+            setTimeout(() => closeAllModals(), 2000);
+        } catch (err) {
+            setError('Failed to update platform');
+        }
+    }
+
     const resetStates = () => {
         setNewUsername('');
         setCurrentPassword('');
@@ -59,6 +75,7 @@ function SettingsPage() {
     };
 
     const closeAllModals = () => {
+        setShowPlatformModal(false); 
         setShowUsernameModal(false);
         setShowPasswordModal(false);
         setShowDeleteModal(false);
@@ -245,6 +262,7 @@ function SettingsPage() {
                         { label: 'View Blocked Users', action: handleViewBlocked },
                         { label: 'View Bookmarks', action: handleViewBookmarks },
                         { label: 'Delete Account', action: () => setShowDeleteModal(true) },
+                        { label: 'Change Platform', action: () => setShowPlatformModal(true) },
                     ].map(({ label, action }) => (
                         <div
                             key={label}
@@ -402,6 +420,30 @@ function SettingsPage() {
                             {error && <p style={errorTextStyle}>{error}</p>}
                             <div style={{ ...modalButtonsStyle, flexShrink: 0 }}>
                                 <button style={secondaryButtonStyle} onClick={closeAllModals}>Close</button>
+                            </div>
+                        </div>
+                    </div>
+                )}
+                {showPlatformModal && (
+                    <div style={modalOverlayStyle} onClick={closeAllModals}>
+                        <div style={modalStyle} onClick={(e) => e.stopPropagation()}>
+                            <h2 style={{ marginTop: 0, color: 'white' }}>Change Platform</h2>
+                            <select
+                                style={{ ...modalInputStyle, cursor: 'pointer' }}
+                                value={selectedPlatform}
+                                onChange={(e) => setSelectedPlatform(e.target.value)}
+                            >
+                                <option disabled hidden value="">Select Platform</option>
+                                <option value="PS">Playstation</option>
+                                <option value="PC">PC</option>
+                                <option value="XB">Xbox</option>
+                                <option value="NI">Nintendo</option>
+                            </select>
+                            {error && <p style={errorTextStyle}>{error}</p>}
+                            {success && <p style={successTextStyle}>{success}</p>}
+                            <div style={modalButtonsStyle}>
+                                <button style={primaryButtonStyle} onClick={handleChangePlatform}>Update Platform</button>
+                                <button style={secondaryButtonStyle} onClick={closeAllModals}>Cancel</button>
                             </div>
                         </div>
                     </div>

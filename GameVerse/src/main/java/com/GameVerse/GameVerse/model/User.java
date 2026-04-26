@@ -5,7 +5,7 @@ import java.util.ArrayList;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
-
+// model for users
 @Document(collection = "users")
 public class User {
 
@@ -15,7 +15,7 @@ public class User {
     @Indexed(unique = true)
     private String username;
 
-    private String password;
+    private String password; // will be hashed
     private String bio;
     private String platform;
     private Role role;

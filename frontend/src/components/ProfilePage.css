@@ -54,3 +54,13 @@
     border: 1px solid red;
 
 }
+
+.plat-bio{
+    font-weight: bold;
+    font-size: 1rem;
+    color: #3b82f6;
+    border: 2px solid #3b82f6;
+    border-radius: 20px;
+    padding: 5px;
+    margin: 0;
+}

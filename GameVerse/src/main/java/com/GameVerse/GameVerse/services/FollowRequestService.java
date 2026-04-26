@@ -23,7 +23,7 @@ public class FollowRequestService {
     @Autowired
     private RelationshipServices service;
     
-
+    // Send a follow request
     public void sendARequest(String userId, String acctId) {
         User user = userRepository.findById(userId).orElse(null);
         User privUser = userRepository.findById(acctId).orElse(null);
@@ -34,11 +34,14 @@ public class FollowRequestService {
         if(relationshipRepository.existsByFollowerIdAndFollowingId(userId, acctId)) {
             throw new RuntimeException("Relationship already exist");
         }
+        if(frRepository.existsBySenderIdAndReceiverId(userId, acctId)) {
+            throw new RuntimeException("Request already exists");
+        }
 
         FollowRequest newReq = new FollowRequest(userId, acctId);
         frRepository.save(newReq);
     }
-
+    // cancel a request
     public void cancelRequest(String userId, String acctId) {
         // User user = userRepository.findById(userId).orElse(null);
         // User privUser = userRepository.findById(acctId).orElse(null);
@@ -48,7 +51,7 @@ public class FollowRequestService {
         }
         frRepository.delete(req);
     }
-
+    // true or false and follows the user if true. very simple approach
     public void requestChoice(String reqId, boolean choice) {
         FollowRequest req = frRepository.findById(reqId).orElse(null);
         if(req == null) {

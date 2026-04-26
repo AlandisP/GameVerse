@@ -5,10 +5,19 @@ import axios from 'axios';
 import './Home.css';
 import Pfp from '../images/Profile.png';
 import imgicon from '../images/uploadimg.png';
+import userpfp from '../images/Profile.png';
 import UploadBox from './MediaUpload';
+import { db } from "../firebase";
+import {
+    collection,
+    onSnapshot,
+    orderBy,
+    query,
+    where,
+} from "firebase/firestore";
 const urlprefab = "https://gameverse-media-026955879175-us-east-2-an.s3.us-east-2.amazonaws.com/";
 
-function NavBar({GetPosts}) {
+function NavBar({ GetPosts, unreadMessageCount = 0 }) {
     const [activeTab, setActiveTab] = useState('');
     const [menuOpen, setMenuOpen] = useState(false);
     const navigate = useNavigate();
@@ -16,6 +25,8 @@ function NavBar({GetPosts}) {
     const [count, setCount] = useState(0);
     const token = localStorage.getItem("token");
     const [isClosed, setIsClosed] = useState(true);
+    const [unreadMessages, setUnreadMessages] = useState(0);
+    const username = localStorage.getItem("username");
 
     useEffect(() => {
         const path = location.pathname;
@@ -43,20 +54,62 @@ function NavBar({GetPosts}) {
         navigate('/login');
     };
 
-    useEffect(() => {
-        const fetchNotificationCount = async () => {
-            try {
-                const res = await axios.get(
-                    `${API_URL}/notifications/count`,
-                    { headers: { Authorization: `Bearer ${token}` } }
-                );
-                setCount(res.data);
-            } catch (e) {}
-        };
-        fetchNotificationCount();
-    }, []);
-
-    return (
+        useEffect(() => {
+            const fetchNotificationCount = async () => {
+                try {
+                    const res = await axios.get(
+                        `${API_URL}/notifications/count`,
+                        { headers: { Authorization: `Bearer ${token}` } }
+                    );
+                    setCount(res.data);
+                } catch (e) {}
+            };
+            
+            fetchNotificationCount();
+        }, [token]);
+        
+        useEffect(() => {
+            if (!username) return;
+            
+            const conversationsQuery = query(
+                collection(db, "conversations"),
+                where("participants", "array-contains", username)
+            );
+            
+            const unsubscribe = onSnapshot(
+                conversationsQuery,
+                (snapshot) => {
+                    let totalUnread = 0;
+                    
+                    snapshot.docs.forEach((docSnap) => {
+                        const convo = docSnap.data();
+                        const unreadCounts = convo.unreadCounts || {};
+                        const value = unreadCounts[username] || 0;
+                        
+                        console.log("Current username:", username);
+                        console.log("UnreadCounts object:", unreadCounts);
+                        console.log("Value for this convo:", value);
+                        
+                        if (convo.hiddenFor?.includes(username)) return;
+                        
+                        totalUnread += Number(value);
+                    });
+                    
+                    console.log("Final total unread:", totalUnread);
+                    setUnreadMessages(totalUnread);
+                },
+                (error) => {
+                    console.error("Unread messages listener error:", error);
+                    setUnreadMessages(0);
+                }
+            );
+            
+            return () => unsubscribe();
+        }, [username]);
+        
+        
+        const effectiveUnreadMessages = unreadMessages || unreadMessageCount;
+        return (
         <>
             <MakePostOverlay isClosed={isClosed} setIsClosed={setIsClosed} GetPosts={GetPosts}/>
             <button className="hamburger" onClick={() => setMenuOpen(!menuOpen)}>
@@ -96,12 +149,23 @@ function NavBar({GetPosts}) {
                             </svg>
                             Explore
                         </a>
-                        <a href="/messages" className={activeTab === 'messages' ? 'active' : ''} onClick={(e) => handleNavClick(e, '/messages', 'messages')}>
+                        <a
+                        href="/messages"
+                        className={activeTab === 'messages' ? 'active' : ''}
+                        onClick={(e) => handleNavClick(e, '/messages', 'messages')}
+                        style={{ position: 'relative' }}
+                        >
                             <svg className="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                            </svg>
-                            Messages
-                        </a>
+                                </svg>
+                                Messages
+                                
+                                {effectiveUnreadMessages > 0 && (
+                                    <span className="notification-badge">
+                                        {effectiveUnreadMessages > 99 ? '99+' : effectiveUnreadMessages}
+                                    </span>
+                                )}
+                            </a>
                         <a href="/partyfinder" className={activeTab === 'partyfinder' ? 'active' : ''} onClick={(e) => handleNavClick(e, '/partyfinder', 'partyfinder')}>
                             <svg className="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
@@ -164,7 +228,8 @@ function MakePostOverlay({isClosed, setIsClosed, GetPosts}) {
     const [file, setfile] = useState(null);
     const [isopen, setopen] = useState(false);
     const username = localStorage.getItem("username");
-    const [imgsrc, setimgsrc] = useState(urlprefab+username+"/Profile/ProfilePic");
+    const [imgsrc, setimgsrc] = useState(null);
+    const s3url = urlprefab + username + "/Profile/ProfilePic";
     const [posting, makingpost] = useState(false);
 
     const getAllUserCommunities = async() => {
@@ -200,6 +265,8 @@ function MakePostOverlay({isClosed, setIsClosed, GetPosts}) {
                 // GetPosts();
                     setIsClosed(true);
                     makingpost(false);
+                    if(GetPosts) GetPosts();
+                    console.log("GetPosts:", typeof GetPosts);
                 } else if(text!=""&&selectedValue===""){
                     // const res = await axios.post(
                     //     `${API_URL}/post/makepost`, {body: text},
@@ -215,7 +282,8 @@ function MakePostOverlay({isClosed, setIsClosed, GetPosts}) {
                 //  GetPosts();
                     setIsClosed(true);
                     makingpost(false);
-                    GetPosts();
+                    if(GetPosts) GetPosts();
+                    console.log("GetPosts:", typeof GetPosts);
                 }
             }
         } catch (error) {
@@ -230,6 +298,13 @@ function MakePostOverlay({isClosed, setIsClosed, GetPosts}) {
     useEffect(() => {
         getAllUserCommunities();
     },[]);
+
+    useEffect(() => {
+        const img = new Image();
+        img.src = s3url;
+        img.onload = () => setimgsrc(s3url);  // only set if it actually loads
+        img.onerror = () => setimgsrc(userpfp); // fallback if it doesn't
+    }, []);
 
     return(
         <>
@@ -249,7 +324,7 @@ function MakePostOverlay({isClosed, setIsClosed, GetPosts}) {
                         ))}
                     </select>
                     <div className='postingbod'>
-                        <img src={imgsrc} alt='pfp' className='pfp'/>
+                        <img src={imgsrc || userpfp} alt='pfp' className='pfp'/>
                         <div className='column-box'>
                             <textarea  className= 'postarea' placeholder='What are you thinking?' maxLength="280" onChange={(e) => setText(e.target.value)}/>
                             <div className='image-upload'>

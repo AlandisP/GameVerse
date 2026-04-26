@@ -10,6 +10,7 @@ import members from "../../images/members.png";
 import dots from "../../images/dots.png";
 import settings from "../../images/settings.png";
 import PostObj from "../Post";
+import userpfp from "../../images/Profile.png";
 function CommunityPage() {
     const token = localStorage.getItem("token");
     const username = localStorage.getItem("username");
@@ -106,13 +107,21 @@ function CommunityPage() {
         return like;
     }
 
+    const handleDeletePost = (postId) => {
+        setPosts(prev => prev.filter(p => p.id !== postId));
+    }
+
     const ReadCommunityPost = () => {
         const items = posts.map((post, index)=>{
-             return <PostObj key={index} User={post["user"]} Content={post["text"]} Likes={post["likes"]} Liked={parselike(post)} id={post["id"]} commcount={post["comments"].length} books={false} CreatedAt={post["createdAt"]} CommunityName={post["communityName"]} media={post["media"]} type={post["mediaType"]} IsMod={mods.some(m => m.id === userId)}/>
+             return <PostObj key={index} User={post["user"]} Content={post["text"]} Likes={post["likes"]} Liked={parselike(post)} id={post["id"]} commcount={post["comments"].length} books={false} CreatedAt={post["createdAt"]} CommunityName={post["communityName"]} media={post["media"]} type={post["mediaType"]} IsMod={mods.some(m => m.id === userId)}  onDelete={handleDeletePost}/>
         });
         return(
             <div className="com-posts">
-                {items}
+                {items.length!==0?(
+                    <>
+                        {items}
+                    </>
+                ):<p className="none-yet">No Posts for Community</p>}
             </div>
         );
     }
@@ -120,7 +129,7 @@ function CommunityPage() {
     const ReadCommunityMedia = () => {
         const items = posts.filter(post => post.media).map((post,index) => {
             if(post.media) {
-                return <PostObj key={index} User={post["user"]} Content={post["text"]} Likes={post["likes"]} Liked={parselike(post)} id={post["id"]} commcount={post["comments"].length} books={false} CreatedAt={post["createdAt"]} CommunityName={post["communityName"]} media={post["media"]} type={post["mediaType"]} IsMod={mods.includes(userId)}/>
+                return <PostObj key={index} User={post["user"]} Content={post["text"]} Likes={post["likes"]} Liked={parselike(post)} id={post["id"]} commcount={post["comments"].length} books={false} CreatedAt={post["createdAt"]} CommunityName={post["communityName"]} media={post["media"]} type={post["mediaType"]} IsMod={mods.includes(userId)}  onDelete={handleDeletePost}/>
             }
         }, []);
       return(
@@ -213,7 +222,8 @@ function CommunityPage() {
                 {},
                 { headers: { Authorization: `Bearer ${token}` } }
             );
-            setMembers(prev => [...prev, { id: userId, username: username }]);
+            const pfpUrl = `https://gameverse-media-026955879175-us-east-2-an.s3.us-east-2.amazonaws.com/${username}/Profile/ProfilePic`;
+            setMembers(prev => [...prev, { id: userId, username: username, pfp: pfpUrl}]);
             // Update member count
             setCurrCommunity(prev => ({
                 ...prev,
@@ -232,6 +242,7 @@ function CommunityPage() {
             );
             // Remove the user from membersCom
             setMembers(prev => prev.filter(member => member.id !== userId));
+            setMods(prev => prev.filter(mod => mod.id !== userId));
             // Update member count
             setCurrCommunity(prev => ({
                 ...prev,
@@ -286,7 +297,7 @@ function CommunityPage() {
         return (
             
             <div className="page-container">
-                <NavBar/>
+                <NavBar GetPosts={getCommunityPosts}/>
                 { isOwner?(
                     <>
                     <ChangeNameOverlay isClosed={isClosed1} setIsClosed={setIsClosed1} setCommunityName={setCommunityName}/>
@@ -381,7 +392,7 @@ function CommunityPage() {
                                     mods.map(mod =>(
                                         <div key={mod.id} className="userBlock" onClick={(e)=>{e.stopPropagation(); navigate(`/profile/${mod.username}`);}}>
                                             <div className="userCircle">
-                                                {mod.pfp && <img src={mod.pfp} alt='userpfp'/>}
+                                                <img src={mod.pfp?mod.pfp:userpfp} alt='userpfp'/>
                                             </div>
                                             
                                             <p className="user-m">{mod.username}</p>
@@ -400,7 +411,7 @@ function CommunityPage() {
                                 {
                                 membersCom.map(member =>(
                                     <div key={member.id} className="userBlock" onClick={(e)=>{e.stopPropagation(); navigate(`/profile/${member.username}`)}}>
-                                        <div className="userCircle"></div>
+                                        <div className="userCircle"><img src={member.pfp?member.pfp:userpfp} alt='userpfp'/></div>
                                         <p className="user-m">{member.username}</p>
                                         {mods.some(mod => mod.id === userId)?(
                                             <div className="img-holder" onClick={(e) => handleOptionsClick(e, member)}>

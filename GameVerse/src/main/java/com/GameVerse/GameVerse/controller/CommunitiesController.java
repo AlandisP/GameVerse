@@ -22,6 +22,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.GameVerse.GameVerse.controller.DTO.CommunityDTO;
 import com.GameVerse.GameVerse.model.Community;
 import com.GameVerse.GameVerse.model.CommunityCategory;
 import com.GameVerse.GameVerse.model.CommunityMembership;
@@ -58,13 +59,19 @@ public class CommunitiesController {
 
     private static final String type = "Community";
 
-
+    // Gets all communities. Had to get restructured
     @GetMapping
-    public ResponseEntity<?> getAllCommunities() {
+    public ResponseEntity<?> getAllCommunities(Authentication auth) {
+        String userId = (String) auth.getPrincipal();
         List<Community> list = communityRepository.findAll();
-        return ResponseEntity.ok().body(list);
+        
+        List<CommunityDTO> result = list.stream()
+            .map(c -> new CommunityDTO(c, cmr.existsByCommunityIdAndUserId(c.getId(), userId)))
+            .collect(Collectors.toList());
+        
+        return ResponseEntity.ok(result);
     }
-
+    // finds all community matches
     @GetMapping("/matches")
     public ResponseEntity<?> getCommunityMatches(@RequestParam String text) {
         List<Community> byName = communityRepository.findByNameContainingIgnoreCase(text);
@@ -76,7 +83,7 @@ public class CommunitiesController {
 
         return ResponseEntity.ok(combined);
     }
-
+    // Create community endpoint
     @PostMapping("/createCommunity")
     public ResponseEntity<?> createCommunity(@RequestBody createCommunityRequest req, Authentication auth) {
         String id = (String) auth.getPrincipal();
@@ -90,7 +97,7 @@ public class CommunitiesController {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
-
+    // Endpoint returns a communiyy by name
     @GetMapping("/{name}")
     public ResponseEntity<?> getCommunity(@PathVariable String name, Authentication auth) {
         String id = (String) auth.getPrincipal();
@@ -101,7 +108,7 @@ public class CommunitiesController {
         }
         return ResponseEntity.ok(com);
     }
-
+    // join community endpoint
     @PutMapping("/{communityname}/join")
     public ResponseEntity<?> joinCommunity(@PathVariable String communityname, Authentication auth) {
         String id = (String) auth.getPrincipal();
@@ -116,17 +123,20 @@ public class CommunitiesController {
         communityService.addMember(communityRepository.findByNameIgnoreCase(communityname).getId(), id);
         return ResponseEntity.ok().body("Successfully joined community");
     }
-
+    // leave community endpoint
     @PutMapping("/{communityname}/leave")
     public ResponseEntity<?> leaveCommunity(@PathVariable String communityname, Authentication auth) {
         String id = (String) auth.getPrincipal();
         if(!communityRepository.existsByNameIgnoreCase(communityname)) {
             return ResponseEntity.badRequest().body("Community doesn't exist");
         }
+        if(communityRepository.findByNameIgnoreCase(communityname).getOwnerId().equals(id)) {
+            return ResponseEntity.badRequest().body("You must transfer ownership of the community or delete it.");
+        }
         communityService.removeMember(communityRepository.findByNameIgnoreCase(communityname).getId(), id);
         return ResponseEntity.ok().body("Successfully left community");
     }
-
+    // Kicking endpoint
     @PutMapping("/{communityname}/{username}/kick")
     public ResponseEntity<?> kickMember(@PathVariable String communityname, @PathVariable String username, Authentication auth) {
         String id = (String) auth.getPrincipal();
@@ -139,13 +149,13 @@ public class CommunitiesController {
         if(!communityRepository.existsByNameIgnoreCase(communityname)) {
             return ResponseEntity.badRequest().body("Community doesn't exist");
         }
-        if(!repository.existsByUsername(username)) {
+        if(!repository.existsByUsernameIgnoreCase(username)) {
             return ResponseEntity.badRequest().body("User doesn't exist");
         }
         communityService.removeMember(communityRepository.findByNameIgnoreCase(communityname).getId(), repository.findByUsernameIgnoreCase(username).getId());
         return ResponseEntity.ok().body("User has been kicked from the community");
     }
-
+    // modding endpoint
     @PutMapping("/{communityname}/{username}/mod")
     public ResponseEntity<?> addModerator(@PathVariable String communityname, @PathVariable String username, Authentication auth){
         String id = (String) auth.getPrincipal();
@@ -162,7 +172,7 @@ public class CommunitiesController {
         communityService.addModerator(com.getId(), user.getId());
         return ResponseEntity.ok("Successfuly made the user moderator");
     }
-
+    // demote endpoint
     @PutMapping("/{communityname}/{username}/demote")
     public ResponseEntity<?> removeModerator(@PathVariable String communityname, @PathVariable String username, Authentication auth){
         String id = (String) auth.getPrincipal();
@@ -179,7 +189,7 @@ public class CommunitiesController {
         communityService.removeModerator(com.getId(), user.getId());
         return ResponseEntity.ok("Successfuly removed the user moderator");
     }
-
+    // editing community name endpoint
     @PutMapping("/{name}/editName")
     public ResponseEntity<?> editCommunityName(@PathVariable String name, @RequestBody EditNameRequest req ) {
         Community com = communityRepository.findByNameIgnoreCase(name);
@@ -190,7 +200,7 @@ public class CommunitiesController {
         communityRepository.save(com);
         return ResponseEntity.ok(com);
     }
-
+    // community description endpoint
     @PutMapping("/{name}/editDescription")
     public ResponseEntity<?> editCommunityDescription(@PathVariable String name, @RequestBody EditDescriptionRequest req ) {
         Community com = communityRepository.findByNameIgnoreCase(name);
@@ -201,7 +211,7 @@ public class CommunitiesController {
         communityRepository.save(com);
         return ResponseEntity.ok(com);
     }
-
+    // delete a community
     @DeleteMapping("/delete")
     public ResponseEntity<?> deleteCommunity(@RequestBody DeleteCommunityRequest req, Authentication auth) {
         String id = (String)auth.getPrincipal();
@@ -224,7 +234,7 @@ public class CommunitiesController {
             .collect(Collectors.toList());
         return ResponseEntity.ok(categories);
     }
-
+    // gets all memberships
     @GetMapping("/memberships")
     public ResponseEntity<?> getUserCommunities(Authentication auth, @RequestParam(defaultValue = "6") int limit) {
          String id = (String) auth.getPrincipal();
@@ -234,7 +244,7 @@ public class CommunitiesController {
             .toList();
         return ResponseEntity.ok(limited);
     }
-
+    // gets all members of a community
     @GetMapping("/{communityName}/Members")
     public ResponseEntity<?> getCommunityMembers(@PathVariable String communityName) {
         Community com = communityRepository.findByNameIgnoreCase(communityName);
@@ -243,7 +253,7 @@ public class CommunitiesController {
         }
         return ResponseEntity.ok(communityService.getCommunityMembers(com.getId()));
     }
-
+    // gets all the mods
     @GetMapping("/{communityName}/Mods")
     public ResponseEntity<?> getCommunityModerators(@PathVariable String communityName) {
         Community com = communityRepository.findByNameIgnoreCase(communityName);
@@ -252,7 +262,7 @@ public class CommunitiesController {
         }
         return ResponseEntity.ok(communityService.getCommunityOwnerAndMods(com.getId()));
     }
-
+    // gets ALL members of a community
     @GetMapping("/{communityName}/AllMembers")
     public ResponseEntity<?> getCommunityAllMembers(@PathVariable String communityName) {
         Community com = communityRepository.findByNameIgnoreCase(communityName);
@@ -261,12 +271,11 @@ public class CommunitiesController {
         }
         return ResponseEntity.ok(communityService.getCommunityAllMembers(com.getId()));
     }
-
     @GetMapping("/featured")
     public ResponseEntity<?> getCommunitiesInOrder() {
         return ResponseEntity.ok(communityRepository.findAllByOrderByMemberCountDesc());
     }
-
+    // transfer membership endpoint
     @PutMapping("/{communityName}/TransferOwnership")
     public ResponseEntity transferLeadership(@PathVariable String communityName, @RequestBody transferOwnershipRequest req, Authentication auth) {
         String id = (String) auth.getPrincipal();

@@ -14,4 +14,7 @@ public interface FollowRequestRepository extends MongoRepository<FollowRequest, 
     List<FollowRequest> findByReceiverId(String receiverId);
     List<FollowRequest> findBySenderId(String senderId);     
     void deleteBySenderIdAndReceiverId(String senderId, String receiverId);
+    boolean existsBySenderIdAndReceiverId(String senderId, String receiverId);
+    void deleteAllBySenderId(String senderId);
+    void deleteAllByReceiverId(String receiver);
 }

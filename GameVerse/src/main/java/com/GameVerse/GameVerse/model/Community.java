@@ -5,13 +5,13 @@ import java.util.List;
 
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
-
+// Communities model
 @Document(collection = "communities")
 public class Community {
     @Id
     private String id;
-    private String ownerId;
-    private List<String> moderatorIds = new ArrayList<>();
+    private String ownerId; // need to track
+    private List<String> moderatorIds = new ArrayList<>(); // initialized right off the bat
     private String name;
     private String description;
     private int memberCount;

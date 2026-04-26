@@ -114,6 +114,7 @@
     padding: 10px;
     background-color: rgb(44, 42, 42);
     gap: 10px;
+    flex-wrap: wrap;
 }
 
 .emptyBox {
@@ -151,6 +152,7 @@
     background-color: transparent;
     align-items: center;
     flex-shrink: 0;
+    min-width: 110px;
 }
 
 .joinbtn {

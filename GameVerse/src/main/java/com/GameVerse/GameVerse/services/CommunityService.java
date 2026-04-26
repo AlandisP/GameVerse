@@ -38,7 +38,7 @@ public class CommunityService {
 
     @Autowired
     private S3Service s3serv;
-
+    // Creates a community
     public void createCommunity(String ownerId, String name, String description, CommunityCategory category) {
         User user = userRepository.findById(ownerId).orElse(null);
         if(user == null) {
@@ -52,7 +52,7 @@ public class CommunityService {
         CommunityMembership cm = new CommunityMembership(ownerId, com.getId(), MemberType.OWNER);
         cr.save(cm);
     }
-
+    // add a member/join
     public void addMember(String communityId, String userId) {
         Community com = communityRepository.findById(communityId).orElse(null);
         User user = userRepository.findById(userId).orElse(null);
@@ -67,7 +67,7 @@ public class CommunityService {
         com.setMemberCount((int) cr.countByCommunityId(communityId));
         communityRepository.save(com);   
     }
-
+    // add a moderator
     public void addModerator(String communityId, String userId) {
         Community com = communityRepository.findById(communityId).orElse(null);
         User user = userRepository.findById(userId).orElse(null);
@@ -80,7 +80,7 @@ public class CommunityService {
         com.addModerator(userId);
         communityRepository.save(com); 
     }
-
+    // demotes a moderator back to a member
     public void removeModerator(String communityId, String userId) {
         Community com = communityRepository.findById(communityId).orElse(null);
         User user = userRepository.findById(userId).orElse(null);
@@ -95,7 +95,7 @@ public class CommunityService {
         }
         communityRepository.save(com);
     }
-
+    // remove a member. also check if they are a mod and remove them from the list
     public void removeMember(String communityId, String userId) {
         Community com = communityRepository.findById(communityId).orElse(null);
         User user = userRepository.findById(userId).orElse(null);
@@ -107,10 +107,14 @@ public class CommunityService {
         }
         CommunityMembership cm = cr.findByCommunityIdAndUserId(communityId, userId);
         cr.delete(cm);
+        if(com.getModeratorIds().contains(userId)) {
+            com.getModeratorIds().remove(userId);
+        }
         com.setMemberCount((int) cr.countByCommunityId(communityId));
         communityRepository.save(com);
     }
 
+    // Makes a community posts
     public void communityPost(String communityId, String username, String text, MultipartFile media) {
         try{
             Community com = communityRepository.findById(communityId).orElse(null);
@@ -157,7 +161,7 @@ public class CommunityService {
     }
     // This is structured so that we aren't showing 5+ commiunites on the featured page
     public List<Community> getTopCommunitiesForUser(String userId) {
-        if(!userRepository.existsByUsername(userId)) {
+        if(!userRepository.existsByUsernameIgnoreCase(userId)) {
             throw new RuntimeException(" User doesn't exist");
         }
         List<CommunityMembership> arr = cr.findTop5ByUserId(userId);

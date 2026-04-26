@@ -12,6 +12,7 @@ import { useNavigate } from "react-router-dom";
 import Pfp from '../images/Profile.png';
 import check from '../images/checksym.png';
 import xsym from '../images/exsym.png';
+import trashcan from '../images/trashcan.png';
 dayjs.extend(relativeTime);
 
 function NotificationPage() {
@@ -26,7 +27,7 @@ function NotificationPage() {
     const [currUser, setCurrUser] = useState(null);
     const [requests, setRequest] = useState([]);
     const [myRequest, setMyRequest] = useState([]);
-
+    // follow api request
     const handleFollow = async(user)=>{
         try {
             const res = await axios.post(
@@ -81,7 +82,7 @@ function NotificationPage() {
             console.error("failed to get users: ", error.response?.data || error.message);
         }
     }
-
+    // request responses are in the notification screen since you get notis for request anyway
     const handleRequestResponse = async(user, status) => {
         try{
             const res = await axios.post(
@@ -95,7 +96,7 @@ function NotificationPage() {
             console.error("Error:", error.response.data);
         }
     }
-
+    // cancel
     const handleCancelRequest = async(user) => {
         try{
             const res = await axios.post(
@@ -169,7 +170,7 @@ function NotificationPage() {
 
     const ReadNotis = () => {
         const items = notifications.map((noti, ind) => (
-            <Notification key={ind} Type={noti.type} Message={noti.message} CreatedAt={noti.createdAt} id={noti.id}/>
+            <Notification key={ind} Type={noti.type} Message={noti.message} CreatedAt={noti.createdAt} id={noti.id} setNotifications={setNotifications}/>
         ));
         return (
             notifications.length !== 0?(
@@ -179,7 +180,7 @@ function NotificationPage() {
             </div>
         );
     }
-
+    // recommendations
     const ReadRecs = () => {
         const items = recommendations.map((user,ind) => (
             <div key={ind} className="userrec" onClick={() => navigate(`/profile/${user.username}`)}>
@@ -205,7 +206,7 @@ function NotificationPage() {
             </div>
         );
     }
-
+    // folllow requests
     const ReadReqs = () => {
         const items = myRequest.map((user, ind) => (
             <div  key={ind} className="user-holderreq" onClick={() => navigate(`/profile/${user.username}`)}>
@@ -239,7 +240,6 @@ function NotificationPage() {
                     <h1 style={{ color: "white", textAlign: "left",marginTop: "11px",marginLeft: "20px",marginBottom: "0"}}>Notifications</h1>
                 </div>
                  <div style={{ height: "60px" }}></div>
-
                  <div className="notifications">
                     <div className="container">
                         <ReadNotis/>
@@ -247,7 +247,7 @@ function NotificationPage() {
                     <div className="extras">
                         <h2 className="header-1">Who to Follow</h2>
                         <div className="rec-holder">
-                            <ReadRecs/>
+                            {recommendations.length==0?<p>Loading...</p>:<ReadRecs/>}
                         </div>
                         { currUser?.isPrivate  && <h2>Follow Request</h2>}
                         <div className="req-holder">
@@ -273,14 +273,15 @@ function NotificationPage() {
     );
 
 }
-
-function Notification({Type, Message, CreatedAt, id}) {
+// notification card. seems a bit long but has a good bit of functionality
+function Notification({Type, Message, CreatedAt, id, setNotifications}) {
     const ref = useRef();
     const token = localStorage.getItem("token");
     const navigate = useNavigate();
     const user = Message.split(" ")[0];
     const img = Type==='Profile' ? followed: bell;
-
+    const deleted = useRef(false);
+    // Clever way of handling some types of clicks
     const HandleConditionalClick = () => {
         if(Type === 'Party') {
             navigate('/partyfinder');
@@ -289,10 +290,19 @@ function Notification({Type, Message, CreatedAt, id}) {
         }
     }
 
+    const handleDelete = async(e) => {
+        const res = await axios.delete(
+            `${API_URL}/notifications/deleteNoti/${id}`,
+            { headers: { Authorization: `Bearer ${token}` } }
+        );
+        setNotifications(prev => prev.filter(n => n.id !== id));
+
+    }
+
     // This logic is called whenever the page is view(will research later)
     useEffect(() => {
         const observer = new IntersectionObserver(([entry]) => {
-            if (entry.isIntersecting) {
+            if (entry.isIntersecting && !deleted.current) {
                 axios.post(
                     `${API_URL}/notifications/markRead/${id}`, {},
                     { headers: { Authorization: `Bearer ${token}` } }
@@ -316,6 +326,7 @@ function Notification({Type, Message, CreatedAt, id}) {
                 </div>
                 <div className="right-side">
                     <p>{dayjs(CreatedAt).fromNow()}</p>
+                    <img src={trashcan} alt="trashcan" className="trashcan" onClick={(e) => {e.stopPropagation(); handleDelete();}}/>
                 </div>
             </div>
         </div>

@@ -39,6 +39,15 @@
     display: flex;
     flex-direction: column;
     overflow: hidden;
+    flex:1;
+    min-width: 0;
+}
+
+.noti-text h3,
+.noti-text p {
+    white-space: nowrap;     
+    overflow: hidden;           
+    text-overflow: ellipsis;    
 }
 
 
@@ -51,7 +60,9 @@
     border-radius: 20px;
     justify-content: space-between;
     background-color: transparent;
-    gap: 2rem;
+    gap: 8px;
+    flex-shrink: 0;
+    align-items: flex-end;
 
 }
 .noti-img {
@@ -192,5 +203,11 @@
     width: 100%;
     height: 100%;
     border-radius: 50%;
+}
+
+.trashcan {
+    height: 22px;
+    width: 22px;
+    align-self: center;
 }
 

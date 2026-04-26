@@ -42,7 +42,7 @@ function Party({Name, Description, Categories, Count, id, Members, Status, Creat
     const handleCloseEdit = () => {
         setIsOpen2(false);
     }
-
+    // weird name but this request joins a party
     const buttonTest = async () => {
         try {
             await axios.put(
@@ -59,7 +59,7 @@ function Party({Name, Description, Categories, Count, id, Members, Status, Creat
         }
     };
 
-
+    // delete api request
     const handleDeleteParty = async () => {
         try {
             await axios.delete(
@@ -73,7 +73,7 @@ function Party({Name, Description, Categories, Count, id, Members, Status, Creat
             setError({ text: error.response?.data, id: Date.now() });
         }
     }
-
+    // leave api request
     const handleLeaveParty = async() => {
         try {
             await axios.put(
@@ -88,7 +88,7 @@ function Party({Name, Description, Categories, Count, id, Members, Status, Creat
             setError({ text: error.response?.data, id: Date.now() });
         }
     }
-
+    // this essentially helps with the timer functionality(tried to make it a live counter)
     useEffect(() => {
         if (!TimerEndsAt || Status === 'ACTIVE') return;
 
@@ -144,7 +144,7 @@ function Party({Name, Description, Categories, Count, id, Members, Status, Creat
         </>
     );
 }
-
+// just to transform the categories into proper capitalization
 function transformString(text) {
     const newtext = text.charAt(0).toUpperCase() + text.slice(1).toLowerCase();
     return newtext.replace(/_/g, " ");

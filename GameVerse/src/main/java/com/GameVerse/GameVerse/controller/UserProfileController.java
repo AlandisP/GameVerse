@@ -1,7 +1,6 @@
 package com.GameVerse.GameVerse.controller;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -72,7 +71,7 @@ public class UserProfileController {
         User user = repository.findById(userId).orElseThrow();
         return ResponseEntity.ok(user);
     }
-
+    // helps get a user profile
     @GetMapping("/{username}")
     public ResponseEntity<?> getUserProfile(@PathVariable String username) {
         User user = repository.findByUsernameIgnoreCase(username);
@@ -81,7 +80,6 @@ public class UserProfileController {
         }
         return ResponseEntity.ok(user);
     }
-
     @PutMapping
     public ResponseEntity<?> editUserBio(@RequestBody ProfileUpdateRequest req, Authentication auth) {
         String userId = (String) auth.getPrincipal();
@@ -121,7 +119,7 @@ public class UserProfileController {
             User person = repository.findByUsernameIgnoreCase(user);
             return ResponseEntity.ok(person.getpfp());
     }
-
+    // editing password endpoint
     @PutMapping("/password")
     public ResponseEntity<?> editUserPassword(@RequestBody PasswordChangeRequest req, Authentication auth) {
         String userId = (String) auth.getPrincipal();
@@ -144,7 +142,7 @@ public class UserProfileController {
 
         return ResponseEntity.ok("Password has been changed");
     }
-
+    // editing endpoint
     @PutMapping("/username")
     public ResponseEntity<?> editUsername(@RequestBody UsernameChangeReq req, Authentication auth) {
         String userId = (String) auth.getPrincipal();
@@ -190,7 +188,7 @@ public class UserProfileController {
         relationshipServices.followUser(followerId, target.getId());
         return ResponseEntity.ok().build();
     }
-
+    //remove a follower 
     @PostMapping("/removeFollower/{username}")
     public ResponseEntity<?> removeFollower(@PathVariable String username, Authentication auth) {
         String userId = (String) auth.getPrincipal();
@@ -202,7 +200,7 @@ public class UserProfileController {
         return ResponseEntity.ok().body("Removed user from followers");
 
     }
-
+    // unfollow endpoint
     @PostMapping("/{username}/unfollow")
     public ResponseEntity<?> unfollowUser(@PathVariable String username, Authentication auth) {
         String followerId = (String) auth.getPrincipal();
@@ -251,7 +249,7 @@ public class UserProfileController {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
-
+    // unblock a person
     @PostMapping("/unblock/{username}")
     public ResponseEntity<?> unblockUser(@PathVariable String username, Authentication auth) {
         String userId = (String) auth.getPrincipal();
@@ -283,7 +281,7 @@ public class UserProfileController {
         User user = repository.findByUsernameIgnoreCase(username);
         return ResponseEntity.ok(blockedService.getBlockListIds(user.getId()));
     }
-
+    // simple toggle for privating accounts
     @PostMapping("/TogglePrivate")
     public ResponseEntity<?> setAccountToPrivate(Authentication auth) {
         String userId = (String) auth.getPrincipal();
@@ -297,6 +295,16 @@ public class UserProfileController {
         user.setIsPrivate(!user.getIsPrivate());
         repository.save(user);
         return ResponseEntity.ok(user.getIsPrivate());
+    }
+    // change platform endpoint
+    @PostMapping("/ChangePlat")
+    public ResponseEntity<?> changePlatform(@RequestBody String platform, Authentication auth) {
+        String userId = (String) auth.getPrincipal();
+        User user = repository.findById(userId).orElseThrow();
+        user.setPlatform(platform);
+        repository.save(user);
+        return ResponseEntity.ok("success");
+
     }
 
 

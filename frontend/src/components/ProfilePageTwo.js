@@ -150,12 +150,15 @@ function ProfilePageTwo() {
           setLikedPosts(res.data);
       }
     }
-
+    const handleDeletePost = (postId) => {
+      setPosts(prev => prev.filter(p => p.id !== postId));
+      setLikedPosts(prev => prev.filter(p => p.id !== postId));
+  }
     
 
     const ReadUserPosts = () => {
         const items = posts.map((post, index)=>{
-             return <PostObj key={index} User={post["user"]} Content={post["text"]} Likes={post["likes"]} Liked={parselike(post)} id={post["id"]} commcount={post["comments"].length} books={false} CreatedAt={post["createdAt"]} CommunityName={post["communityName"]} media={post["media"]} type={post["mediaType"]}/>
+             return <PostObj key={index} User={post["user"]} Content={post["text"]} Likes={post["likes"]} Liked={parselike(post)} id={post["id"]} commcount={post["comments"].length} books={false} CreatedAt={post["createdAt"]} CommunityName={post["communityName"]} media={post["media"]} type={post["mediaType"]} onDelete={handleDeletePost}/>
         });
         return(
             <div className="com-posts">
@@ -166,7 +169,7 @@ function ProfilePageTwo() {
     const ReadUserMedia = () => {
       const items = posts.filter(post => post.media).map((post,index) => {
         if(post.media) {
-          return <PostObj key={index} User={post["user"]} Content={post["text"]} Likes={post["likes"]} Liked={parselike(post)} id={post["id"]} commcount={post["comments"].length} books={false} CreatedAt={post["createdAt"]} CommunityName={post["communityName"]} media={post["media"]} type={post["mediaType"]}/>
+          return <PostObj key={index} User={post["user"]} Content={post["text"]} Likes={post["likes"]} Liked={parselike(post)} id={post["id"]} commcount={post["comments"].length} books={false} CreatedAt={post["createdAt"]} CommunityName={post["communityName"]} media={post["media"]} type={post["mediaType"]} onDelete={handleDeletePost}/>
         }
       });
       return(
@@ -182,7 +185,7 @@ function ProfilePageTwo() {
 
     const ReadUserLikes = () => {
         const items = likedposts.map((post, index)=>{
-             return <PostObj key={index} User={post["user"]} Content={post["text"]} Likes={post["likes"]} Liked={parselike(post)} id={post["id"]} commcount={post["comments"].length} books={false} CreatedAt={post["createdAt"]} CommunityName={post["communityName"]} media={post["media"]} type={post["mediaType"]}/>
+             return <PostObj key={index} User={post["user"]} Content={post["text"]} Likes={post["likes"]} Liked={parselike(post)} id={post["id"]} commcount={post["comments"].length} books={false} CreatedAt={post["createdAt"]} CommunityName={post["communityName"]} media={post["media"]} type={post["mediaType"]} onDelete={handleDeletePost}/>
         });
         return(
             <div className="com-posts">
@@ -407,7 +410,7 @@ function ProfilePageTwo() {
               `${API_URL}/auth/steam/getOwnedGames/${profile.steamId}`,
               { headers: { Authorization: `Bearer ${token}` } }
             );
-            setGames(res.data.response.games);
+            setGames(res.data.response.games || []);
 
           }catch(error) {
             console.error("failed to get steam info: ", error.response?.data || error.message);
@@ -438,6 +441,9 @@ function ProfilePageTwo() {
     },[profile]);
 
     const ReadUserGames = () => {
+      if(!games || games.length === 0) {
+        return <p className="none-yet">No games found or library is private</p>;
+      }
       const items = games.map((game, ind) => {
           return <ShownGames key={game.appid} Name={game.name} Image={`https://cdn.akamai.steamstatic.com/steam/apps/${game.appid}/header.jpg`} PlayTime={game.playtime_forever}/>
         }
@@ -570,6 +576,7 @@ function ProfilePageTwo() {
                 <div className="username-row">
                   <h1 style={{ marginBottom: "5px" }}>{profile.username}</h1>
                   {profile.isPrivate && <img src={lock} alt="private img"/>}
+                  <p className="plat-bio">{profile.platform}</p>
                 </div>
                 <p style={{ marginTop: 0, color: "#aaaaaa" }}>
                   @{profile.username}
@@ -791,7 +798,7 @@ function ProfilePageTwo() {
               {isOwnProfile&&profile.steamId==null?(
                 <>
                 <p className="none-yet">You must sign in with steam to show your achievements. Please click the link to sign into steam</p>
-                <a href={`https://ccfrontend-production.up.railway.app/auth/steam?token=${token}`}>
+                <a href={`https://codecartel-production.up.railway.app/auth/steam?token=${token}`}>
                   <img src={SignIn} alt="steamlogin"/>
                 </a> </>):profile.steamId===null?(<p className="none-yet">This user has not logged into steam</p>):<ReadUserGames/>
               }

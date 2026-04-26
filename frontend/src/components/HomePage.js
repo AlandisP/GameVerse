@@ -159,6 +159,12 @@ function HomePage() {
     ? followingPosts.filter((p) => p.tag === platform)
     : followingPosts;
 
+
+    const handleDeletePost = (postId) => {
+        setposts(prev => prev.filter(p => p.id !== postId));
+        setFollowingPosts(prev => prev.filter(p => p.id !== postId));
+    }
+
   const GetAllPosts = filtered.map((post, index) => {
     const isbookd = bookarray.includes(post["id"]) ? true : false;
     if(index<displaying){
@@ -176,6 +182,7 @@ function HomePage() {
           CommunityName={post["communityName"]}
           media={post["media"]}
           type={post["mediaType"]}
+          onDelete={handleDeletePost}
         />
       );
     }
@@ -198,6 +205,7 @@ function HomePage() {
           CommunityName={post["communityName"]}
           media={post["media"]}
           type={post["mediaType"]}
+          onDelete={handleDeletePost}
         />
       );
     }

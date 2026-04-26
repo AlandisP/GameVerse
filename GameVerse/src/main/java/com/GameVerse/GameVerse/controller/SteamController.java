@@ -42,7 +42,7 @@ public class SteamController {
 
     @Autowired
     private JwtService jwtService; 
-
+    // steam redirection endpoint
     @GetMapping
     public RedirectView redirectToSteam(@RequestParam String token) {
         String steamLoginUrl = "https://steamcommunity.com/openid/login"
@@ -106,14 +106,14 @@ public class SteamController {
             return false;
         }
     }
-
+    // gets user owned games from stream
     @GetMapping("/getOwnedGames/{steamId}")
     public ResponseEntity<?> getOwnedGames(@PathVariable String steamId) {
         String url = "https://api.steampowered.com/IPlayerService/GetOwnedGames/v1/?key=" + apiKey +"&steamid="+ steamId + "&include_appinfo=true&include_played_free_games=1";
         RestTemplate rest = new RestTemplate();
         return ResponseEntity.ok(rest.getForObject(url, Object.class));
     }
-
+    // search for steam games
     @GetMapping("/search-games")
     public ResponseEntity<?> searchGames(
         @RequestParam String query,

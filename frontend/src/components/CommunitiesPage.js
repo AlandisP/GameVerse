@@ -31,7 +31,13 @@ function CommunitiesPage() {
             `${API_URL}/communities`,
             { headers: { Authorization: `Bearer ${token}` } }
         );
-        setCommunities(res.data);
+        console.log("raw:", res.data[0]);
+        const mapped = res.data.map(item => ({
+            ...item.community,
+            isMember: item.member
+        }));
+        console.log("mapped:", mapped[0]);
+        setCommunities(mapped);
     };
 
     const handleSelectCategory = (cat) => {
@@ -216,10 +222,10 @@ function FeaturedBlock({Name, Description, MemberCount , OnJoin, isJoined}) {
     const userId = localStorage.getItem("userId");
     const token  = localStorage.getItem('token');
     const navigate = useNavigate();
-    const [members, setMembers] = useState([]);
+    // const [members, setMembers] = useState([]);
     const [memberCount, setMemberCount] = useState(MemberCount);
-    const isMember = members?.some(member => member.id === userId);
-    const [joined, setJoined] = useState(isMember);
+    // const isMember = members?.some(member => member.id === userId);
+    // const [joined, setJoined] = useState(isMember);
     const [imgsrc, setimgsrc] = useState(urlprefab+Name+"/Profile/Banner");
 
     const handleJoinClick = async(e) => {
@@ -231,7 +237,7 @@ function FeaturedBlock({Name, Description, MemberCount , OnJoin, isJoined}) {
                 { headers: { Authorization: `Bearer ${token}` } }
             );
             setMemberCount(prev => prev + 1);
-            setJoined(true);
+            //setJoined(true);
             OnJoin();
         } catch (error) {
             console.error("failed to join community: ", error.response?.data || error.message);

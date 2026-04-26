@@ -219,7 +219,7 @@
 }
 
 .inputs2::placeholder {
-    color:white;
+    color:rgba(255, 255, 255, 0.377);
     font-family: Arial, Helvetica, sans-serif;
 }
 
@@ -324,9 +324,9 @@
 
 .errormsg {
     font-size: 3rem;
-    color: red;
+    color: #3b82f6;
     font-weight: bold;
-    background-color: black;
+    background-color: rgba(0, 0, 0, 0.363);
 }
 
 .subs {
@@ -502,4 +502,8 @@
     flex-direction: row;
     align-items: center;
     gap: 5px;
+}
+
+.comheader1 {
+    padding: 5px;
 }
