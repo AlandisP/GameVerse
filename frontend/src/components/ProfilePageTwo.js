@@ -410,7 +410,7 @@ function ProfilePageTwo() {
               `${API_URL}/auth/steam/getOwnedGames/${profile.steamId}`,
               { headers: { Authorization: `Bearer ${token}` } }
             );
-            setGames(res.data.response.games);
+            setGames(res.data.response.games || []);
 
           }catch(error) {
             console.error("failed to get steam info: ", error.response?.data || error.message);
@@ -441,6 +441,9 @@ function ProfilePageTwo() {
     },[profile]);
 
     const ReadUserGames = () => {
+      if(!games || games.length === 0) {
+        return <p className="none-yet">No games found or library is private</p>;
+      }
       const items = games.map((game, ind) => {
           return <ShownGames key={game.appid} Name={game.name} Image={`https://cdn.akamai.steamstatic.com/steam/apps/${game.appid}/header.jpg`} PlayTime={game.playtime_forever}/>
         }
