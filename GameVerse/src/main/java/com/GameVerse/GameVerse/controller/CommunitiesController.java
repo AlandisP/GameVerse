@@ -149,7 +149,7 @@ public class CommunitiesController {
         if(!communityRepository.existsByNameIgnoreCase(communityname)) {
             return ResponseEntity.badRequest().body("Community doesn't exist");
         }
-        if(!repository.existsByUsername(username)) {
+        if(!repository.existsByUsernameIgnoreCase(username)) {
             return ResponseEntity.badRequest().body("User doesn't exist");
         }
         communityService.removeMember(communityRepository.findByNameIgnoreCase(communityname).getId(), repository.findByUsernameIgnoreCase(username).getId());

@@ -161,7 +161,7 @@ public class CommunityService {
     }
     // This is structured so that we aren't showing 5+ commiunites on the featured page
     public List<Community> getTopCommunitiesForUser(String userId) {
-        if(!userRepository.existsByUsername(userId)) {
+        if(!userRepository.existsByUsernameIgnoreCase(userId)) {
             throw new RuntimeException(" User doesn't exist");
         }
         List<CommunityMembership> arr = cr.findTop5ByUserId(userId);
