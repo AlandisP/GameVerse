@@ -4,6 +4,7 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 @Document(collection = "memberships")
+// Membership class for communities
 public class CommunityMembership {
     @Id
     private String id;

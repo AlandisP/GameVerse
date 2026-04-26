@@ -27,11 +27,11 @@ public class AuthController {
     
     @Autowired
     private JwtService jwtService;
-    
+    // sign up endpoint
     @PostMapping("/signup")
     public ResponseEntity<?> signUp(@RequestBody RegisterRequest request) {
         // Check if username exists
-        if (userRepository.existsByUsername(request.username)) {
+        if (userRepository.existsByUsernameIgnoreCase(request.username)) {
             return ResponseEntity.badRequest().body("Username already exists");
         }
         if (!(request.password.equals(request.confirmPassword))) {
@@ -56,7 +56,7 @@ public class AuthController {
         
         return ResponseEntity.ok(new AuthResponse(token, savedUser.getId(), savedUser.getUsername(), savedUser.getRole()));
     }
-    
+    // login endpoint
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest request) {
         User user = userRepository.findByUsernameIgnoreCase(request.username);

@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import axios from "axios";
 import NavBar from "./NavBar";
 import logo from "../images/search.png";
+import './styles.css';
 
 import API_URL from "../config/api";
 
@@ -915,11 +916,12 @@ function MessagePage() {
                 </div>
 
                 <input
+                  className="group-input"
                   value={newDmUsername}
                   onChange={(e) => setNewDmUsername(e.target.value)}
                   placeholder="Enter username (exact)"
                   style={{
-                    width: "100%",
+                    width: "90%",
                     padding: "10px",
                     borderRadius: "10px",
                     border: "none",
@@ -1000,11 +1002,12 @@ function MessagePage() {
                 </div>
 
                 <input
+                  className="group-input"
                   value={groupTitle}
                   onChange={(e) => setGroupTitle(e.target.value)}
                   placeholder="Group title"
                   style={{
-                    width: "100%",
+                    width: "90%",
                     padding: "10px",
                     borderRadius: "10px",
                     border: "none",
@@ -1016,11 +1019,12 @@ function MessagePage() {
                 />
 
                 <input
+                  className="group-input"
                   value={groupMembersInput}
                   onChange={(e) => setGroupMembersInput(e.target.value)}
                   placeholder="Enter usernames, comma separated"
                   style={{
-                    width: "100%",
+                    width: "90%",
                     padding: "10px",
                     borderRadius: "10px",
                     border: "none",
@@ -1689,6 +1693,7 @@ function MessagePage() {
             }}
           >
             <input
+              className="group-input"
               value={messageInput}
               onChange={(e) => setMessageInput(e.target.value)}
               placeholder={

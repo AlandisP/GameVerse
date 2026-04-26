@@ -3,6 +3,7 @@ package com.GameVerse.GameVerse.model;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+// Class for blocking relationships holding userId and blockedId
 @Document(collection ="blockingRelationships")
 public class BlockingRelationship {
     @Id

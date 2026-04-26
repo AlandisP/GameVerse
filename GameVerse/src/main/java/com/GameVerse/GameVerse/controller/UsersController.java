@@ -76,7 +76,6 @@ public class UsersController {
     @Autowired
     private S3Service s3serv;
 
-
     @GetMapping
     public List<User> getAllUsers() {
         return repository.findAll();
@@ -86,10 +85,10 @@ public class UsersController {
     public User createUser(@RequestBody User user) {
         return repository.save(user);
     }
-    
+    // check if a user exist by username
     @GetMapping("/exists/{username}")
     public ResponseEntity<?> usernameExists(@PathVariable String username) {
-    boolean exists = repository.existsByUsername(username);
+    boolean exists = repository.existsByUsernameIgnoreCase(username);
     return ResponseEntity.ok(Map.of("exists", exists));
 }
 
@@ -97,7 +96,7 @@ public class UsersController {
     public User getUserById(@PathVariable String id) {
         return repository.findById(id).orElse(null);
     }
-    
+    // useless endpoint
     @DeleteMapping("/{id}")
     public void deleteUser(@PathVariable String id) {
         repository.deleteById(id);
@@ -109,7 +108,7 @@ public class UsersController {
 
         return repository.findByUsernameContainingIgnoreCase(text);
     }
-
+    // new endpoint located in a different file
     @PostMapping("/follow/{username}")
     public ResponseEntity<?> followUser(@PathVariable String username, Authentication auth) {
         String userId = (String) auth.getPrincipal();
@@ -124,7 +123,7 @@ public class UsersController {
         relationshipService.followUser(currUser.getId(), following.getId());
         return ResponseEntity.ok("Successfully followed the user");
     }
-
+    // sends a follow request to a user
     @PostMapping("/request/{username}")
     public ResponseEntity<?> respondtoRequest(@PathVariable String username, @RequestParam boolean choice, Authentication auth) {
         String userId = (String) auth.getPrincipal();
@@ -137,7 +136,7 @@ public class UsersController {
         frService.requestChoice(req.getId(), choice);
         return ResponseEntity.ok("Success");
     }
-
+    // cancels a request (thought there might be a way to do this without an extra endpoint)
     @PostMapping("/cancelRequest/{username}")
     public ResponseEntity<?> cancelRequest(@PathVariable String username, Authentication auth) {
         String userId = (String) auth.getPrincipal();
@@ -197,7 +196,7 @@ public class UsersController {
             .toList();
         return ResponseEntity.ok(usernames);
     }
-
+    //sends a request
     @GetMapping("/followRequest/{username}")
     public ResponseEntity<?> getFollowRequest(Authentication auth, @PathVariable String username) {
         String userId = (String) auth.getPrincipal();
@@ -205,7 +204,7 @@ public class UsersController {
         List<String> requests = frRepository.findByReceiverId(user.getId()).stream().map(FollowRequest::getSenderId).collect(Collectors.toList());
         return ResponseEntity.ok(requests.stream().map(id -> repository.findById(id).orElse(null)).collect(Collectors.toList()));
     }
-
+    // follow request endpoint
     @GetMapping("/requestSent")
     public ResponseEntity<?> getUserSentRequest(Authentication auth) {
         String userId = (String) auth.getPrincipal();
@@ -214,7 +213,7 @@ public class UsersController {
         return ResponseEntity.ok(sentRequest.stream().map(id -> repository.findById(id).orElse(null).getUsername()).collect(Collectors.toList()));
     }
 
-
+    // make sure they are gone from everything.
     @DeleteMapping("/delete-account")
 public ResponseEntity<?> deleteAccount(@RequestBody Map<String, String> body, Authentication auth) {
     String userId = (String) auth.getPrincipal();
@@ -275,6 +274,8 @@ public ResponseEntity<?> deleteAccount(@RequestBody Map<String, String> body, Au
     relationshipRepository.deleteAllByFollowerId(userId);
     relationshipRepository.deleteAllByFollowingId(userId);
     repository.deleteById(userId);
+    frRepository.deleteAllByReceiverId(userId);
+    frRepository.deleteAllBySenderId(userId);
     try{
         s3serv.deleteAllMedia(username);
     } catch(Exception e){
@@ -283,7 +284,7 @@ public ResponseEntity<?> deleteAccount(@RequestBody Map<String, String> body, Au
     
     return ResponseEntity.ok(Map.of("message", "Account deleted successfully"));
 }
-
+// change password endpoint
 @PutMapping("/change-password")
 public ResponseEntity<?> changePassword(@RequestBody Map<String, String> body, Authentication auth) {
     String userId = (String) auth.getPrincipal();
@@ -304,7 +305,7 @@ public ResponseEntity<?> changePassword(@RequestBody Map<String, String> body, A
     repository.save(user);
     return ResponseEntity.ok(Map.of("message", "Password updated successfully"));
 }
-
+    // change username endpoint
   @PutMapping("/change-username")
   public ResponseEntity<?> changeUsername(@RequestBody Map<String, String> body, Authentication auth) {
     String userId = (String) auth.getPrincipal();
@@ -314,7 +315,7 @@ public ResponseEntity<?> changePassword(@RequestBody Map<String, String> body, A
         return ResponseEntity.badRequest().body(Map.of("message", "Username cannot be empty"));
     if (newUsername.contains(" "))
         return ResponseEntity.badRequest().body(Map.of("message", "Username cannot contain spaces"));
-    if (repository.existsByUsername(newUsername.trim()))
+    if (repository.existsByUsernameIgnoreCase(newUsername.trim()))
         return ResponseEntity.badRequest().body(Map.of("message", "Username already taken"));
 
     User user = repository.findById(userId).orElseThrow();

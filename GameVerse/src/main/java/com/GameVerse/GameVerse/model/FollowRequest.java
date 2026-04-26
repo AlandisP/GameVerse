@@ -13,7 +13,7 @@ public class FollowRequest {
     private String senderId;
     private String receiverId;
     private Instant createdAt;
-
+    // Model for private accounts
     public FollowRequest(String senderId, String receiverId) {
         this.senderId = senderId;
         this.receiverId = receiverId;

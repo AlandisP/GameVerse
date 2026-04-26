@@ -36,7 +36,7 @@ public class NotificationController {
 
     @Autowired
     private RecommendationService recService;
-
+    // gets all notifcations by username
     @GetMapping("/{username}")
     public ResponseEntity<?> getUnreadNotifications(@PathVariable String username, Authentication auth) {
         String userId = (String) auth.getPrincipal();
@@ -47,7 +47,7 @@ public class NotificationController {
         Pageable page = PageRequest.of(0, 8);
         return ResponseEntity.ok().body(notificationRepository.findByUserIdOrderByCreatedAtDesc(userId));
     }
-
+    //marks a notification as read
     @PostMapping("/markRead/{id}")
     public ResponseEntity<?> markAsRead(@PathVariable String id, Authentication auth) {
         String userId = (String) auth.getPrincipal();
@@ -55,7 +55,7 @@ public class NotificationController {
         return ResponseEntity.ok().build();
 
     }
-
+    // gets the amount of notifications a user has
     @GetMapping("/count")
     public ResponseEntity<?> getNotificationCount(Authentication auth) {
         String userId = (String) auth.getPrincipal();
@@ -66,13 +66,13 @@ public class NotificationController {
         Long  count = notificationRepository.countByUserIdAndReadFalse(userId);
         return ResponseEntity.ok().body(count);
     }
-
+    // gets follower recommendations
     @GetMapping("/recommendations")
     public ResponseEntity<?> getRecommendations(Authentication auth) {
         String userId = (String) auth.getPrincipal();
         return ResponseEntity.ok(recService.followRecommendations(userId));
     }
-
+    // deletes a notification
     @DeleteMapping("/deleteNoti/{id}")
     public ResponseEntity<?> deleteNotification(@PathVariable String id) {
         Notification noti = notificationRepository.findById(id).orElse(null);

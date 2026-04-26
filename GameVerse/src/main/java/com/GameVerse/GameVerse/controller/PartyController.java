@@ -53,7 +53,7 @@ public class PartyController {
         List<PartyFinder> parties = partyRepository.findAll();
         return ResponseEntity.ok().body(parties);
     }
-
+    // Creates a party
     @PostMapping("/createParty")
     public ResponseEntity<?> createParty(@RequestBody createPartyRequest req, Authentication auth) {
         String userId = (String) auth.getPrincipal();
@@ -80,12 +80,12 @@ public class PartyController {
         partyRepository.save(party);
         return ResponseEntity.ok().body(party.getId());   
     }
-
+    // categories
     @GetMapping("/categories")
     public ResponseEntity<?> getAllCategories() {
         return ResponseEntity.ok(Category.grouped());
     }
-
+    // gets your own party
     @GetMapping("/myParty")
     public ResponseEntity<?> getCurrentParty(Authentication auth) {
         String userId = (String) auth.getPrincipal();
@@ -95,7 +95,7 @@ public class PartyController {
         }
         return ResponseEntity.ok(party);
     }
-
+    // gets a party based on name(this isnt used)
     @GetMapping("/{partyName}")
     public ResponseEntity<?> getParty(@PathVariable String partyName) {
         PartyFinder party = partyRepository.findByNameIgnoreCase(partyName);
@@ -105,6 +105,7 @@ public class PartyController {
         return ResponseEntity.ok(party);
     }
 
+    // gets all party matching certain string
     @GetMapping("/matches")
     public ResponseEntity<?> getPartyMatches(@RequestParam String text) {
         List<PartyFinder> parties = partyRepository.findByNameContainingIgnoreCase(text);
@@ -120,14 +121,14 @@ public class PartyController {
         return ResponseEntity.ok(combined);
 
     }
-
+    // dont think this one is used
     @GetMapping("/matchesCategory")
     public List<PartyFinder> getCategoryMatches(@RequestParam List<String> categories) {
         List<Category> categoryList = categories.stream().map(cat -> Category.valueOf(cat.toUpperCase())).collect(Collectors.toList());
         List<PartyFinder> list = partyRepository.findByCategoriesIn(categoryList);
         return list;
     }
-
+    // endpoint used to join a party
     @PutMapping("/{partyname}/join")
     public ResponseEntity<?> joinParty(@PathVariable String partyname, Authentication auth) {
         PartyFinder party = partyRepository.findByNameIgnoreCase(partyname);
@@ -144,7 +145,7 @@ public class PartyController {
             return ResponseEntity.badRequest().body(ex.getMessage());
         }
     }
-
+    // leave a party endpoint
     @PutMapping("/{partyname}/leave")
     public ResponseEntity<?> leaveParty(@PathVariable String partyname, Authentication auth) {
         PartyFinder party = partyRepository.findByNameIgnoreCase(partyname);
@@ -187,7 +188,7 @@ public class PartyController {
         partyService.deleteParty(id);
         return ResponseEntity.ok("party successfully deleted");
     }
-
+    // relatively new endpoint. essentially creating a new party 
     @PostMapping("/{partyName}/editParty")
     public ResponseEntity<?> editParty(@RequestBody createPartyRequest req, Authentication auth, @PathVariable String partyName) {
         PartyFinder party = partyRepository.findByNameIgnoreCase(partyName);
@@ -220,7 +221,7 @@ public class PartyController {
         partyRepository.save(party);
         return ResponseEntity.ok().body(party.getId());   
     }
-
+    // activates a party(sets status to active)
     @PutMapping("/{id}/activate")
     public ResponseEntity<?> activateParty(@PathVariable String id) {
         PartyFinder party = partyRepository.findById(id).orElseThrow();

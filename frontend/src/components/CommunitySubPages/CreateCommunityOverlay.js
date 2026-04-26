@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import API_URL from '../../config/api';
 import axios from 'axios';
+import ErrorMessage from '../Overlays/ErrorMessage';
 
 function CreateCommunityOverlay({isOpen, onClose, onCommunityCreated}) {
     const token  = localStorage.getItem('token');
@@ -41,10 +42,15 @@ function CreateCommunityOverlay({isOpen, onClose, onCommunityCreated}) {
             setError("You must have a description for your community.");
             return;
         }
-        const result = await axios.post (
+        try {
+            const result = await axios.post (
             `${API_URL}/communities/createCommunity`, {name: communityName, description: comDescription, category: selectedCategory},
             { headers: { Authorization: `Bearer ${token}` } }
         );
+        } catch (error) {
+            setError(error.response?.data);
+        }
+        
         setSelectedCategory(null);
         setComDescription("");
         setCommunityName("");
@@ -74,7 +80,7 @@ function CreateCommunityOverlay({isOpen, onClose, onCommunityCreated}) {
             <div className='overlay'>
                 <div className='overlay-background-party'>
                     <div className='top-portion'>
-                        <h1>Create Community</h1>
+                        <h1 className="comheader1">Create Community</h1>
                         <button className='close' onClick={() => {onClose(); ClearFields();} }>X</button>
                     </div>
                     <div className='comcontent'>

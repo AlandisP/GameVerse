@@ -2,7 +2,7 @@ package com.GameVerse.GameVerse.model;
 
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
-
+// model for Relationships(followers and following relationships)
 @Document(collection = "relationships")
 public class Relationship {
     @Id
