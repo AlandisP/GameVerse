@@ -38,7 +38,7 @@ function UploadBox({clearvar, fileinf}){
     },[file]);
     const onupload = (e) => {
         const upload = e.target.files;
-        console.log(/video/g.test(upload[0].type));
+        //console.log(/video/g.test(upload[0].type));
         if(/video/g.test(upload[0].type)){
             settype("video");
         }
@@ -47,6 +47,10 @@ function UploadBox({clearvar, fileinf}){
         }
         if(/video/g.test(upload[0].type)==/image/g.test(upload[0].type)){
             seterror("Invalid Media Upload");
+            return;
+        }
+        if(upload[0].size>100000000){
+            seterror("File size too large");
             return;
         }
         if(upload && upload.length > 0){
@@ -65,6 +69,10 @@ function UploadBox({clearvar, fileinf}){
         }
         if(/video/g.test(upload[0].type)==/image/g.test(upload[0].type)){
             seterror("Invalid Media Upload");
+            return;
+        }
+        if(upload[0].size>100000000){
+            seterror("File size too large");
             return;
         }
         if(upload && upload.length > 0){
