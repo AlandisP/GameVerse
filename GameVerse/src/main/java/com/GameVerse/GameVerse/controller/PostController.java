@@ -125,7 +125,7 @@ public class PostController {
     // public List<Post> getpost(){
     //     return postRepo.findAll();
     // }
-
+    // uses service to make a community post
     @PostMapping("/makecommunitypost")
     public ResponseEntity<?> makecommunitypost(@RequestParam("body") String content, @RequestParam("id") String communityid, @RequestParam(value = "media", required = false) MultipartFile media, Authentication auth) {
         String username = userRep.findById(auth.getPrincipal().toString()).get().getUsername();

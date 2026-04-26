@@ -27,7 +27,7 @@ function NotificationPage() {
     const [currUser, setCurrUser] = useState(null);
     const [requests, setRequest] = useState([]);
     const [myRequest, setMyRequest] = useState([]);
-
+    // follow api request
     const handleFollow = async(user)=>{
         try {
             const res = await axios.post(
@@ -82,7 +82,7 @@ function NotificationPage() {
             console.error("failed to get users: ", error.response?.data || error.message);
         }
     }
-
+    // request responses are in the notification screen since you get notis for request anyway
     const handleRequestResponse = async(user, status) => {
         try{
             const res = await axios.post(
@@ -96,7 +96,7 @@ function NotificationPage() {
             console.error("Error:", error.response.data);
         }
     }
-
+    // cancel
     const handleCancelRequest = async(user) => {
         try{
             const res = await axios.post(
@@ -180,7 +180,7 @@ function NotificationPage() {
             </div>
         );
     }
-
+    // recommendations
     const ReadRecs = () => {
         const items = recommendations.map((user,ind) => (
             <div key={ind} className="userrec" onClick={() => navigate(`/profile/${user.username}`)}>
@@ -206,7 +206,7 @@ function NotificationPage() {
             </div>
         );
     }
-
+    // folllow requests
     const ReadReqs = () => {
         const items = myRequest.map((user, ind) => (
             <div  key={ind} className="user-holderreq" onClick={() => navigate(`/profile/${user.username}`)}>
@@ -247,7 +247,7 @@ function NotificationPage() {
                     <div className="extras">
                         <h2 className="header-1">Who to Follow</h2>
                         <div className="rec-holder">
-                            <ReadRecs/>
+                            {recommendations.length==0?<p>Loading...</p>:<ReadRecs/>}
                         </div>
                         { currUser?.isPrivate  && <h2>Follow Request</h2>}
                         <div className="req-holder">
@@ -273,7 +273,7 @@ function NotificationPage() {
     );
 
 }
-
+// notification card. seems a bit long but has a good bit of functionality
 function Notification({Type, Message, CreatedAt, id, setNotifications}) {
     const ref = useRef();
     const token = localStorage.getItem("token");
@@ -281,7 +281,7 @@ function Notification({Type, Message, CreatedAt, id, setNotifications}) {
     const user = Message.split(" ")[0];
     const img = Type==='Profile' ? followed: bell;
     const deleted = useRef(false);
-
+    // Clever way of handling some types of clicks
     const HandleConditionalClick = () => {
         if(Type === 'Party') {
             navigate('/partyfinder');

@@ -15,6 +15,8 @@ public class NotificationService {
     @Autowired
     private UserRepository userRepository;
 
+
+    // create the notification
     public void createNotification(String type, String message, String userId) {
         if(userRepository.findById(userId) == null) {
             throw new RuntimeException("User doesnt exist");
@@ -22,7 +24,7 @@ public class NotificationService {
         Notification n = new Notification(userId, type, message);
         repository.save(n);
     }
-
+    // reads the noti(mainly a frontend thing)
     public void readNotification(String id) {
         if(repository.findById(id) == null) {
             throw new RuntimeException("Notification doesnt exist");

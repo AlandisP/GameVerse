@@ -16,7 +16,7 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 
 import jakarta.servlet.http.HttpServletRequest;
-
+// configures what API endpoints have access 
 @Configuration
 public class SecurityConfiguration {
 

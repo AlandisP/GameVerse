@@ -27,7 +27,7 @@ public class AuthController {
     
     @Autowired
     private JwtService jwtService;
-    
+    // sign up endpoint
     @PostMapping("/signup")
     public ResponseEntity<?> signUp(@RequestBody RegisterRequest request) {
         // Check if username exists
@@ -56,7 +56,7 @@ public class AuthController {
         
         return ResponseEntity.ok(new AuthResponse(token, savedUser.getId(), savedUser.getUsername(), savedUser.getRole()));
     }
-    
+    // login endpoint
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest request) {
         User user = userRepository.findByUsernameIgnoreCase(request.username);

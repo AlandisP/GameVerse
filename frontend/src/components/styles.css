@@ -698,3 +698,7 @@ nav.sidebar div,
     padding: 10px;
     cursor: pointer;
 }
+
+.group-input::placeholder {
+  color: white
+}

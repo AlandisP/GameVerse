@@ -29,7 +29,7 @@ public class RecommendationService {
     @Autowired
     private MongoTemplate mongoTemplate;
     
-
+    // Generate 7 follow recommendations
     public List<User> followRecommendations(String userId) {
         User currentUser = userRepository.findById(userId).orElseThrow();
 
