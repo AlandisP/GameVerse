@@ -36,4 +36,8 @@ public class FollowRequest {
     public Instant getCreatedAt() { 
         return createdAt; 
     }
+
+    public void setId(String id) {
+        this.id=id;
+    }
 }

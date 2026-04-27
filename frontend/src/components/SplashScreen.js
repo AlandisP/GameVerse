@@ -31,7 +31,7 @@ function SplashScreen() {
   ];
 
   const repoUrl = "https://github.com/SCCapstone/CodeCartel";
-  const videoUrl = ""; // Put your final demo embed URL here
+  const videoUrl = "https://www.youtube.com/watch?v=FIsXbvJmz6M";
 
   return (
     <div className="landing-page">

@@ -237,7 +237,7 @@ public class PartyController {
 
 
 
-    static class createPartyRequest {
+    public static class createPartyRequest {
         public String name;
         public String description;
         public int maxMembers;
