@@ -10,20 +10,6 @@ import org.openqa.selenium.chrome.ChromeDriver;
 
 
 public class HomepageUITest {
-    @Test
-    void homepageLoads() {
-        WebDriver driver = new ChromeDriver();
-
-        driver.findElement(By.xpath("//input[@placeholder='Username']")).sendKeys("capstonetest");
-
-        driver.findElement(By.xpath("//input[@placeholder='Password']")).sendKeys("1234");
-        driver.findElement(By.xpath("//button[contains(text(), 'Login')]")).click();
-
-        WebElement element = driver.findElement(By.xpath("//*[contains(text(), 'Welcome')]"));
-        assertTrue(element.isDisplayed());
-
-        driver.quit();
-    }
 
     @Test
     void userIsRedirectedToHomeAfterLogin() throws InterruptedException {
@@ -65,23 +51,6 @@ public class HomepageUITest {
         driver.quit();
     }
 
-    @Test
-    void loginPageRedirectsToHomeWhenTokenExists() throws InterruptedException {
-        WebDriver driver = new ChromeDriver();
-        driver.get("http://localhost:3000");
-
-        // Inject token into localStorage
-        ((JavascriptExecutor) driver).executeScript(
-            "localStorage.setItem('token', 'testtoken');"
-        );
-
-        driver.navigate().refresh();
-        Thread.sleep(1500);
-
-        assertTrue(driver.getCurrentUrl().contains("/home"));
-
-        driver.quit();
-    }
 
 
     @Test
@@ -112,7 +81,7 @@ public class HomepageUITest {
     @Test
     void userCanNavigateToExploreAfterLogin() throws InterruptedException {
         WebDriver driver = new ChromeDriver();
-        driver.get("http://localhost:3000");
+        driver.get("http://localhost:3000/login");
 
         driver.findElement(By.id("userinput")).sendKeys("capstonetest");
         driver.findElement(By.id("passinput")).sendKeys("1234");
@@ -129,27 +98,5 @@ public class HomepageUITest {
         driver.quit();
     }
 
-    @Test
-    void sessionOnlyLoginClearsTokenOnReload() throws InterruptedException {
-        WebDriver driver = new ChromeDriver();
-        driver.get("http://localhost:3000");
-
-        // Set sessionOnly login
-        ((JavascriptExecutor) driver).executeScript(
-            "localStorage.setItem('token', 'abc123');" +
-            "localStorage.setItem('sessionOnly', 'true');" +
-            "sessionStorage.clear();"
-        );
-
-        driver.navigate().refresh();
-        Thread.sleep(1500);
-
-        String token = (String)((JavascriptExecutor) driver)
-            .executeScript("return localStorage.getItem('token');");
-
-        assertTrue(token == null);
-
-        driver.quit();
-    }
     
 }

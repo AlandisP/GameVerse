@@ -83,7 +83,7 @@ function SplashScreen() {
               <div className="video-chrome" />
               {videoUrl ? (
                 <iframe
-                  src={videoUrl}
+                  src={`https://www.youtube.com/embed/FIsXbvJmz6M`}
                   title="Final Demo Video"
                   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                   allowFullScreen

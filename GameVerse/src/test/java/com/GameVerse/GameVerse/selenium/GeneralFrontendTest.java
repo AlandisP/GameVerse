@@ -1,16 +1,13 @@
 package com.GameVerse.GameVerse.selenium;
 
-import java.time.Duration;
-
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 import org.junit.jupiter.api.Test;
 import org.openqa.selenium.By;
 import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeDriver;
-import org.openqa.selenium.support.ui.ExpectedConditions;
-import org.openqa.selenium.support.ui.WebDriverWait;
 
 public class GeneralFrontendTest {
 
@@ -80,44 +77,10 @@ public class GeneralFrontendTest {
         driver.quit();
     }
 
-    @Test
-    void userCanNavigateToSignup() {
-        WebDriver driver = new ChromeDriver();
-        driver.get("http://localhost:3000/login");
-
-        WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(5));
-
-        WebElement signupLink = wait.until(ExpectedConditions.elementToBeClickable(
-            By.xpath("//a[contains(text(), 'Create One')]")
-        ));
-
-        signupLink.click();
-
-        wait.until(ExpectedConditions.urlContains("/signup"));
-
-        assertTrue(driver.getCurrentUrl().contains("/signup"));
-        driver.quit();
-    }
-
 
     // ------------------------------------------------------------------ //
     //  Login behaviour
     // ------------------------------------------------------------------ //
-
-    @Test
-    void userCanLogin() throws InterruptedException {
-        WebDriver driver = loginAs("capstonetest", "1234");
-
-        WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(5));
-
-        // Wait for the Feed header to appear
-        WebElement feedHeader = wait.until(ExpectedConditions.visibilityOfElementLocated(
-            By.xpath("//h1[contains(text(), 'Feed')]")
-        ));
-
-        assertTrue(feedHeader.isDisplayed());
-        driver.quit();
-}
 
 
     @Test

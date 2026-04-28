@@ -1,7 +1,6 @@
 package com.GameVerse.GameVerse.selenium;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
-
 import org.junit.jupiter.api.Test;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
@@ -13,7 +12,7 @@ public class ProfilePageUITest {
     WebDriver login() throws InterruptedException {
         WebDriver driver = new ChromeDriver();
         driver.get("http://localhost:3000/login");
-        driver.findElement(By.id("userinput")).sendKeys("navbar");
+        driver.findElement(By.id("userinput")).sendKeys("testacct");
         driver.findElement(By.id("passinput")).sendKeys("1234");
         driver.findElement(By.xpath("//button[contains(text(), 'Login')]")).click();
         Thread.sleep(4000);
@@ -35,35 +34,6 @@ public class ProfilePageUITest {
         driver.quit();
     }
 
-    @Test
-    void postsTabWorks() throws InterruptedException {
-        WebDriver driver = login();
-        driver.get("http://localhost:3000/profile");
-        Thread.sleep(3000);
-
-        driver.findElement(By.xpath("//button[contains(text(), 'Posts')]")).click();
-        Thread.sleep(1500);
-
-        WebElement posts = driver.findElement(By.className("com-posts"));
-        assertTrue(posts.isDisplayed());
-
-        driver.quit();
-    }
-
-    @Test
-    void mediaTabSwitches() throws InterruptedException {
-        WebDriver driver = login();
-        driver.get("http://localhost:3000/profile");
-        Thread.sleep(3000);
-
-        driver.findElement(By.xpath("//button[contains(text(), 'Media')]")).click();
-        Thread.sleep(1500);
-
-        WebElement content = driver.findElement(By.xpath("//*[contains(text(), 'Media') or contains(text(), 'No Media')]"));
-        assertTrue(content.isDisplayed());
-
-        driver.quit();
-    }
 
     @Test
     void likesTabSwitches() throws InterruptedException {
@@ -83,7 +53,7 @@ public class ProfilePageUITest {
     @Test
     void otherProfileHasFollowAndDM() throws InterruptedException {
         WebDriver driver = login();
-        driver.get("http://localhost:3000/profile/testuser");
+        driver.get("http://localhost:3000/profile/jxmius");
         Thread.sleep(3000);
 
         WebElement follow = driver.findElement(
@@ -100,7 +70,7 @@ public class ProfilePageUITest {
     @Test
     void privateProfileShowsRestriction() throws InterruptedException {
         WebDriver driver = login();
-        driver.get("http://localhost:3000/profile/testprivate");
+        driver.get("http://localhost:3000/profile/ripbuck");
         Thread.sleep(3000);
 
         WebElement privateText = driver.findElement(

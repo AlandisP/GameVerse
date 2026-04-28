@@ -1,7 +1,6 @@
 package com.GameVerse.GameVerse.selenium;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
-
 import org.junit.jupiter.api.Test;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
@@ -15,7 +14,7 @@ public class CreatePartyUITest {
         WebDriver driver = new ChromeDriver();
 
         driver.get("http://localhost:3000/login");
-        driver.findElement(By.id("userinput")).sendKeys("navbar");
+        driver.findElement(By.id("userinput")).sendKeys("testacct");
         driver.findElement(By.id("passinput")).sendKeys("1234");
         driver.findElement(By.xpath("//button[contains(text(), 'Login')]")).click();
         Thread.sleep(4000);

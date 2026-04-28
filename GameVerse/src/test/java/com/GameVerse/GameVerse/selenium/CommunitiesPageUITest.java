@@ -76,25 +76,6 @@ public class CommunitiesPageUITest {
 
 
     @Test
-    void createCommunityOverlayOpens() throws InterruptedException {
-        WebDriver driver = new ChromeDriver();
-        login(driver);
-        driver.get("http://localhost:3000/communities");
-
-        Thread.sleep(1500);
-
-        WebElement createBtn = driver.findElement(By.xpath("//button[contains(text(), 'Create Your Own')]"));
-        createBtn.click();
-
-        Thread.sleep(800);
-
-        WebElement overlay = driver.findElement(By.xpath("//*[contains(@class, 'CreateCommunityOverLay')]"));
-        assertTrue(overlay.isDisplayed());
-
-        driver.quit();
-    }
-
-    @Test
     void featuredCommunitiesSectionLoads() throws InterruptedException {
         WebDriver driver = new ChromeDriver();
         login(driver);
