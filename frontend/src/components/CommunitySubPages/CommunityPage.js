@@ -45,41 +45,32 @@ function CommunityPage() {
     const [pfp, setpfp] = useState(null);
     const [banner, setbanner] = useState(null);
     const [pfpUrl, setpfpUrl] = useState("");
-    const [pfpUrltemp, setpfpUrlt] = useState("");
     const [bannerUrl, setbannerUrl] = useState("");
-    const [bannerUrltemp, setbannerUrlt] = useState("");
 
     useEffect(()=>{
       if(editing&&pfp){
-        setpfpUrlt(pfpUrl);
-        setpfpUrl(URL.createObjectURL(pfp));
+        const objectUrl = URL.createObjectURL(pfp);
+        setpfpUrl(objectUrl);
+        return () => URL.revokeObjectURL(objectUrl);
       }
-      if(editing&&!pfp&&pfpUrltemp!==""){
-        setpfpUrl(pfpUrltemp);
-        URL.revokeObjectURL(pfp);
-      }
-    },pfp);
+    },[pfp]);
     useEffect(()=>{
       if(editing&&banner){
-        setbannerUrlt(bannerUrl);
-        setbannerUrl(URL.createObjectURL(banner));
+        const objectUrl = URL.createObjectURL(banner);
+        setbannerUrl(objectUrl);
+        return () => URL.revokeObjectURL(objectUrl);
       }
-      if(editing&&!banner&&bannerUrltemp!==""){
-        setbannerUrl(bannerUrltemp);
-        URL.revokeObjectURL(banner);
-      }
-    },banner);
+    },[banner]);
     const cancelEdit = ()=>{
       if(pfp){
-        setpfpUrl(pfpUrltemp);
-        URL.revokeObjectURL(pfp);
         setpfp(null);
       }
       if(banner){
-        setbannerUrl(bannerUrltemp);
-        URL.revokeObjectURL(banner);
         setbanner(null);
       }
+      // Restore original URLs from the community data
+      setpfpUrl(currCommunity?.pfp ?? "");
+      setbannerUrl(currCommunity?.banner ?? "");
       setEditing(false);
     }
     //#####################
